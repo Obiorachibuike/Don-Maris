@@ -47,7 +47,7 @@ const findSimilarProductsTool = ai.defineTool(
         name: 'findSimilarProducts',
         description: 'Find products that are similar to the one being viewed, or recommend accessories. Use this to answer questions about other products or recommendations.',
         inputSchema: z.object({ 
-            category: z.string().optional().describe('The category to search for (e.g., Case, Charger).'),
+            category: z.string().optional().describe('The category to search for (e.g., Screen, Tools).'),
             brand: z.string().optional().describe('The brand to search for.'),
          }),
         outputSchema: z.array(z.custom<Product>()),

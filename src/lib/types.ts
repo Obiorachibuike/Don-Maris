@@ -7,7 +7,7 @@ export type Product = {
   price: number;
   image: string;
   brand: string;
-  type: 'Case' | 'Charger' | 'Screen Protector' | 'Headphones' | 'Car Mount' | 'Screen' | 'Charging Flex' | 'Power Flex' | 'Tools';
+  type: 'Power Flex' | 'Charging Flex' | 'Screen' | 'Backglass' | 'Glass' | 'Tools';
   rating: number;
   reviews: Review[];
   data_ai_hint: string;

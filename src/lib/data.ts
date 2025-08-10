@@ -2,41 +2,6 @@ import type { Product } from './types';
 
 const products: Product[] = [
   {
-    id: '1',
-    name: 'AuraShield Case for iPhone 15',
-    description: 'Slim, protective, and stylish case.',
-    longDescription: 'The AuraShield case offers military-grade drop protection in a slim, pocket-friendly design. Its crystal-clear back showcases your phone\'s original look, while the reinforced corners absorb shock from impacts. A raised bezel protects your screen and camera from scratches.',
-    price: 29.99,
-    image: 'https://placehold.co/600x600.png',
-    data_ai_hint: 'phone case',
-    brand: 'AuraShield',
-    type: 'Case',
-    rating: 4.8,
-    reviews: [
-      { id: 'r1', author: 'Jane D.', rating: 5, comment: 'Fits perfectly and feels great in hand!', date: '2023-10-15' },
-      { id: 'r2', author: 'Mike P.', rating: 4, comment: 'Good protection, but the clear back gets fingerprints easily.', date: '2023-10-12' },
-    ],
-    isFeatured: true,
-    dateAdded: '2023-10-01',
-  },
-  {
-    id: '2',
-    name: 'VoltSprint 45W GaN Charger',
-    description: 'Ultra-fast charging in a compact size.',
-    longDescription: 'Experience next-level charging with the VoltSprint 45W GaN charger. Using advanced Gallium Nitride technology, it delivers high-speed power to your devices in a fraction of the size of a traditional charger. Perfect for travel and decluttering your workspace.',
-    price: 34.99,
-    image: 'https://placehold.co/600x600.png',
-    data_ai_hint: 'phone charger',
-    brand: 'VoltSprint',
-    type: 'Charger',
-    rating: 4.9,
-    reviews: [
-      { id: 'r3', author: 'Chris G.', rating: 5, comment: 'Charges my phone incredibly fast. A game changer!', date: '2023-11-01' },
-    ],
-    isFeatured: true,
-    dateAdded: '2023-10-02',
-  },
-  {
     id: '3',
     name: 'iPhone 14 Pro Max OLED Screen Replacement',
     description: 'Vibrant and responsive OLED replacement screen.',
@@ -50,22 +15,6 @@ const products: Product[] = [
     reviews: [],
     isFeatured: true,
     dateAdded: '2023-11-15',
-  },
-  {
-    id: '4',
-    name: 'EchoBuds Pro Wireless Earbuds',
-    description: 'Immersive sound with active noise cancellation.',
-    longDescription: 'Dive into your music with EchoBuds Pro. These wireless earbuds feature advanced active noise cancellation to block out distractions, a transparency mode to hear your surroundings, and custom-tuned drivers for rich, detailed audio. Enjoy up to 8 hours of playback on a single charge.',
-    price: 129.99,
-    image: 'https://placehold.co/600x600.png',
-    data_ai_hint: 'wireless earbuds',
-    brand: 'EchoBuds',
-    type: 'Headphones',
-    rating: 4.7,
-    reviews: [
-      { id: 'r6', author: 'Alex R.', rating: 5, comment: 'The noise cancellation is amazing for my commute.', date: '2023-10-05' },
-    ],
-    dateAdded: '2023-09-10',
   },
   {
     id: '5',
@@ -96,22 +45,6 @@ const products: Product[] = [
     reviews: [],
     dateAdded: '2023-11-18',
   },
-  {
-    id: '7',
-    name: 'DuraWeave Braided USB-C Cable',
-    description: 'Durable 6ft nylon-braided cable.',
-    longDescription: 'Tired of flimsy cables? The DuraWeave is built to last. Its double-braided nylon exterior and reinforced connectors can withstand over 25,000 bends. The 6ft length provides extra convenience for charging from anywhere.',
-    price: 19.99,
-    image: 'https://placehold.co/600x600.png',
-    data_ai_hint: 'charging cable',
-    brand: 'VoltSprint',
-    type: 'Charger',
-    rating: 4.9,
-    reviews: [
-        { id: 'r7', author: 'Tom H.', rating: 5, comment: 'Finally a cable that doesn\'t break in a month!', date: '2023-11-10' },
-    ],
-    dateAdded: '2023-09-05',
-  },
     {
     id: '8',
     name: 'iPhone 12/13/14 Power & Volume Flex Cable',
@@ -140,50 +73,6 @@ const products: Product[] = [
     reviews: [],
     dateAdded: '2023-10-25',
   },
-  {
-    id: '10',
-    name: 'PrivacyGuard Screen Protector',
-    description: 'Keep your screen private from prying eyes.',
-    longDescription: 'The PrivacyGuard screen protector features a two-way privacy filter that darkens your screen when viewed from the side. It\'s perfect for using your phone in public spaces. Made from the same tough 9H tempered glass as our CrystalGuard protectors.',
-    price: 19.99,
-    image: 'https://placehold.co/600x600.png',
-    data_ai_hint: 'privacy screen',
-    brand: 'CrystalGuard',
-    type: 'Screen Protector',
-    rating: 4.5,
-    reviews: [],
-    dateAdded: '2023-09-15',
-  },
-    {
-    id: '11',
-    name: 'PowerDeck Trio Wireless Charging Pad',
-    description: 'Charge your phone, watch, and earbuds simultaneously.',
-    longDescription: 'Declutter your nightstand with the PowerDeck Trio. This sleek charging station features dedicated spots to wirelessly charge your phone, smartwatch, and wireless earbuds all at once. An intelligent chipset ensures optimal charging speeds for each device.',
-    price: 79.99,
-    image: 'https://placehold.co/600x600.png',
-    data_ai_hint: 'charging station',
-    brand: 'VoltSprint',
-    type: 'Charger',
-    rating: 4.7,
-    reviews: [
-        { id: 'r8', author: 'Emily R.', rating: 5, comment: 'So convenient to charge everything in one place.', date: '2023-11-02' },
-    ],
-    dateAdded: '2023-10-18',
-  },
-  {
-    id: '12',
-    name: 'TerraShell Eco-Friendly Case',
-    description: 'Compostable case made from plant-based materials.',
-    longDescription: 'Protect your phone and the planet with the TerraShell case. Made from 100% compostable and plant-based materials, it provides excellent drop protection while being environmentally friendly. When you\'re done with it, you can compost it at home!',
-    price: 39.99,
-    image: 'https://placehold.co/600x600.png',
-    data_ai_hint: 'eco friendly',
-    brand: 'TerraShell',
-    type: 'Case',
-    rating: 4.8,
-    reviews: [],
-    dateAdded: '2023-08-20',
-  },
 ];
 
 // This is a placeholder for where the API is located.
@@ -192,35 +81,19 @@ const API_BASE_URL = '/api';
 /**
  * Fetches all products from the server with a fallback to local data.
  */
-export async function getProducts(): Promise<Product[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/products`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch products from server.');
-    }
-    const serverProducts: Product[] = await response.json();
-    return serverProducts;
-  } catch (error) {
-    console.warn('Server not available, falling back to local product data.', error);
-    return products;
-  }
+export function getProducts(): Product[] {
+  // For this demo, we'll just return the local data.
+  // In a real app, you would fetch from the API.
+  return products;
 }
 
 /**
  * Fetches a single product by its ID from the server with a fallback to local data.
  */
-export async function getProductById(id: string): Promise<Product | undefined> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/products/${id}`);
-    if (!response.ok) {
-        throw new Error(`Failed to fetch product with id ${id} from server.`);
-    }
-    const serverProduct: Product = await response.json();
-    return serverProduct;
-  } catch(error) {
-    console.warn(`Server not available, falling back to local product data for id ${id}.`, error);
-    return products.find(p => p.id === id);
-  }
+export function getProductById(id: string): Product | undefined {
+  // For this demo, we'll just return from local data.
+  // In a real app, you would fetch from the API.
+  return products.find(p => p.id === id);
 }
 
 /**
