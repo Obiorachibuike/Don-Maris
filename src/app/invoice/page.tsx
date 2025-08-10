@@ -11,11 +11,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import type { CartItem } from '@/lib/types';
 import { ArrowLeft, Printer } from 'lucide-react';
 
+interface CustomerDetails {
+    name: string;
+    email: string;
+    address: string;
+    city: string;
+    state: string;
+    zip: string;
+}
+
 interface OrderDetails {
     items: CartItem[];
     total: number;
     invoiceId: string;
     date: string;
+    customer: CustomerDetails;
 }
 
 export default function InvoicePage() {
@@ -42,7 +52,7 @@ export default function InvoicePage() {
         );
     }
     
-    const { items, total, invoiceId, date } = order;
+    const { items, total, invoiceId, date, customer } = order;
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -64,7 +74,9 @@ export default function InvoicePage() {
                         </div>
                         <div className="text-right">
                             <h3 className="font-bold">Billed To:</h3>
-                            <p>Valued Customer</p>
+                            <p>{customer.name}</p>
+                            <p>{customer.address}</p>
+                            <p>{customer.city}, {customer.state} {customer.zip}</p>
                         </div>
                     </div>
 
@@ -148,4 +160,3 @@ export default function InvoicePage() {
         </div>
     );
 }
-

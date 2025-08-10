@@ -22,7 +22,16 @@ export default function CheckoutPage() {
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        
+        const formData = new FormData(e.currentTarget);
+        const customerDetails = {
+            name: formData.get('name') as string,
+            email: formData.get('email') as string,
+            address: formData.get('address') as string,
+            city: formData.get('city') as string,
+            state: formData.get('state') as string,
+            zip: formData.get('zip') as string,
+        };
+
         // In a real app, you would process payment here.
         // For this demo, we'll store the order and clear the cart.
 
@@ -32,6 +41,7 @@ export default function CheckoutPage() {
             total,
             invoiceId: `DM-${new Date().getTime()}`,
             date: new Date().toLocaleDateString(),
+            customer: customerDetails,
         };
         sessionStorage.setItem('don_maris_order', JSON.stringify(orderDetails));
 
@@ -76,27 +86,27 @@ export default function CheckoutPage() {
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div className="space-y-2">
                                                     <Label htmlFor="name">Full Name</Label>
-                                                    <Input id="name" placeholder="John Doe" required />
+                                                    <Input id="name" name="name" placeholder="John Doe" required />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label htmlFor="email">Email Address</Label>
-                                                    <Input id="email" type="email" placeholder="john.doe@example.com" required />
+                                                    <Input id="email" name="email" type="email" placeholder="john.doe@example.com" required />
                                                 </div>
                                                 <div className="sm:col-span-2 space-y-2">
                                                     <Label htmlFor="address">Street Address</Label>
-                                                    <Input id="address" placeholder="123 Tech Lane" required />
+                                                    <Input id="address" name="address" placeholder="123 Tech Lane" required />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label htmlFor="city">City</Label>
-                                                    <Input id="city" placeholder="Techville" required />
+                                                    <Input id="city" name="city" placeholder="Techville" required />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label htmlFor="state">State / Province</Label>
-                                                    <Input id="state" placeholder="California" required />
+                                                    <Input id="state" name="state" placeholder="California" required />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label htmlFor="zip">ZIP / Postal Code</Label>
-                                                    <Input id="zip" placeholder="90210" required />
+                                                    <Input id="zip" name="zip" placeholder="90210" required />
                                                 </div>
                                             </div>
                                         </AccordionContent>
