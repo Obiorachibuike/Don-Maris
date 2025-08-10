@@ -1,3 +1,4 @@
+
 import { getProducts } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
@@ -15,20 +16,20 @@ export default function Home() {
     <div className="flex flex-col">
       {/* Hero Section */}
       <AnimatedSection>
-        <section className="bg-gradient-to-br from-background to-muted/50 py-20 md:py-32">
+        <section className="bg-gradient-to-br from-primary to-accent py-20 md:py-32">
           <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
             <div className="space-y-6 text-center md:text-left">
-              <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight">
+              <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight text-primary-foreground">
                 Quality Parts, Expertly Delivered
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground">
+              <p className="text-lg md:text-xl text-primary-foreground/80">
                 Your one-stop shop for high-quality phone accessories and repair parts. Find exactly what you need to keep your devices running perfectly.
               </p>
               <div className="flex gap-4 justify-center md:justify-start">
-                <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                <Button asChild size="lg" className="bg-background text-foreground hover:bg-background/90">
                   <Link href="/products">Shop All Products <ArrowRight className="ml-2" /></Link>
                 </Button>
-                <Button asChild size="lg" variant="outline">
+                <Button asChild size="lg" variant="outline" className="text-white border-white/50 hover:bg-white/10 hover:text-white">
                   <Link href="/recommendations">AI Recommender</Link>
                 </Button>
               </div>
