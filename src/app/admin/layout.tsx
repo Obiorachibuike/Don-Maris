@@ -69,7 +69,7 @@ export default function AdminLayout({
                       <SidebarMenu>
                           {navItems.filter(item => userCanAccess(item.roles)).map(item => (
                                <SidebarMenuItem key={item.href}>
-                                    <Link href={item.href} legacyBehavior passHref>
+                                    <Link href={item.href}>
                                           <SidebarMenuButton isActive={pathname === item.href} icon={<item.icon />}>
                                               {item.label}
                                           </SidebarMenuButton>
