@@ -1,9 +1,10 @@
+
 import type { Product } from './types';
 
 const products: Product[] = [
   {
     id: '3',
-    name: 'iPhone 14 Pro Max OLED Screen Replacement',
+    name: 'iPhone 14 Pro Max Screen Replacement',
     description: 'Vibrant and responsive OLED replacement screen.',
     longDescription: 'Restore your iPhone 14 Pro Max to its former glory with this high-quality OLED screen replacement. It offers the same vibrant colors, deep blacks, and responsive touch as the original. Each kit includes the necessary tools for installation.',
     price: 189.99,
@@ -50,7 +51,7 @@ const products: Product[] = [
   },
     {
     id: '8',
-    name: 'iPhone 12/13/14 Power & Volume Flex Cable',
+    name: 'iPhone 12 Power & Volume Flex Cable',
     description: 'Replacement for power button and volume controls.',
     longDescription: 'This flex cable assembly replaces the power button, volume buttons, and mute/ring switch for various iPhone models. Ideal for fixing unresponsive or malfunctioning buttons. Please select your specific model before ordering.',
     price: 18.99,
@@ -65,7 +66,7 @@ const products: Product[] = [
   },
   {
     id: '9',
-    name: 'Pixel 7 Pro Screen Replacement Kit',
+    name: 'Pixel 7 Pro Screen Replacement',
     description: 'High-quality screen with included adhesive.',
     longDescription: 'Bring your Google Pixel 7 Pro display back to life. This kit includes a high-fidelity screen and pre-cut adhesive for a secure, water-resistant fit. The display offers accurate colors and touch response.',
     price: 145.00,
@@ -77,6 +78,36 @@ const products: Product[] = [
     reviews: [],
     dateAdded: '2023-10-25',
     stock: 65,
+  },
+  {
+    id: '10',
+    name: 'Samsung Galaxy S22 Ultra Backglass',
+    description: 'OEM-quality backglass replacement with adhesive.',
+    longDescription: 'Replace your cracked or shattered Samsung Galaxy S22 Ultra backglass with this high-quality replacement part. It comes with pre-installed adhesive for a secure fit and matches the original look and feel.',
+    price: 49.99,
+    image: 'https://placehold.co/600x600.png',
+    data_ai_hint: 'phone backglass',
+    brand: 'GlassGuard',
+    type: 'Backglass',
+    rating: 4.8,
+    reviews: [],
+    dateAdded: '2023-11-25',
+    stock: 120,
+  },
+   {
+    id: '11',
+    name: 'X559 Charging Port Flex Cable',
+    description: 'Replacement charging port for various models.',
+    longDescription: 'Fix charging issues with your device using the X559 replacement flex cable. Ensures reliable charging and data sync for compatible models.',
+    price: 21.99,
+    image: 'https://placehold.co/600x600.png',
+    data_ai_hint: 'charging port',
+    brand: 'PartPerfect',
+    type: 'Charging Flex',
+    rating: 4.5,
+    reviews: [],
+    dateAdded: '2023-11-22',
+    stock: 180,
   },
 ];
 
