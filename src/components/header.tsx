@@ -56,7 +56,7 @@ export function Header() {
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center gap-2" onClick={() => setSheetOpen(false)}>
             <Smartphone className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold font-headline text-foreground">
+            <span className="text-2xl font-bold font-headline text-primary">
               Don Maris
             </span>
           </Link>
