@@ -2,7 +2,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DollarSign, Users, Package, CreditCard } from 'lucide-react';
+import { DollarSign, Users, Package, CreditCard, ShoppingBag } from 'lucide-react';
 import {
   Table,
   TableHeader,
@@ -12,8 +12,8 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Badge } from "@/components/ui/badge";
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, Pie, PieChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, type ChartConfig } from "@/components/ui/chart";
 
 const salesData = [
     { month: 'Jan', sales: 186, revenue: 80 },
@@ -26,6 +26,12 @@ const salesData = [
     { month: 'Aug', sales: 145, revenue: 120 },
 ];
 
+const orderStatusData = [
+    { status: 'fulfilled', count: 245, label: 'Fulfilled' },
+    { status: 'processing', count: 123, label: 'Processing' },
+    { status: 'pending', count: 45, label: 'Pending' },
+];
+
 const chartConfig: ChartConfig = {
   sales: {
     label: "Sales",
@@ -34,7 +40,19 @@ const chartConfig: ChartConfig = {
   revenue: {
       label: "Revenue",
       color: "hsl(var(--accent))",
-  }
+  },
+  fulfilled: {
+      label: "Fulfilled",
+      color: "hsl(var(--chart-2))",
+  },
+  processing: {
+      label: "Processing",
+      color: "hsl(var(--chart-4))",
+  },
+  pending: {
+      label: "Pending",
+      color: "hsl(var(--chart-1))",
+  },
 };
 
 export default function AdminDashboard() {
@@ -92,8 +110,23 @@ export default function AdminDashboard() {
             </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-1">
+                 <CardHeader>
+                    <CardTitle>Order Status</CardTitle>
+                    <CardDescription>A pie chart showing the status of all orders.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                         <PieChart accessibilityLayer>
+                            <Tooltip content={<ChartTooltipContent nameKey="count" hideLabel />} />
+                            <Pie data={orderStatusData} dataKey="count" nameKey="status" innerRadius={60} />
+                            <ChartLegend content={<ChartLegendContent nameKey="status" />} />
+                        </PieChart>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+             <Card className="lg:col-span-2">
                 <CardHeader>
                     <CardTitle>Sales Overview</CardTitle>
                     <CardDescription>A bar chart showing total sales per month.</CardDescription>
@@ -107,23 +140,6 @@ export default function AdminDashboard() {
                             <Tooltip content={<ChartTooltipContent />} />
                             <Bar dataKey="sales" fill="var(--color-sales)" radius={4} />
                         </BarChart>
-                    </ChartContainer>
-                </CardContent>
-            </Card>
-             <Card>
-                <CardHeader>
-                    <CardTitle>Revenue Trends</CardTitle>
-                    <CardDescription>A line chart showing revenue over time.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                   <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                        <LineChart accessibilityLayer data={salesData} margin={{ left: 12, right: 12 }}>
-                            <CartesianGrid vertical={false} />
-                            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-                            <YAxis tickMargin={8} />
-                            <Tooltip content={<ChartTooltipContent />} />
-                            <Line type="monotone" dataKey="revenue" stroke="var(--color-revenue)" strokeWidth={2} dot={false} />
-                        </LineChart>
                     </ChartContainer>
                 </CardContent>
             </Card>
@@ -170,4 +186,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-
