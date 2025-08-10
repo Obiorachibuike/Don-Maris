@@ -75,7 +75,7 @@ body {
 .ripple {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.4);
+  background: radial-gradient(circle, hsla(var(--primary), 0.5), hsla(var(--accent), 0.5));
   transform: scale(0);
   animation: ripple-animation 600ms linear;
 }
