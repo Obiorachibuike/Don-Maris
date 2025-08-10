@@ -24,10 +24,6 @@ const salesData = [
     { month: 'Jun', sales: 214, revenue: 140 },
     { month: 'Jul', sales: 286, revenue: 180 },
     { month: 'Aug', sales: 145, revenue: 120 },
-    { month: 'Sep', sales: 298, revenue: 210 },
-    { month: 'Oct', sales: 159, revenue: 90 },
-    { month: 'Nov', sales: 321, revenue: 250 },
-    { month: 'Dec', sales: 367, revenue: 280 },
 ];
 
 const chartConfig: ChartConfig = {
