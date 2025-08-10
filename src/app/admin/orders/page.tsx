@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import Link from "next/link";
 
 export default function OrdersPage() {
     
@@ -33,7 +34,7 @@ export default function OrdersPage() {
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredOrders = allOrders.filter(order => 
-        order.invoiceId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(order.invoiceId).toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.customer.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -92,7 +93,9 @@ export default function OrdersPage() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem>View Order Details</DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/admin/orders/${order.invoiceId}`}>View Order Details</Link>
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem>Update Status</DropdownMenuItem>
                                                 <DropdownMenuItem className="text-red-500">Cancel Order</DropdownMenuItem>
                                             </DropdownMenuContent>
