@@ -117,16 +117,8 @@ export default function ProductPage({ params }: ProductPageProps) {
           )}
         </div>
       </AnimatedSection>
-
-      <Separator className="my-12" />
-
-      <AnimatedSection>
-        <div className="max-w-2xl mx-auto">
-            <ProductChat productId={product.id} productName={product.name} />
-        </div>
-      </AnimatedSection>
-
     </div>
+    <ProductChat productId={product.id} productName={product.name} />
     </>
   );
 }

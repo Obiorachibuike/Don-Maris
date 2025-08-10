@@ -15,7 +15,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AnimatedSection } from '@/components/animated-section';
-import { Separator } from '@/components/ui/separator';
 import { ProductChat } from '@/components/product-chat';
 
 export default function ProductsPage() {
@@ -126,6 +125,7 @@ export default function ProductsPage() {
   );
 
   return (
+    <>
     <div className="container mx-auto px-4 py-8">
       <AnimatedSection>
         <div className="text-center mb-12">
@@ -200,17 +200,10 @@ export default function ProductsPage() {
               </div>
             )}
           </AnimatedSection>
-          
-          <Separator className="my-12" />
-
-          <AnimatedSection>
-            <div className="max-w-2xl mx-auto">
-                <ProductChat />
-            </div>
-          </AnimatedSection>
-
         </main>
       </div>
     </div>
+    <ProductChat />
+    </>
   );
 }
