@@ -130,7 +130,9 @@ export default function CartPage() {
 
                 <div className="mt-10 flex items-center justify-end gap-x-6">
                     <Button variant="outline" onClick={clearCart}>Clear Cart</Button>
-                    <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">Proceed to Checkout</Button>
+                    <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                        <Link href="/checkout">Proceed to Checkout</Link>
+                    </Button>
                 </div>
             </div>
        </div>
