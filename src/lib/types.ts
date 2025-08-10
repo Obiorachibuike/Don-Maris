@@ -1,3 +1,4 @@
+
 export type Product = {
   id: string;
   name: string;
@@ -27,3 +28,5 @@ export type CartItem = {
   product: Product;
   quantity: number;
 };
+
+export type PaymentStatus = 'paid' | 'unpaid';

@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import type { CartItem } from '@/lib/types';
+import type { CartItem, PaymentStatus } from '@/lib/types';
 import { ArrowLeft, Printer } from 'lucide-react';
 
 interface CustomerDetails {
@@ -26,6 +26,7 @@ interface OrderDetails {
     invoiceId: string;
     date: string;
     customer: CustomerDetails;
+    paymentStatus: PaymentStatus;
 }
 
 export default function InvoicePage() {
@@ -52,7 +53,8 @@ export default function InvoicePage() {
         );
     }
     
-    const { items, total, invoiceId, date, customer } = order;
+    const { items, total, invoiceId, date, customer, paymentStatus } = order;
+    const amountDue = paymentStatus === 'paid' ? 0 : total;
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -131,14 +133,18 @@ export default function InvoicePage() {
                                 <span className="text-muted-foreground">Subtotal</span>
                                 <span className="font-medium">${total.toFixed(2)}</span>
                             </div>
-                            <div className="flex justify-between">
+                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Shipping</span>
                                 <span className="font-medium">Free</span>
                             </div>
+                             <div className="flex justify-between">
+                                <span className="text-muted-foreground">Total Paid</span>
+                                <span className="font-medium">${paymentStatus === 'paid' ? total.toFixed(2) : (0).toFixed(2)}</span>
+                            </div>
                             <Separator />
                             <div className="flex justify-between font-bold text-lg">
-                                <span>Total Paid</span>
-                                <span>${total.toFixed(2)}</span>
+                                <span>Amount Due</span>
+                                <span className={amountDue > 0 ? 'text-destructive' : ''}>${amountDue.toFixed(2)}</span>
                             </div>
                         </div>
                     </div>

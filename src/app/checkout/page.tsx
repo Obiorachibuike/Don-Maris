@@ -15,6 +15,7 @@ import { CreditCard, Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { FormEvent } from 'react';
 import { submitOrder } from '@/lib/data';
+import type { PaymentStatus } from '@/lib/types';
 
 export default function CheckoutPage() {
     const { items, total, clearCart } = useCart();
@@ -38,6 +39,7 @@ export default function CheckoutPage() {
             total,
             customer: customerDetails,
             date: new Date().toISOString(),
+            paymentStatus: 'paid' as PaymentStatus, // Assume payment is successful for now
         };
         
         const result = await submitOrder(orderDetails);
