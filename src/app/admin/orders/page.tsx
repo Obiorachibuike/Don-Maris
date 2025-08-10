@@ -20,14 +20,14 @@ import { MoreHorizontal } from "lucide-react";
 export default function OrdersPage() {
     
     const allOrders = [
-        { invoiceId: 'ORD001', customer: 'Olivia Martin', amount: 250.00, status: 'Fulfilled', date: '2023-11-23' },
-        { invoiceId: 'ORD002', customer: 'Jackson Lee', amount: 150.75, status: 'Processing', date: '2023-11-23' },
-        { invoiceId: 'ORD003', customer: 'Isabella Nguyen', amount: 350.00, status: 'Fulfilled', date: '2023-11-22' },
-        { invoiceId: 'ORD004', customer: 'William Kim', amount: 45.50, status: 'Pending', date: '2023-11-22' },
-        { invoiceId: 'ORD005', customer: 'Sophia Davis', amount: 550.20, status: 'Fulfilled', date: '2023-11-21' },
-        { invoiceId: 'ORD006', customer: 'Liam Garcia', amount: 89.99, status: 'Processing', date: '2023-11-21' },
-        { invoiceId: 'ORD007', customer: 'Ava Rodriguez', amount: 120.00, status: 'Cancelled', date: '2023-11-20' },
-        { invoiceId: 'ORD008', customer: 'Noah Martinez', amount: 75.00, status: 'Fulfilled', date: '2023-11-20' },
+        { invoiceId: '123456', customer: 'Olivia Martin', amount: 250.00, status: 'Fulfilled', date: '2023-11-23' },
+        { invoiceId: '123457', customer: 'Jackson Lee', amount: 150.75, status: 'Processing', date: '2023-11-23' },
+        { invoiceId: '123458', customer: 'Isabella Nguyen', amount: 350.00, status: 'Fulfilled', date: '2023-11-22' },
+        { invoiceId: '123459', customer: 'William Kim', amount: 45.50, status: 'Pending', date: '2023-11-22' },
+        { invoiceId: '123460', customer: 'Sophia Davis', amount: 550.20, status: 'Fulfilled', date: '2023-11-21' },
+        { invoiceId: '123461', customer: 'Liam Garcia', amount: 89.99, status: 'Processing', date: '2023-11-21' },
+        { invoiceId: '123462', customer: 'Ava Rodriguez', amount: 120.00, status: 'Cancelled', date: '2023-11-20' },
+        { invoiceId: '123463', customer: 'Noah Martinez', amount: 75.00, status: 'Fulfilled', date: '2023-11-20' },
     ];
     
     const [searchTerm, setSearchTerm] = useState('');
