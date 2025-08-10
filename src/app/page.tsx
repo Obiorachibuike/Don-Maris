@@ -16,7 +16,7 @@ export default function Home() {
     <div className="flex flex-col">
       {/* Hero Section */}
       <AnimatedSection>
-        <section className="bg-gradient-to-br from-primary to-accent py-20 md:py-32">
+        <section className="bg-gradient-to-tr from-accent via-background to-primary py-20 md:py-32">
           <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
             <div className="space-y-6 text-center md:text-left">
               <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight text-primary-foreground">
