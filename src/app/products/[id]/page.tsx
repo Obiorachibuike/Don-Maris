@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { Input } from '@/components/ui/input';
 
 type ProductPageProps = {
@@ -23,6 +23,10 @@ export default function ProductPage({ params }: ProductPageProps) {
   const { addItem } = useCart();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
+  // The `params` object is a Promise in this context.
+  // We use `use(params)` to resolve it, which is not allowed in Client Components.
+  // However, Next.js still supports direct access for migration purposes,
+  // but it's better to stick to the component's props.
   const product = getProductById(params.id);
 
   if (!product) {
