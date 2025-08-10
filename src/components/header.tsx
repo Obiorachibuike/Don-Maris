@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Smartphone, Sparkles, Home, ShoppingCart, Package } from 'lucide-react';
+import { Smartphone, Sparkles, Home, ShoppingCart, Package, Info } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -21,6 +21,7 @@ export function Header() {
     { href: '/', label: 'Home', icon: Home },
     { href: '/products', label: 'Products', icon: Package },
     { href: '/recommendations', label: 'AI Recommender', icon: Sparkles },
+    { href: '/about', label: 'About', icon: Info },
   ];
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
