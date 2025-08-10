@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import {
   Table,
   TableHeader,
@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { 
     AlertDialog, 
@@ -47,6 +47,23 @@ const allOrdersData: Order[] = [
     { invoiceId: '123461', customer: 'Liam Garcia', amount: 89.99, status: 'Processing', date: '2023-11-21' },
     { invoiceId: '123462', customer: 'Ava Rodriguez', amount: 120.00, status: 'Cancelled', date: '2023-11-20' },
     { invoiceId: '123463', customer: 'Noah Martinez', amount: 75.00, status: 'Fulfilled', date: '2023-11-20' },
+    { invoiceId: '123464', customer: 'Emma Brown', amount: 300.00, status: 'Fulfilled', date: '2023-11-19' },
+    { invoiceId: '123465', customer: 'James Wilson', amount: 99.50, status: 'Processing', date: '2023-11-19' },
+    { invoiceId: '123466', customer: 'Charlotte Jones', amount: 180.00, status: 'Fulfilled', date: '2023-11-18' },
+    { invoiceId: '123467', customer: 'Benjamin Taylor', amount: 25.00, status: 'Pending', date: '2023-11-18' },
+    { invoiceId: '123468', customer: 'Amelia Miller', amount: 600.00, status: 'Cancelled', date: '2023-11-17' },
+    { invoiceId: '123469', customer: 'Elijah Anderson', amount: 420.00, status: 'Fulfilled', date: '2023-11-17' },
+    { invoiceId: '123470', customer: 'Mia Thomas', amount: 110.25, status: 'Processing', date: '2023-11-16' },
+    { invoiceId: '123471', customer: 'Lucas Hernandez', amount: 70.00, status: 'Fulfilled', date: '2023-11-16' },
+    { invoiceId: '123472', customer: 'Harper Moore', amount: 85.00, status: 'Pending', date: '2023-11-15' },
+    { invoiceId: '123473', customer: 'Henry White', amount: 199.99, status: 'Fulfilled', date: '2023-11-15' },
+    { invoiceId: '123474', customer: 'Evelyn Harris', amount: 325.50, status: 'Processing', date: '2023-11-14' },
+    { invoiceId: '123475', customer: 'Alexander Clark', amount: 50.00, status: 'Fulfilled', date: '2023-11-14' },
+    { invoiceId: '123476', customer: 'Abigail Lewis', amount: 400.00, status: 'Cancelled', date: '2023-11-13' },
+    { invoiceId: '123477', customer: 'Daniel Robinson', amount: 135.00, status: 'Fulfilled', date: '2023-11-13' },
+    { invoiceId: '123478', customer: 'Madison Walker', amount: 275.00, status: 'Processing', date: '2023-11-12' },
+    { invoiceId: '123479', customer: 'Matthew Perez', amount: 95.80, status: 'Fulfilled', date: '2023-11-12' },
+    { invoiceId: '123480', customer: 'Chloe Hall', amount: 65.00, status: 'Pending', date: '2023-11-11' },
 ];
 
 export default function OrdersPage() {
@@ -55,6 +72,8 @@ export default function OrdersPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [newStatus, setNewStatus] = useState<Order['status'] | ''>('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const ordersPerPage = 20;
 
     const handleUpdateStatus = (order: Order) => {
         setSelectedOrder(order);
@@ -77,6 +96,21 @@ export default function OrdersPage() {
         String(order.invoiceId).toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.customer.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const indexOfLastOrder = currentPage * ordersPerPage;
+    const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+    const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+
+    const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+
+    const handlePreviousPage = () => {
+        setCurrentPage(prev => Math.max(prev - 1, 1));
+    };
+
+    const handleNextPage = () => {
+        setCurrentPage(prev => Math.min(prev + 1, totalPages));
+    };
+
 
     return (
         <div className="space-y-6">
@@ -108,7 +142,7 @@ export default function OrdersPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredOrders.map(order => (
+                            {currentOrders.map(order => (
                                 <TableRow key={order.invoiceId}>
                                     <TableCell className="font-medium">{order.invoiceId}</TableCell>
                                     <TableCell>{order.customer}</TableCell>
@@ -148,6 +182,36 @@ export default function OrdersPage() {
                         </TableBody>
                     </Table>
                 </CardContent>
+                <CardFooter>
+                     <div className="flex items-center justify-between w-full">
+                        <div className="text-sm text-muted-foreground">
+                            Showing {indexOfFirstOrder + 1} to {Math.min(indexOfLastOrder, filteredOrders.length)} of {filteredOrders.length} orders.
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handlePreviousPage}
+                                disabled={currentPage === 1}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                                Previous
+                            </Button>
+                            <span className="text-sm text-muted-foreground">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleNextPage}
+                                disabled={currentPage === totalPages}
+                            >
+                                Next
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </CardFooter>
             </Card>
 
             <AlertDialog open={!!selectedOrder} onOpenChange={(isOpen) => !isOpen && setSelectedOrder(null)}>
