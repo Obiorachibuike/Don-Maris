@@ -34,7 +34,7 @@ export default function ProductsPage() {
   
   const brands = useMemo(() => [...new Set(products.map((p) => p.brand))].sort(), [products]);
   const types = useMemo(() => [...new Set(products.map((p) => p.type))].sort(), [products]);
-  const maxPrice = useMemo(() => products.length > 0 ? Math.max(...products.map(p => p.price)) : 100, [products]);
+  const maxPrice = useMemo(() => products.length > 0 ? Math.ceil(Math.max(...products.map(p => p.price))) : 100, [products]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
