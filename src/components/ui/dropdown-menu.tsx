@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -8,7 +9,47 @@ import { cn } from "@/lib/utils"
 
 const DropdownMenu = DropdownMenuPrimitive.Root
 
-const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
+const DropdownMenuTrigger = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Trigger>
+>(({ className, ...props }, ref) => {
+  const createRipple = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const button = event.currentTarget
+    const circle = document.createElement("span")
+    const diameter = Math.max(button.clientWidth, button.clientHeight)
+    const radius = diameter / 2
+
+    circle.style.width = circle.style.height = `${diameter}px`
+    circle.style.left = `${event.clientX - button.offsetLeft - radius}px`
+    circle.style.top = `${event.clientY - button.offsetTop - radius}px`
+    circle.classList.add("ripple")
+
+    const ripple = button.getElementsByClassName("ripple")[0]
+
+    if (ripple) {
+      ripple.remove()
+    }
+
+    button.appendChild(circle)
+  }
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    createRipple(e)
+    if (props.onClick) {
+      props.onClick(e)
+    }
+  }
+
+  return (
+    <DropdownMenuPrimitive.Trigger
+      ref={ref}
+      className={cn("relative overflow-hidden", className)}
+      onClick={handleClick}
+      {...props}
+    />
+  )
+})
+DropdownMenuTrigger.displayName = DropdownMenuPrimitive.Trigger.displayName
 
 const DropdownMenuGroup = DropdownMenuPrimitive.Group
 
