@@ -154,7 +154,7 @@ export function ProductChat({ productId, productName, className }: ChatProps) {
             >
                 <Button
                     size="lg"
-                    className="rounded-full shadow-lg w-16 h-16 mt-4 bg-accent hover:bg-accent/90"
+                    className="rounded-full shadow-lg w-16 h-16 mt-4 bg-primary hover:bg-primary/90"
                     onClick={() => setIsOpen(!isOpen)}
                     aria-label="Toggle AI Chat"
                 >
