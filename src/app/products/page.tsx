@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -14,6 +15,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AnimatedSection } from '@/components/animated-section';
+import { Separator } from '@/components/ui/separator';
+import { ProductChat } from '@/components/product-chat';
 
 export default function ProductsPage() {
   const products = getProducts();
@@ -197,6 +200,15 @@ export default function ProductsPage() {
               </div>
             )}
           </AnimatedSection>
+          
+          <Separator className="my-12" />
+
+          <AnimatedSection>
+            <div className="max-w-2xl mx-auto">
+                <ProductChat />
+            </div>
+          </AnimatedSection>
+
         </main>
       </div>
     </div>

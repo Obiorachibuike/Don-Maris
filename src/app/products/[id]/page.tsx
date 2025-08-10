@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, use } from 'react';
 import { Input } from '@/components/ui/input';
 import { AnimatedSection } from '@/components/animated-section';
-import { Chat } from '@/components/floating-chat';
+import { ProductChat } from '@/components/product-chat';
 
 type ProductPageProps = {
   params: {
@@ -122,7 +122,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 
       <AnimatedSection>
         <div className="max-w-2xl mx-auto">
-            <Chat productId={product.id} productName={product.name} />
+            <ProductChat productId={product.id} productName={product.name} />
         </div>
       </AnimatedSection>
 

@@ -15,7 +15,7 @@ import type { Product } from '@/lib/types';
 import { z } from 'genkit';
 
 const ProductChatInputSchema = z.object({
-  productId: z.string().describe('The ID of the product the user is currently viewing.'),
+  productId: z.string().optional().describe('The ID of the product the user is currently viewing.'),
   question: z.string().describe("The user's question about the product."),
   chatHistory: z.array(z.object({
     role: z.enum(['user', 'model']),
@@ -75,8 +75,11 @@ const prompt = ai.definePrompt({
     output: { schema: ProductChatOutputSchema },
     tools: [getProductInfoTool, findSimilarProductsTool],
     prompt: `You are a friendly and knowledgeable shopping assistant for Don Maris Accessories. Your goal is to help users with their questions about products.
-
+{{#if productId}}
 - The user is currently viewing the product with ID: {{{productId}}}. Use the getProductInfo tool if you need more details about it.
+{{else}}
+- The user is on the main products page. Help them find products or answer general questions.
+{{/if}}
 - If the user asks for recommendations or about other products, use the findSimilarProducts tool.
 - Keep your answers concise, helpful, and friendly.
 - Format responses in Markdown for readability. You can use lists, bold text, etc.

@@ -3,10 +3,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from './ui/button';
-import { MessageSquare, Send, X, Bot, User, Loader2 } from 'lucide-react';
+import { Send, Bot, User, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
-import { AnimatePresence, motion } from 'framer-motion';
 import { chatWithProductAI } from '@/app/actions';
 import { ScrollArea } from './ui/scroll-area';
 
@@ -16,26 +15,25 @@ type ChatMessage = {
 };
 
 type ChatProps = {
-    productId: string;
-    productName: string;
+    productId?: string;
+    productName?: string;
 };
 
-export function Chat({ productId, productName }: ChatProps) {
+export function ProductChat({ productId, productName }: ChatProps) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-    const initialMessage: ChatMessage = {
-        role: 'model',
-        content: `Hi there! I'm your AI assistant. How can I help you with the ${productName}?`,
-    };
-
     useEffect(() => {
-        if (messages.length === 0) {
-            setMessages([initialMessage]);
-        }
-    }, [messages.length, productName]);
+        const initialMessage: ChatMessage = {
+            role: 'model',
+            content: productName
+                ? `Hi there! I'm your AI assistant. How can I help you with the ${productName}?`
+                : `Hi there! I'm your AI assistant for Don Maris Accessories. Ask me anything about our products, and I'll help you find what you need.`,
+        };
+        setMessages([initialMessage]);
+    }, [productName]);
 
     useEffect(() => {
         if (scrollAreaRef.current) {
@@ -75,7 +73,7 @@ export function Chat({ productId, productName }: ChatProps) {
     };
     
     return (
-        <Card className="flex flex-col h-[60vh] shadow-2xl">
+        <Card className="flex flex-col h-[60vh] shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between border-b">
                 <div className='flex items-center gap-2'>
                     <Bot className="h-6 w-6 text-primary" />
@@ -91,7 +89,6 @@ export function Chat({ productId, productName }: ChatProps) {
                             <div className={`rounded-lg px-4 py-2 max-w-[80%] ${
                                 msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
                             }`}
-                            // Using dangerouslySetInnerHTML to render markdown
                             dangerouslySetInnerHTML={{ __html: msg.content.replace(/\n/g, '<br />')}}
                             />
                             {msg.role === 'user' && <AvatarIcon icon={User} />}
