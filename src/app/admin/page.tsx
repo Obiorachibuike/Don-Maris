@@ -40,11 +40,11 @@ const chartConfig: ChartConfig = {
 export default function AdminDashboard() {
 
   const recentOrders = [
-    { id: 'ORD001', customer: 'Olivia Martin', amount: 250.00, status: 'Fulfilled', date: '2023-11-23' },
-    { id: 'ORD002', customer: 'Jackson Lee', amount: 150.75, status: 'Processing', date: '2023-11-23' },
-    { id: 'ORD003', customer: 'Isabella Nguyen', amount: 350.00, status: 'Fulfilled', date: '2023-11-22' },
-    { id: 'ORD004', customer: 'William Kim', amount: 45.50, status: 'Pending', date: '2023-11-22' },
-    { id: 'ORD005', customer: 'Sophia Davis', amount: 550.20, status: 'Fulfilled', date: '2023-11-21' },
+    { invoiceId: '123456', customer: 'Olivia Martin', amount: 250.00, status: 'Fulfilled', date: '2023-08-23' },
+    { invoiceId: '123457', customer: 'Jackson Lee', amount: 150.75, status: 'Processing', date: '2023-08-23' },
+    { invoiceId: '123458', customer: 'Isabella Nguyen', amount: 350.00, status: 'Fulfilled', date: '2023-08-22' },
+    { invoiceId: '123459', customer: 'William Kim', amount: 45.50, status: 'Pending', date: '2023-08-22' },
+    { invoiceId: '123460', customer: 'Sophia Davis', amount: 550.20, status: 'Fulfilled', date: '2023-08-21' },
   ];
 
   return (
@@ -138,7 +138,7 @@ export default function AdminDashboard() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Order ID</TableHead>
+                            <TableHead>Invoice ID</TableHead>
                             <TableHead>Customer</TableHead>
                             <TableHead>Amount</TableHead>
                             <TableHead>Status</TableHead>
@@ -147,8 +147,8 @@ export default function AdminDashboard() {
                     </TableHeader>
                     <TableBody>
                         {recentOrders.map(order => (
-                            <TableRow key={order.id}>
-                                <TableCell className="font-medium">{order.id}</TableCell>
+                            <TableRow key={order.invoiceId}>
+                                <TableCell className="font-medium">{order.invoiceId}</TableCell>
                                 <TableCell>{order.customer}</TableCell>
                                 <TableCell>${order.amount.toFixed(2)}</TableCell>
                                 <TableCell>
@@ -170,3 +170,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
