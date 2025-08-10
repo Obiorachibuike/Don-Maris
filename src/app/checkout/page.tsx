@@ -12,21 +12,37 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { CreditCard, Lock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { FormEvent } from 'react';
 
 export default function CheckoutPage() {
     const { items, total, clearCart } = useCart();
     const { toast } = useToast();
+    const router = useRouter();
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        
+        // In a real app, you would process payment here.
+        // For this demo, we'll store the order and clear the cart.
+
+        // Store the finalized order details in sessionStorage to pass to the invoice page
+        const orderDetails = {
+            items,
+            total,
+            invoiceId: `DM-${new Date().getTime()}`,
+            date: new Date().toLocaleDateString(),
+        };
+        sessionStorage.setItem('don_maris_order', JSON.stringify(orderDetails));
+
+        clearCart();
+        
         toast({
             title: "Order Placed!",
-            description: "Thank you for your purchase. We've received your order and will process it shortly.",
+            description: "Thank you for your purchase. We've received your order.",
         });
-        clearCart();
-        // Here you would typically redirect to an order confirmation page
-        // For now, we can redirect to the homepage
-        window.location.href = '/';
+
+        router.push('/invoice');
     };
 
     if (items.length === 0) {
@@ -164,4 +180,3 @@ export default function CheckoutPage() {
         </div>
     );
 }
-

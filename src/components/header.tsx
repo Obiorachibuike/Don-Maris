@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Smartphone, Sparkles, Home, ShoppingCart, Package, Info, Mail, Menu } from 'lucide-react';
+import { Smartphone, Sparkles, Home, ShoppingCart, Package, Info, Mail, Menu, Receipt } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -106,3 +106,4 @@ export function Header() {
     </header>
   );
 }
+
