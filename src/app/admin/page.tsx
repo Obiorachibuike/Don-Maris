@@ -129,17 +129,45 @@ export default function AdminDashboard() {
              <Card className="lg:col-span-2">
                 <CardHeader>
                     <CardTitle>Sales Overview</CardTitle>
-                    <CardDescription>A bar chart showing total sales per month.</CardDescription>
+                    <CardDescription>A line chart showing total sales and revenue per month.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                         <BarChart accessibilityLayer data={salesData}>
-                            <CartesianGrid vertical={false} />
-                            <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
-                            <YAxis />
-                            <Tooltip content={<ChartTooltipContent />} />
-                            <Bar dataKey="sales" fill="var(--color-sales)" radius={4} />
-                        </BarChart>
+                        <LineChart
+                          accessibilityLayer
+                          data={salesData}
+                          margin={{
+                            left: 12,
+                            right: 12,
+                          }}
+                        >
+                          <CartesianGrid vertical={false} />
+                          <XAxis
+                            dataKey="month"
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                          />
+                          <ChartTooltip
+                            cursor={false}
+                            content={<ChartTooltipContent />}
+                          />
+                          <ChartLegend content={<ChartLegendContent />} />
+                          <Line
+                            dataKey="sales"
+                            type="monotone"
+                            stroke="var(--color-sales)"
+                            strokeWidth={2}
+                            dot={false}
+                          />
+                           <Line
+                            dataKey="revenue"
+                            type="monotone"
+                            stroke="var(--color-revenue)"
+                            strokeWidth={2}
+                            dot={false}
+                          />
+                        </LineChart>
                     </ChartContainer>
                 </CardContent>
             </Card>
@@ -186,3 +214,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
