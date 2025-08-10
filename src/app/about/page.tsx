@@ -1,12 +1,19 @@
 
 'use client';
 
+import * as React from "react"
+import Autoplay from "embla-carousel-autoplay"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Target, Heart, Eye } from "lucide-react";
 import Image from "next/image";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 export default function AboutPage() {
+  const plugin = React.useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: true })
+  )
+
   const sliderImages = [
     {
         src: "https://placehold.co/600x400.png",
@@ -49,7 +56,13 @@ export default function AboutPage() {
             </p>
           </div>
         </div>
-         <Carousel className="w-full max-w-xl mx-auto" opts={{ loop: true }}>
+         <Carousel 
+            plugins={[plugin.current]}
+            className="w-full max-w-xl mx-auto" 
+            opts={{ loop: true }}
+            onMouseEnter={plugin.current.stop}
+            onMouseLeave={plugin.current.reset}
+          >
             <CarouselContent>
               {sliderImages.map((image, index) => (
                 <CarouselItem key={index}>
