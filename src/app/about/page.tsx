@@ -1,8 +1,30 @@
+
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Target, Heart, Eye } from "lucide-react";
 import Image from "next/image";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 export default function AboutPage() {
+  const sliderImages = [
+    {
+        src: "https://placehold.co/600x400.png",
+        alt: "Don Maris team working",
+        "data-ai-hint": "team collaboration"
+    },
+    {
+        src: "https://placehold.co/600x400.png",
+        alt: "Close-up of a high-quality phone case",
+        "data-ai-hint": "phone case"
+    },
+    {
+        src: "https://placehold.co/600x400.png",
+        alt: "Modern workshop with repair tools",
+        "data-ai-hint": "modern workshop"
+    }
+  ]
+
   return (
     <div className="container mx-auto px-4 py-12">
       <section className="text-center mb-16">
@@ -27,15 +49,30 @@ export default function AboutPage() {
             </p>
           </div>
         </div>
-         <div className="relative h-80 rounded-lg overflow-hidden shadow-xl">
-            <Image
-                src="https://placehold.co/600x400.png"
-                alt="Don Maris team working"
-                fill
-                className="object-cover"
-                data-ai-hint="team collaboration"
-            />
-         </div>
+         <Carousel className="w-full max-w-xl mx-auto" opts={{ loop: true }}>
+            <CarouselContent>
+              {sliderImages.map((image, index) => (
+                <CarouselItem key={index}>
+                  <div className="p-1">
+                    <Card>
+                      <CardContent className="flex aspect-video items-center justify-center p-0 rounded-lg overflow-hidden">
+                        <Image
+                            src={image.src}
+                            alt={image.alt}
+                            width={600}
+                            height={400}
+                            className="object-cover"
+                            data-ai-hint={image['data-ai-hint']}
+                        />
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
       </section>
 
       <section className="text-center">
