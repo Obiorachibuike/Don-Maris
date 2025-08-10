@@ -14,13 +14,14 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { CreditCard, Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { FormEvent } from 'react';
+import { submitOrder } from '@/lib/data';
 
 export default function CheckoutPage() {
     const { items, total, clearCart } = useCart();
     const { toast } = useToast();
     const router = useRouter();
 
-    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const customerDetails = {
@@ -32,27 +33,39 @@ export default function CheckoutPage() {
             zip: formData.get('zip') as string,
         };
 
-        // In a real app, you would process payment here.
-        // For this demo, we'll store the order and clear the cart.
-
-        // Store the finalized order details in sessionStorage to pass to the invoice page
         const orderDetails = {
             items,
             total,
-            invoiceId: `DM-${new Date().getTime()}`,
-            date: new Date().toLocaleDateString(),
             customer: customerDetails,
+            date: new Date().toISOString(),
         };
-        sessionStorage.setItem('don_maris_order', JSON.stringify(orderDetails));
-
-        clearCart();
         
-        toast({
-            title: "Order Placed!",
-            description: "Thank you for your purchase. We've received your order.",
-        });
+        const result = await submitOrder(orderDetails);
 
-        router.push('/invoice');
+        if (result.status === 'success' || result.id) {
+            // Store the finalized order details in sessionStorage to pass to the invoice page
+            const finalOrder = {
+                ...orderDetails,
+                invoiceId: result.id || `DM-${new Date().getTime()}`,
+                date: new Date(orderDetails.date).toLocaleDateString(),
+            };
+            sessionStorage.setItem('don_maris_order', JSON.stringify(finalOrder));
+
+            clearCart();
+            
+            toast({
+                title: "Order Placed!",
+                description: "Thank you for your purchase. We've received your order.",
+            });
+
+            router.push('/invoice');
+        } else {
+             toast({
+                variant: 'destructive',
+                title: "Order Failed",
+                description: "There was a problem placing your order. Please try again.",
+            });
+        }
     };
 
     if (items.length === 0) {

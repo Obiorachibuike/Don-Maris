@@ -1,5 +1,8 @@
-import type { Product } from './types';
 
+import { NextResponse } from 'next/server';
+import type { Product } from '@/lib/types';
+
+// In a real application, this data would come from a database.
 const products: Product[] = [
   {
     id: '1',
@@ -186,68 +189,9 @@ const products: Product[] = [
   },
 ];
 
-// This is a placeholder for where the API is located.
-const API_BASE_URL = '/api';
 
-/**
- * Fetches all products from the server with a fallback to local data.
- */
-export async function getProducts(): Promise<Product[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/products`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch products from server.');
-    }
-    const serverProducts: Product[] = await response.json();
-    return serverProducts;
-  } catch (error) {
-    console.warn('Server not available, falling back to local product data.', error);
-    return products;
-  }
-}
-
-/**
- * Fetches a single product by its ID from the server with a fallback to local data.
- */
-export async function getProductById(id: string): Promise<Product | undefined> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/products/${id}`);
-    if (!response.ok) {
-        throw new Error(`Failed to fetch product with id ${id} from server.`);
-    }
-    const serverProduct: Product = await response.json();
-    return serverProduct;
-  } catch(error) {
-    console.warn(`Server not available, falling back to local product data for id ${id}.`, error);
-    return products.find(p => p.id === id);
-  }
-}
-
-/**
- * Submits an order to the server.
- * @param orderData - The data for the order to be submitted.
- * @returns The response from the server.
- */
-export async function submitOrder(orderData: any) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/orders`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(orderData),
-        });
-        if (!response.ok) {
-            throw new Error('Failed to submit order.');
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('Could not submit order to server.', error);
-        // Fallback for demo purposes: return the submitted data with a mock order ID
-        return {
-            ...orderData,
-            id: `MOCK-${Date.now()}`,
-            status: 'success'
-        };
-    }
+export async function GET() {
+    // Simulate a delay to mimic a real API call
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return NextResponse.json(products);
 }

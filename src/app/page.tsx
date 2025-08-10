@@ -7,8 +7,8 @@ import Image from 'next/image';
 import { ArrowRight, CheckCircle, Smartphone, Truck } from 'lucide-react';
 import { AnimatedSection } from '@/components/animated-section';
 
-export default function Home() {
-  const allProducts = getProducts();
+export default async function Home() {
+  const allProducts = await getProducts();
   const featuredProducts = allProducts.filter(p => p.isFeatured);
   const newArrivals = allProducts.sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).slice(0, 4);
 

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Product } from '@/lib/types';
 import { getProducts } from '@/lib/data';
 import { Input } from '@/components/ui/input';
@@ -16,18 +16,35 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AnimatedSection } from '@/components/animated-section';
 import { ProductChat } from '@/components/product-chat';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProductsPage() {
-  const products = getProducts();
-  const brands = [...new Set(products.map((p) => p.brand))].sort();
-  const types = [...new Set(products.map((p) => p.type))].sort();
-  const maxPrice = Math.max(...products.map(p => p.price));
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadProducts() {
+      setIsLoading(true);
+      const fetchedProducts = await getProducts();
+      setProducts(fetchedProducts);
+      setIsLoading(false);
+    }
+    loadProducts();
+  }, []);
+  
+  const brands = useMemo(() => [...new Set(products.map((p) => p.brand))].sort(), [products]);
+  const types = useMemo(() => [...new Set(products.map((p) => p.type))].sort(), [products]);
+  const maxPrice = useMemo(() => products.length > 0 ? Math.max(...products.map(p => p.price)) : 100, [products]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState([0, maxPrice]);
   const [sortOption, setSortOption] = useState('newest');
+
+  useEffect(() => {
+      setPriceRange([0, maxPrice]);
+  }, [maxPrice]);
 
   const handleTypeChange = (type: string) => {
     setSelectedTypes(prev =>
@@ -123,6 +140,18 @@ export default function ProductsPage() {
       </Button>
     </div>
   );
+  
+  const ProductGridSkeleton = () => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+        {Array.from({ length: 9 }).map((_, i) => (
+            <div key={i} className="flex flex-col gap-2">
+                <Skeleton className="aspect-square w-full" />
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/4" />
+            </div>
+        ))}
+      </div>
+  )
 
   return (
     <>
@@ -138,7 +167,14 @@ export default function ProductsPage() {
           <AnimatedSection>
             <div className="sticky top-24 p-6 bg-card rounded-lg shadow-sm">
               <h2 className="text-2xl font-bold mb-6 font-headline">Filters</h2>
-              <FilterControls />
+              {isLoading ? (
+                  <div className="space-y-4">
+                      <Skeleton className="h-8 w-1/2" />
+                      <Skeleton className="h-20 w-full" />
+                      <Skeleton className="h-8 w-1/2" />
+                      <Skeleton className="h-20 w-full" />
+                  </div>
+              ) : <FilterControls />}
             </div>
           </AnimatedSection>
         </aside>
@@ -187,7 +223,9 @@ export default function ProductsPage() {
           </AnimatedSection>
           
           <AnimatedSection>
-            {filteredAndSortedProducts.length > 0 ? (
+            {isLoading ? (
+              <ProductGridSkeleton />
+            ) : filteredAndSortedProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredAndSortedProducts.map(product => (
                   <ProductCard key={product.id} product={product} />

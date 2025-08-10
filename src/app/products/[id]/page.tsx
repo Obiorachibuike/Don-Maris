@@ -11,10 +11,12 @@ import { Separator } from '@/components/ui/separator';
 import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
-import { useState, use } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { AnimatedSection } from '@/components/animated-section';
 import { ProductChat } from '@/components/product-chat';
+import type { Product } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type ProductPageProps = {
   params: {
@@ -26,19 +28,49 @@ export default function ProductPage({ params }: ProductPageProps) {
   const { addItem } = useCart();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
-  const product = getProductById(use(params).id);
+  const [product, setProduct] = useState<Product | null | undefined>(null);
 
-  if (!product) {
+  useEffect(() => {
+    async function loadProduct() {
+      const fetchedProduct = await getProductById(params.id);
+      setProduct(fetchedProduct);
+    }
+    loadProduct();
+  }, [params.id]);
+
+  if (product === undefined) {
     notFound();
   }
 
   const handleAddToCart = () => {
-    addItem(product, quantity);
-    toast({
-        title: "Added to cart",
-        description: `${quantity} x ${product.name} has been added to your cart.`,
-    });
+    if (product) {
+      addItem(product, quantity);
+      toast({
+          title: "Added to cart",
+          description: `${quantity} x ${product.name} has been added to your cart.`,
+      });
+    }
   };
+  
+  if (!product) {
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+                <div>
+                    <Skeleton className="aspect-square w-full rounded-lg" />
+                </div>
+                <div className="space-y-4">
+                    <Skeleton className="h-10 w-3/4" />
+                    <Skeleton className="h-6 w-1/4" />
+                    <Skeleton className="h-8 w-20" />
+                    <Skeleton className="h-12 w-1/2" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                </div>
+            </div>
+        </div>
+    );
+  }
 
   return (
     <>
