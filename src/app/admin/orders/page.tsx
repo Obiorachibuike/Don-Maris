@@ -20,14 +20,14 @@ import { MoreHorizontal } from "lucide-react";
 export default function OrdersPage() {
     
     const allOrders = [
-        { id: 'ORD001', invoiceId: '123456', customer: 'Olivia Martin', amount: 250.00, status: 'Fulfilled', date: '2023-11-23' },
-        { id: 'ORD002', invoiceId: '123457', customer: 'Jackson Lee', amount: 150.75, status: 'Processing', date: '2023-11-23' },
-        { id: 'ORD003', invoiceId: '123458', customer: 'Isabella Nguyen', amount: 350.00, status: 'Fulfilled', date: '2023-11-22' },
-        { id: 'ORD004', invoiceId: '123459', customer: 'William Kim', amount: 45.50, status: 'Pending', date: '2023-11-22' },
-        { id: 'ORD005', invoiceId: '123460', customer: 'Sophia Davis', amount: 550.20, status: 'Fulfilled', date: '2023-11-21' },
-        { id: 'ORD006', invoiceId: '123461', customer: 'Liam Garcia', amount: 89.99, status: 'Processing', date: '2023-11-21' },
-        { id: 'ORD007', invoiceId: '123462', customer: 'Ava Rodriguez', amount: 120.00, status: 'Cancelled', date: '2023-11-20' },
-        { id: 'ORD008', invoiceId: '123463', customer: 'Noah Martinez', amount: 75.00, status: 'Fulfilled', date: '2023-11-20' },
+        { id: 'ORD001', customer: 'Olivia Martin', amount: 250.00, status: 'Fulfilled', date: '2023-11-23' },
+        { id: 'ORD002', customer: 'Jackson Lee', amount: 150.75, status: 'Processing', date: '2023-11-23' },
+        { id: 'ORD003', customer: 'Isabella Nguyen', amount: 350.00, status: 'Fulfilled', date: '2023-11-22' },
+        { id: 'ORD004', customer: 'William Kim', amount: 45.50, status: 'Pending', date: '2023-11-22' },
+        { id: 'ORD005', customer: 'Sophia Davis', amount: 550.20, status: 'Fulfilled', date: '2023-11-21' },
+        { id: 'ORD006', customer: 'Liam Garcia', amount: 89.99, status: 'Processing', date: '2023-11-21' },
+        { id: 'ORD007', customer: 'Ava Rodriguez', amount: 120.00, status: 'Cancelled', date: '2023-11-20' },
+        { id: 'ORD008', customer: 'Noah Martinez', amount: 75.00, status: 'Fulfilled', date: '2023-11-20' },
     ];
     
     const [searchTerm, setSearchTerm] = useState('');
@@ -59,7 +59,6 @@ export default function OrdersPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Order ID</TableHead>
-                                <TableHead>Invoice ID</TableHead>
                                 <TableHead>Customer</TableHead>
                                 <TableHead>Amount</TableHead>
                                 <TableHead>Status</TableHead>
@@ -71,7 +70,6 @@ export default function OrdersPage() {
                             {filteredOrders.map(order => (
                                 <TableRow key={order.id}>
                                     <TableCell className="font-medium">{order.id}</TableCell>
-                                    <TableCell>{order.invoiceId}</TableCell>
                                     <TableCell>{order.customer}</TableCell>
                                     <TableCell>${order.amount.toFixed(2)}</TableCell>
                                     <TableCell>
