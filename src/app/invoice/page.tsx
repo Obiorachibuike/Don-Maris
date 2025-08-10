@@ -37,10 +37,7 @@ export default function InvoicePage() {
         const savedOrder = sessionStorage.getItem('don_maris_order');
         if (savedOrder) {
             setOrder(JSON.parse(savedOrder));
-            // Optional: clear the sessionStorage after reading it
-            // sessionStorage.removeItem('don_maris_order');
         } else {
-            // If there's no order data, redirect to home
             router.push('/');
         }
     }, [router]);
@@ -60,7 +57,6 @@ export default function InvoicePage() {
         <div className="container mx-auto px-4 py-8">
            <h1 className="text-4xl font-bold font-headline mb-8 text-center">Order Confirmation</h1>
            <div className="relative bg-card rounded-lg shadow-lg p-8 md:p-12 overflow-hidden">
-                {/* Watermark */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
                     <span className="text-7xl md:text-9xl font-black font-headline text-foreground/5 rotate-[-15deg] select-none">
                         Don Maris

@@ -19,9 +19,12 @@ export default function CheckoutPage() {
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
+        const [firstName, ...lastNameParts] = (formData.get('name') as string).split(' ');
         const customerDetails = {
-            name: formData.get('name') as string,
+            firstName: firstName,
+            lastName: lastNameParts.join(' '),
             email: formData.get('email') as string,
+            phone: formData.get('phone') as string,
             address: formData.get('address') as string,
             city: formData.get('city') as string,
             state: formData.get('state') as string,
@@ -34,7 +37,6 @@ export default function CheckoutPage() {
             customer: customerDetails,
         };
         
-        // Store shipping details in sessionStorage to pass to the payment page
         sessionStorage.setItem('don_maris_shipping', JSON.stringify(orderDetails));
         
         router.push('/payment');
@@ -57,7 +59,6 @@ export default function CheckoutPage() {
             <h1 className="text-4xl font-bold font-headline mb-8 text-center">Checkout - Step 1 of 2</h1>
             <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Shipping and Payment Details */}
                     <div className="lg:col-span-2">
                         <Card>
                             <CardHeader>
@@ -72,6 +73,10 @@ export default function CheckoutPage() {
                                     <div className="space-y-2">
                                         <Label htmlFor="email">Email Address</Label>
                                         <Input id="email" name="email" type="email" placeholder="john.doe@example.com" required />
+                                    </div>
+                                     <div className="sm:col-span-2 space-y-2">
+                                        <Label htmlFor="phone">Phone Number</Label>
+                                        <Input id="phone" name="phone" type="tel" placeholder="+1234567890" required />
                                     </div>
                                     <div className="sm:col-span-2 space-y-2">
                                         <Label htmlFor="address">Street Address</Label>
@@ -94,7 +99,6 @@ export default function CheckoutPage() {
                         </Card>
                     </div>
 
-                    {/* Order Summary */}
                     <div className="lg:col-span-1">
                         <Card className="sticky top-24">
                             <CardHeader>

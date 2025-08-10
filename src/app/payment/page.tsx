@@ -4,22 +4,25 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { useCart } from '@/hooks/use-cart';
 import Image from 'next/image';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { CreditCard, Landmark, Lock } from 'lucide-react';
+import { CreditCard, Landmark, Lock, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { submitOrder } from '@/lib/data';
 import type { PaymentStatus, CartItem } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import axios from 'axios';
+
 
 interface CustomerDetails {
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
+    phone: string;
     address: string;
     city: string;
     state: string;
@@ -32,22 +35,60 @@ interface ShippingDetails {
     customer: CustomerDetails;
 }
 
+interface VirtualAccount {
+    account_number: string;
+    bank_name: string;
+    account_name: string;
+}
+
 export default function PaymentPage() {
     const { clearCart } = useCart();
     const { toast } = useToast();
     const router = useRouter();
     const [shippingDetails, setShippingDetails] = useState<ShippingDetails | null>(null);
+    const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null);
+    const [isGeneratingAccount, setIsGeneratingAccount] = useState(false);
 
     useEffect(() => {
         const savedShipping = sessionStorage.getItem('don_maris_shipping');
         if (savedShipping) {
             setShippingDetails(JSON.parse(savedShipping));
         } else {
-            // If no shipping data, redirect to checkout
             router.push('/checkout');
         }
     }, [router]);
 
+    const handleGenerateVirtualAccount = async () => {
+        if (!shippingDetails) return;
+        setIsGeneratingAccount(true);
+        try {
+            const response = await axios.post('/api/create-virtual-account', {
+                email: shippingDetails.customer.email,
+                first_name: shippingDetails.customer.firstName,
+                last_name: shippingDetails.customer.lastName,
+                phone: shippingDetails.customer.phone,
+            });
+            if (response.data.success) {
+                setVirtualAccount(response.data.data);
+                toast({
+                    title: 'Virtual Account Created',
+                    description: 'Please use the details below to complete your payment.',
+                });
+            } else {
+                throw new Error(response.data.error?.message || 'Failed to create virtual account.');
+            }
+        } catch (error: any) {
+            console.error(error);
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: error.message || 'Could not generate a virtual account. Please try again.',
+            });
+        } finally {
+            setIsGeneratingAccount(false);
+        }
+    };
+    
     const handleSubmit = async (paymentMade: boolean) => {
         if (!shippingDetails) return;
 
@@ -64,9 +105,12 @@ export default function PaymentPage() {
                 ...orderDetails,
                 invoiceId: result.id || `DM-${new Date().getTime()}`,
                 date: new Date(orderDetails.date).toLocaleDateString(),
+                customer: {
+                    ...orderDetails.customer,
+                    name: `${orderDetails.customer.firstName} ${orderDetails.customer.lastName}`.trim(),
+                }
             };
             sessionStorage.setItem('don_maris_order', JSON.stringify(finalOrder));
-
             clearCart();
             sessionStorage.removeItem('don_maris_shipping');
             
@@ -99,7 +143,6 @@ export default function PaymentPage() {
         <div className="container mx-auto px-4 py-12">
             <h1 className="text-4xl font-bold font-headline mb-8 text-center">Payment - Step 2 of 2</h1>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Payment Options */}
                 <div className="lg:col-span-2">
                     <Card>
                         <CardHeader>
@@ -145,14 +188,23 @@ export default function PaymentPage() {
                                         <Landmark /> Bank Transfer (Paystack)
                                     </AccordionTrigger>
                                     <AccordionContent className="pt-4 space-y-4">
-                                       <p className="text-muted-foreground">To complete your purchase, please transfer the total amount to the virtual account number below using Paystack.</p>
-                                       <div className="p-4 bg-muted rounded-lg">
-                                           <p><span className="font-semibold">Account Number:</span> 8025160310</p>
-                                           <p><span className="font-semibold">Bank:</span> Opay</p>
-                                           <p><span className="font-semibold">Amount:</span> ${total.toFixed(2)}</p>
-                                       </div>
+                                       <p className="text-muted-foreground">To complete your purchase, generate a dedicated virtual account number via Paystack and make the transfer.</p>
+                                        {virtualAccount ? (
+                                             <div className="p-4 bg-muted rounded-lg">
+                                                <p><span className="font-semibold">Bank Name:</span> {virtualAccount.bank_name}</p>
+                                                <p><span className="font-semibold">Account Number:</span> {virtualAccount.account_number}</p>
+                                                <p><span className="font-semibold">Account Name:</span> {virtualAccount.account_name}</p>
+                                                <p><span className="font-semibold">Amount:</span> ${total.toFixed(2)}</p>
+                                             </div>
+                                        ) : (
+                                            <Button onClick={handleGenerateVirtualAccount} disabled={isGeneratingAccount} className="w-full">
+                                                {isGeneratingAccount ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                                Generate Virtual Account
+                                            </Button>
+                                        )}
+                                       
                                        <p className="text-sm text-muted-foreground">After making the transfer, click the button below to confirm your order.</p>
-                                       <Button onClick={() => handleSubmit(true)} className="w-full">I've made the transfer</Button>
+                                       <Button onClick={() => handleSubmit(true)} className="w-full" disabled={!virtualAccount}>I've made the transfer</Button>
                                     </AccordionContent>
                                 </AccordionItem>
                             </Accordion>
@@ -166,7 +218,6 @@ export default function PaymentPage() {
                     </div>
                 </div>
 
-                {/* Order Summary */}
                 <div className="lg:col-span-1">
                     <Card className="sticky top-24">
                         <CardHeader>
@@ -197,4 +248,3 @@ export default function PaymentPage() {
         </div>
     );
 }
-
