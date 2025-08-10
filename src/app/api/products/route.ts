@@ -36,9 +36,9 @@ const products: Product[] = [
   },
   {
     id: '6',
-    name: 'Galaxy S23 Ultra Charging Port Flex Cable',
+    name: 'X650 Charging Port Flex Cable',
     description: 'OEM-grade replacement for faulty charging ports.',
-    longDescription: 'Fix charging issues with your Samsung Galaxy S23 Ultra with this replacement flex cable. This component includes the USB-C port, primary microphone, and cellular antenna connections. Ensures reliable charging and data sync.',
+    longDescription: 'Fix charging issues with your phone with this replacement flex cable. This component includes the USB-C port, primary microphone, and cellular antenna connections. Ensures reliable charging and data sync.',
     price: 22.50,
     image: 'https://placehold.co/600x600.png',
     data_ai_hint: 'flex cable',
