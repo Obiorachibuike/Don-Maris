@@ -82,6 +82,8 @@ const prompt = ai.definePrompt({
 - Format responses in Markdown for readability. You can use lists, bold text, etc.
 - If you recommend a product, provide its name and price.
 - Base your answers ONLY on the information provided by the tools.
+
+User question: {{{question}}}
 `,
 });
 
@@ -100,10 +102,7 @@ const productChatFlow = ai.defineFlow(
         const { output } = await prompt(
             { ...input },
             {
-                history: [
-                  ...history,
-                  { role: 'user', content: [{ text: input.question }] }
-                ],
+                history,
             }
         );
 
