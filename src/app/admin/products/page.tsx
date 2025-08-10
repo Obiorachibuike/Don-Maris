@@ -38,11 +38,11 @@ export default function ProductsAdminPage() {
         product.type.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const indexOfLastProduct = currentPage * productsPerPage;
-    const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-    const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
-
     const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+    const indexOfLastOrder = currentPage * productsPerPage;
+    const indexOfFirstProduct = indexOfLastOrder - productsPerPage;
+    const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastOrder);
+
 
     const handlePreviousPage = () => {
         setCurrentPage(prev => Math.max(prev - 1, 1));
