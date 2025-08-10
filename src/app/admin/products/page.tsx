@@ -94,6 +94,7 @@ export default function ProductsAdminPage() {
                                 <TableHead>Brand</TableHead>
                                 <TableHead>Type</TableHead>
                                 <TableHead>Price</TableHead>
+                                <TableHead>Stock</TableHead>
                                 <TableHead>Rating</TableHead>
                                 <TableHead><span className="sr-only">Actions</span></TableHead>
                             </TableRow>
@@ -110,6 +111,7 @@ export default function ProductsAdminPage() {
                                         <Badge variant="outline">{product.type}</Badge>
                                     </TableCell>
                                     <TableCell>${product.price.toFixed(2)}</TableCell>
+                                    <TableCell>{product.stock}</TableCell>
                                     <TableCell>{product.rating.toFixed(1)}</TableCell>
                                     <TableCell>
                                         <DropdownMenu>

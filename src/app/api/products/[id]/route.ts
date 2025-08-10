@@ -17,6 +17,7 @@ const products: Product[] = [
     reviews: [],
     isFeatured: true,
     dateAdded: '2023-11-15',
+    stock: 50,
   },
   {
     id: '5',
@@ -32,6 +33,7 @@ const products: Product[] = [
     reviews: [],
     isFeatured: true,
     dateAdded: '2023-11-20',
+    stock: 200,
   },
   {
     id: '6',
@@ -46,6 +48,7 @@ const products: Product[] = [
     rating: 4.6,
     reviews: [],
     dateAdded: '2023-11-18',
+    stock: 150,
   },
   {
     id: '8',
@@ -60,6 +63,7 @@ const products: Product[] = [
     rating: 4.5,
     reviews: [],
     dateAdded: '2023-11-08',
+    stock: 80,
   },
   {
     id: '9',
@@ -74,6 +78,7 @@ const products: Product[] = [
     rating: 4.7,
     reviews: [],
     dateAdded: '2023-10-25',
+    stock: 65,
   },
 ];
 

@@ -13,6 +13,7 @@ export type Product = {
   data_ai_hint: string;
   isFeatured?: boolean;
   dateAdded: string;
+  stock: number;
 };
 
 export type Review = {
