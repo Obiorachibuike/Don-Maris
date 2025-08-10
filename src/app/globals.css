@@ -34,6 +34,13 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+
+    --sidebar-background: 224 71% 4%; /* #0F172A */
+    --sidebar-foreground: 210 40% 98%; /* #F8FAFC */
+    --sidebar-border: 217 33% 17%;
+    --sidebar-accent: 247 91% 69%; /* #6D5DF6 */
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-ring: 247 91% 69%;
   }
   .dark {
     --background: 224 71% 4%; /* #0F172A */
@@ -69,20 +76,5 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-  }
-}
-
-.ripple {
-  position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(circle, hsla(var(--primary), 0.5), hsla(var(--accent), 0.5));
-  transform: scale(0);
-  animation: ripple-animation 600ms linear;
-}
-
-@keyframes ripple-animation {
-  to {
-    transform: scale(4);
-    opacity: 0;
   }
 }
