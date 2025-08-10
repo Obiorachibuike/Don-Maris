@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import type { Product } from "@/lib/types";
-import { getProducts } from "@/lib/data";
+import { useProductStore } from "@/store/product-store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import {
   Table,
@@ -22,18 +22,11 @@ import Image from "next/image";
 
 export default function ProductsAdminPage() {
     
-    const [products, setProducts] = useState<Product[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { products, isLoading, fetchProducts } = useProductStore();
     
     useEffect(() => {
-        async function loadProducts() {
-            setIsLoading(true);
-            const fetchedProducts = await getProducts();
-            setProducts(fetchedProducts);
-            setIsLoading(false);
-        }
-        loadProducts();
-    }, []);
+        fetchProducts();
+    }, [fetchProducts]);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -137,7 +130,7 @@ export default function ProductsAdminPage() {
                  <CardFooter>
                      <div className="flex items-center justify-between w-full">
                         <div className="text-sm text-muted-foreground">
-                            Showing {Math.min(indexOfFirstProduct + 1, filteredProducts.length)} to {Math.min(indexOfLastProduct, filteredProducts.length)} of {filteredProducts.length} products.
+                            Showing {Math.min(indexOfFirstProduct + 1, filteredProducts.length)} to {Math.min(indexOfLastOrder, filteredProducts.length)} of {filteredProducts.length} products.
                         </div>
                         <div className="flex items-center gap-2">
                             <Button

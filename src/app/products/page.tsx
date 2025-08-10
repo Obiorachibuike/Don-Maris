@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import type { Product } from '@/lib/types';
-import { getProducts } from '@/lib/data';
+import { useProductStore } from '@/store/product-store';
 import { Input } from '@/components/ui/input';
 import { ProductCard } from '@/components/product-card';
 import { Label } from '@/components/ui/label';
@@ -19,18 +19,11 @@ import { ProductChat } from '@/components/product-chat';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { products, isLoading, fetchProducts } = useProductStore();
 
   useEffect(() => {
-    async function loadProducts() {
-      setIsLoading(true);
-      const fetchedProducts = await getProducts();
-      setProducts(fetchedProducts);
-      setIsLoading(false);
-    }
-    loadProducts();
-  }, []);
+    fetchProducts();
+  }, [fetchProducts]);
   
   const brands = useMemo(() => [...new Set(products.map((p) => p.brand))].sort(), [products]);
   const types = useMemo(() => [...new Set(products.map((p) => p.type))].sort(), [products]);
@@ -167,7 +160,7 @@ export default function ProductsPage() {
           <AnimatedSection>
             <div className="sticky top-24 p-6 bg-card rounded-lg shadow-sm">
               <h2 className="text-2xl font-bold mb-6 font-headline">Filters</h2>
-              {isLoading ? (
+              {isLoading && products.length === 0 ? (
                   <div className="space-y-4">
                       <Skeleton className="h-8 w-1/2" />
                       <Skeleton className="h-20 w-full" />
@@ -223,7 +216,7 @@ export default function ProductsPage() {
           </AnimatedSection>
           
           <AnimatedSection>
-            {isLoading ? (
+            {isLoading && products.length === 0 ? (
               <ProductGridSkeleton />
             ) : filteredAndSortedProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">

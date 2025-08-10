@@ -1,126 +1,37 @@
 
 import type { Product } from './types';
-
-const products: Product[] = [
-  {
-    id: '3',
-    name: 'iPhone 14 Pro Max Screen Replacement',
-    description: 'Vibrant and responsive OLED replacement screen.',
-    longDescription: 'Restore your iPhone 14 Pro Max to its former glory with this high-quality OLED screen replacement. It offers the same vibrant colors, deep blacks, and responsive touch as the original. Each kit includes the necessary tools for installation.',
-    price: 189.99,
-    image: 'https://placehold.co/600x600.png',
-    data_ai_hint: 'phone screen',
-    brand: 'ScreenSavvy',
-    type: 'Screen',
-    rating: 4.7,
-    reviews: [],
-    isFeatured: true,
-    dateAdded: '2023-11-15',
-    stock: 50,
-  },
-  {
-    id: '5',
-    name: 'Pro-Tech 25-in-1 Repair Toolkit',
-    description: 'Essential tools for any phone repair.',
-    longDescription: 'The Pro-Tech toolkit has everything you need for DIY phone repairs. It includes various pentalobe, Phillips, and flathead screwdrivers, spudgers, suction cups, and picks, all housed in a compact, organized case. Made with high-quality CR-V steel for durability.',
-    price: 24.99,
-    image: 'https://placehold.co/600x600.png',
-    data_ai_hint: 'repair tools',
-    brand: 'Pro-Tech',
-    type: 'Tools',
-    rating: 4.9,
-    reviews: [],
-    isFeatured: true,
-    dateAdded: '2023-11-20',
-    stock: 200,
-  },
-  {
-    id: '6',
-    name: 'X650 Charging Port Flex Cable',
-    description: 'OEM-grade replacement for faulty charging ports.',
-    longDescription: 'Fix charging issues with your phone with this replacement flex cable. This component includes the USB-C port, primary microphone, and cellular antenna connections. Ensures reliable charging and data sync.',
-    price: 22.50,
-    image: 'https://placehold.co/600x600.png',
-    data_ai_hint: 'flex cable',
-    brand: 'PartPerfect',
-    type: 'Charging Flex',
-    rating: 4.6,
-    reviews: [],
-    dateAdded: '2023-11-18',
-    stock: 150,
-  },
-    {
-    id: '8',
-    name: 'iPhone 12 Power & Volume Flex Cable',
-    description: 'Replacement for power button and volume controls.',
-    longDescription: 'This flex cable assembly replaces the power button, volume buttons, and mute/ring switch for various iPhone models. Ideal for fixing unresponsive or malfunctioning buttons. Please select your specific model before ordering.',
-    price: 18.99,
-    image: 'https://placehold.co/600x600.png',
-    data_ai_hint: 'volume button',
-    brand: 'PartPerfect',
-    type: 'Power Flex',
-    rating: 4.5,
-    reviews: [],
-    dateAdded: '2023-11-08',
-    stock: 80,
-  },
-  {
-    id: '9',
-    name: 'Pixel 7 Pro Screen Replacement',
-    description: 'High-quality screen with included adhesive.',
-    longDescription: 'Bring your Google Pixel 7 Pro display back to life. This kit includes a high-fidelity screen and pre-cut adhesive for a secure, water-resistant fit. The display offers accurate colors and touch response.',
-    price: 145.00,
-    image: 'https://placehold.co/600x600.png',
-    data_ai_hint: 'pixel screen',
-    brand: 'ScreenSavvy',
-    type: 'Screen',
-    rating: 4.7,
-    reviews: [],
-    dateAdded: '2023-10-25',
-    stock: 65,
-  },
-  {
-    id: '10',
-    name: 'Samsung Galaxy S22 Ultra Backglass',
-    description: 'OEM-quality backglass replacement with adhesive.',
-    longDescription: 'Replace your cracked or shattered Samsung Galaxy S22 Ultra backglass with this high-quality replacement part. It comes with pre-installed adhesive for a secure fit and matches the original look and feel.',
-    price: 49.99,
-    image: 'https://placehold.co/600x600.png',
-    data_ai_hint: 'phone backglass',
-    brand: 'GlassGuard',
-    type: 'Backglass',
-    rating: 4.8,
-    reviews: [],
-    dateAdded: '2023-11-25',
-    stock: 120,
-  },
-   {
-    id: '11',
-    name: 'X559 Charging Port Flex Cable',
-    description: 'Replacement charging port for various models.',
-    longDescription: 'Fix charging issues with your device using the X559 replacement flex cable. Ensures reliable charging and data sync for compatible models.',
-    price: 21.99,
-    image: 'https://placehold.co/600x600.png',
-    data_ai_hint: 'charging port',
-    brand: 'PartPerfect',
-    type: 'Charging Flex',
-    rating: 4.5,
-    reviews: [],
-    dateAdded: '2023-11-22',
-    stock: 180,
-  },
-];
+import { dummyProducts } from './dummy-products';
 
 // This is a placeholder for where the API is located.
 const API_BASE_URL = '/api';
 
+
+/**
+ * Fetches all products from the server.
+ * @returns A promise that resolves to an array of products.
+ */
+export async function getProducts(): Promise<Product[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/products`);
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const products: Product[] = await response.json();
+    return products;
+  } catch (error) {
+    console.error("Failed to fetch products from API, falling back to dummy data.", error);
+    return dummyProducts;
+  }
+}
+
+
 /**
  * Fetches all products from the server with a fallback to local data.
  */
-export function getProducts(): Product[] {
+export function getProductsSync(): Product[] {
   // For this demo, we'll just return the local data.
   // In a real app, you would fetch from the API.
-  return products;
+  return dummyProducts;
 }
 
 /**
@@ -129,7 +40,7 @@ export function getProducts(): Product[] {
 export function getProductById(id: string): Product | undefined {
   // For this demo, we'll just return from local data.
   // In a real app, you would fetch from the API.
-  return products.find(p => p.id === id);
+  return dummyProducts.find(p => p.id === id);
 }
 
 /**

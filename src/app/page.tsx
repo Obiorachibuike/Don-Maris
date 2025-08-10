@@ -1,5 +1,5 @@
 
-import { getProducts } from '@/lib/data';
+import { getProductsSync } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
 import Link from 'next/link';
@@ -7,8 +7,8 @@ import Image from 'next/image';
 import { ArrowRight, CheckCircle, Smartphone, Truck } from 'lucide-react';
 import { AnimatedSection } from '@/components/animated-section';
 
-export default async function Home() {
-  const allProducts = await getProducts();
+export default function Home() {
+  const allProducts = getProductsSync();
   const featuredProducts = allProducts.filter(p => p.isFeatured);
   const newArrivals = allProducts.sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).slice(0, 4);
 
