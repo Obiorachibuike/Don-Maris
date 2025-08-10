@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import type { Product } from "@/lib/types";
 import { getProducts } from "@/lib/data";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import {
   Table,
   TableHeader,
@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, PlusCircle } from "lucide-react";
+import { MoreHorizontal, PlusCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 
 export default function ProductsAdminPage() {
@@ -36,12 +36,28 @@ export default function ProductsAdminPage() {
     }, []);
 
     const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const productsPerPage = 10;
 
     const filteredProducts = products.filter(product => 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.type.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const indexOfLastProduct = currentPage * productsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+    const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+
+    const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+    const handlePreviousPage = () => {
+        setCurrentPage(prev => Math.max(prev - 1, 1));
+    };
+
+    const handleNextPage = () => {
+        setCurrentPage(prev => Math.min(prev + 1, totalPages));
+    };
 
     return (
         <div className="space-y-6">
@@ -57,7 +73,10 @@ export default function ProductsAdminPage() {
                                 placeholder="Search products..." 
                                 className="w-full max-w-sm"
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    setCurrentPage(1); // Reset to first page on new search
+                                }}
                             />
                             <Button>
                                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -80,7 +99,7 @@ export default function ProductsAdminPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredProducts.map(product => (
+                            {currentProducts.map(product => (
                                 <TableRow key={product.id}>
                                     <TableCell>
                                         <Image src={product.image} alt={product.name} width={40} height={40} className="rounded-md object-cover" />
@@ -113,6 +132,36 @@ export default function ProductsAdminPage() {
                         </TableBody>
                     </Table>
                 </CardContent>
+                 <CardFooter>
+                     <div className="flex items-center justify-between w-full">
+                        <div className="text-sm text-muted-foreground">
+                            Showing {Math.min(indexOfFirstProduct + 1, filteredProducts.length)} to {Math.min(indexOfLastProduct, filteredProducts.length)} of {filteredProducts.length} products.
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handlePreviousPage}
+                                disabled={currentPage === 1}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                                Previous
+                            </Button>
+                            <span className="text-sm text-muted-foreground">
+                                Page {currentPage} of {totalPages > 0 ? totalPages : 1}
+                            </span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleNextPage}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                            >
+                                Next
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </CardFooter>
             </Card>
         </div>
     );
