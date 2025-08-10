@@ -27,9 +27,9 @@ const salesData = [
 ];
 
 const orderStatusData = [
-    { status: 'fulfilled', count: 245, label: 'Fulfilled' },
-    { status: 'processing', count: 123, label: 'Processing' },
-    { status: 'pending', count: 45, label: 'Pending' },
+    { status: 'fulfilled', count: 245, label: 'Fulfilled', fill: 'var(--color-fulfilled)' },
+    { status: 'processing', count: 123, label: 'Processing', fill: 'var(--color-processing)' },
+    { status: 'pending', count: 45, label: 'Pending', fill: 'var(--color-pending)' },
 ];
 
 const chartConfig: ChartConfig = {
@@ -43,15 +43,15 @@ const chartConfig: ChartConfig = {
   },
   fulfilled: {
       label: "Fulfilled",
-      color: "hsl(var(--chart-1))",
+      color: "hsl(var(--chart-2))", // Green
   },
   processing: {
       label: "Processing",
-      color: "hsl(var(--chart-2))",
+      color: "hsl(var(--chart-4))", // Yellow
   },
   pending: {
       label: "Pending",
-      color: "hsl(var(--chart-3))",
+      color: "hsl(var(--chart-1))", // Red/Orange
   },
 };
 
@@ -121,7 +121,7 @@ export default function AdminDashboard() {
                          <PieChart accessibilityLayer>
                             <Tooltip content={<ChartTooltipContent nameKey="count" hideLabel />} />
                             <Pie data={orderStatusData} dataKey="count" nameKey="status" innerRadius={60} />
-                            <ChartLegend content={<ChartLegendContent nameKey="status" />} />
+                            <ChartLegend content={<ChartLegendContent nameKey="label" />} />
                         </PieChart>
                     </ChartContainer>
                 </CardContent>
