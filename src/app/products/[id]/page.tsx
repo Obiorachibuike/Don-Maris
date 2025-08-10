@@ -1,3 +1,4 @@
+
 'use client'
 
 import { getProductById } from '@/lib/data';
@@ -13,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, use } from 'react';
 import { Input } from '@/components/ui/input';
 import { AnimatedSection } from '@/components/animated-section';
+import { FloatingChat } from '@/components/floating-chat';
 
 type ProductPageProps = {
   params: {
@@ -24,7 +26,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const { addItem } = useCart();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
-  const product = getProductById(params.id);
+  const product = getProductById(use(params).id);
 
   if (!product) {
     notFound();
@@ -39,6 +41,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   };
 
   return (
+    <>
     <div className="container mx-auto px-4 py-8">
       <AnimatedSection>
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
@@ -115,5 +118,7 @@ export default function ProductPage({ params }: ProductPageProps) {
         </div>
       </AnimatedSection>
     </div>
+    <FloatingChat productId={product.id} productName={product.name} />
+    </>
   );
 }

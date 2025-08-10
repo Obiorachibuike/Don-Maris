@@ -1,6 +1,8 @@
+
 'use server';
 
 import { getAccessoryRecommendations } from '@/ai/flows/accessory-recommendations';
+import { chatAboutProduct, type ProductChatInput } from '@/ai/flows/product-chat';
 import { z } from 'zod';
 
 const schema = z.object({
@@ -36,4 +38,14 @@ export async function getRecommendationsAction(
     console.error(e);
     return { error: 'An unexpected error occurred. Please try again.' };
   }
+}
+
+export async function chatWithProductAI(input: ProductChatInput) {
+    try {
+        const result = await chatAboutProduct(input);
+        return { success: true, response: result.response };
+    } catch (e) {
+        console.error(e);
+        return { success: false, error: 'An unexpected error occurred. Please try again.' };
+    }
 }
