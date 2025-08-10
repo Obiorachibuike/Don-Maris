@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Smartphone, Sparkles, Home, ShoppingCart, Package, Info, Mail, Menu, CreditCard } from 'lucide-react';
+import { Smartphone, Sparkles, Home, ShoppingCart, Package, Info, Mail, Menu, LayoutDashboard } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -26,12 +26,13 @@ export function Header() {
     { href: '/recommendations', label: 'AI Recommender', icon: Sparkles },
     { href: '/about', label: 'About', icon: Info },
     { href: '/contact', label: 'Contact', icon: Mail },
+    { href: '/admin', label: 'Admin', icon: LayoutDashboard },
   ];
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const NavLink = ({ href, label, icon: Icon, isMobile = false }: { href: string, label: string, icon: React.ElementType, isMobile?: boolean }) => {
-    const isActive = (href === '/' && pathname === '/') || (href !== '/' && pathname.startsWith(href));
+    const isActive = (href === '/' && pathname === '/') || (href !== '/' && pathname.startsWith(href) && href.length > 1);
     return (
       <Button
         variant="ghost"
