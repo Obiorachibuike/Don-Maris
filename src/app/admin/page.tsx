@@ -1,4 +1,6 @@
 
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DollarSign, Users, Package, CreditCard } from 'lucide-react';
 import {
@@ -10,6 +12,34 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Badge } from "@/components/ui/badge";
+import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+
+const salesData = [
+    { month: 'Jan', sales: 186, revenue: 80 },
+    { month: 'Feb', sales: 305, revenue: 200 },
+    { month: 'Mar', sales: 237, revenue: 120 },
+    { month: 'Apr', sales: 73, revenue: 190 },
+    { month: 'May', sales: 209, revenue: 130 },
+    { month: 'Jun', sales: 214, revenue: 140 },
+    { month: 'Jul', sales: 286, revenue: 180 },
+    { month: 'Aug', sales: 145, revenue: 120 },
+    { month: 'Sep', sales: 298, revenue: 210 },
+    { month: 'Oct', sales: 159, revenue: 90 },
+    { month: 'Nov', sales: 321, revenue: 250 },
+    { month: 'Dec', sales: 367, revenue: 280 },
+];
+
+const chartConfig: ChartConfig = {
+  sales: {
+    label: "Sales",
+    color: "hsl(var(--primary))",
+  },
+  revenue: {
+      label: "Revenue",
+      color: "hsl(var(--accent))",
+  }
+};
 
 export default function AdminDashboard() {
 
@@ -62,6 +92,43 @@ export default function AdminDashboard() {
                 <CardContent>
                     <div className="text-2xl font-bold">573</div>
                     <p className="text-xs text-muted-foreground">201 since last month</p>
+                </CardContent>
+            </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Sales Overview</CardTitle>
+                    <CardDescription>A bar chart showing total sales per month.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                         <BarChart accessibilityLayer data={salesData}>
+                            <CartesianGrid vertical={false} />
+                            <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
+                            <YAxis />
+                            <Tooltip content={<ChartTooltipContent />} />
+                            <Bar dataKey="sales" fill="var(--color-sales)" radius={4} />
+                        </BarChart>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle>Revenue Trends</CardTitle>
+                    <CardDescription>A line chart showing revenue over time.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                   <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                        <LineChart accessibilityLayer data={salesData} margin={{ left: 12, right: 12 }}>
+                            <CartesianGrid vertical={false} />
+                            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                            <YAxis tickMargin={8} />
+                            <Tooltip content={<ChartTooltipContent />} />
+                            <Line type="monotone" dataKey="revenue" stroke="var(--color-revenue)" strokeWidth={2} dot={false} />
+                        </LineChart>
+                    </ChartContainer>
                 </CardContent>
             </Card>
         </div>
