@@ -43,15 +43,15 @@ const chartConfig: ChartConfig = {
   },
   fulfilled: {
       label: "Fulfilled",
-      color: "hsl(var(--chart-2))",
+      color: "hsl(var(--chart-1))",
   },
   processing: {
       label: "Processing",
-      color: "hsl(var(--chart-4))",
+      color: "hsl(var(--chart-2))",
   },
   pending: {
       label: "Pending",
-      color: "hsl(var(--chart-1))",
+      color: "hsl(var(--chart-3))",
   },
 };
 
