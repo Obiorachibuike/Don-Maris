@@ -29,14 +29,17 @@ export default function ProductPage({ params }: ProductPageProps) {
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<Product | null | undefined>(null);
+  const { id } = params;
 
   useEffect(() => {
     async function loadProduct() {
-      const fetchedProduct = await getProductById(params.id);
+      const fetchedProduct = await getProductById(id);
       setProduct(fetchedProduct);
     }
-    loadProduct();
-  }, [params.id]);
+    if (id) {
+      loadProduct();
+    }
+  }, [id]);
 
   if (product === undefined) {
     notFound();
