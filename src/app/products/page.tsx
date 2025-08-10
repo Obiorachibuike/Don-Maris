@@ -13,6 +13,7 @@ import { Filter, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AnimatedSection } from '@/components/animated-section';
 
 export default function ProductsPage() {
   const products = getProducts();
@@ -123,71 +124,79 @@ export default function ProductsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold font-headline">All Products</h1>
-        <p className="text-lg text-muted-foreground mt-2">Browse our extensive collection of accessories and parts.</p>
-      </div>
+      <AnimatedSection>
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold font-headline">All Products</h1>
+          <p className="text-lg text-muted-foreground mt-2">Browse our extensive collection of accessories and parts.</p>
+        </div>
+      </AnimatedSection>
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <aside className="hidden lg:block lg:col-span-1">
-          <div className="sticky top-24 p-6 bg-card rounded-lg shadow-sm">
-            <h2 className="text-2xl font-bold mb-6 font-headline">Filters</h2>
-            <FilterControls />
-          </div>
+          <AnimatedSection>
+            <div className="sticky top-24 p-6 bg-card rounded-lg shadow-sm">
+              <h2 className="text-2xl font-bold mb-6 font-headline">Filters</h2>
+              <FilterControls />
+            </div>
+          </AnimatedSection>
         </aside>
 
         <main className="lg:col-span-3">
-          <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
-             <Input
-                type="search"
-                placeholder="Search for accessories..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full md:w-1/2"
-              />
-              <div className="flex items-center gap-4 w-full md:w-auto">
-                 <Select value={sortOption} onValueChange={setSortOption}>
-                  <SelectTrigger className="w-full md:w-[180px]">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Newest</SelectItem>
-                    <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                    <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                    <SelectItem value="rating">Highest Rated</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="lg:hidden">
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <Button variant="outline" size="icon">
-                        <Filter className="h-4 w-4" />
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent>
-                      <SheetHeader>
-                        <SheetTitle>Filters</SheetTitle>
-                      </SheetHeader>
-                      <div className="p-4">
-                        <FilterControls />
-                      </div>
-                    </SheetContent>
-                  </Sheet>
+          <AnimatedSection>
+            <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
+              <Input
+                  type="search"
+                  placeholder="Search for accessories..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full md:w-1/2"
+                />
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                  <Select value={sortOption} onValueChange={setSortOption}>
+                    <SelectTrigger className="w-full md:w-[180px]">
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newest">Newest</SelectItem>
+                      <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                      <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                      <SelectItem value="rating">Highest Rated</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="lg:hidden">
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <Button variant="outline" size="icon">
+                          <Filter className="h-4 w-4" />
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent>
+                        <SheetHeader>
+                          <SheetTitle>Filters</SheetTitle>
+                        </SheetHeader>
+                        <div className="p-4">
+                          <FilterControls />
+                        </div>
+                      </SheetContent>
+                    </Sheet>
+                  </div>
                 </div>
-              </div>
-          </div>
+            </div>
+          </AnimatedSection>
           
-          {filteredAndSortedProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredAndSortedProducts.map(product => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-             <div className="text-center py-16">
-              <p className="text-xl text-muted-foreground">No products found.</p>
-              <p className="text-sm text-muted-foreground mt-2">Try adjusting your search or filters.</p>
-            </div>
-          )}
+          <AnimatedSection>
+            {filteredAndSortedProducts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredAndSortedProducts.map(product => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <p className="text-xl text-muted-foreground">No products found.</p>
+                <p className="text-sm text-muted-foreground mt-2">Try adjusting your search or filters.</p>
+              </div>
+            )}
+          </AnimatedSection>
         </main>
       </div>
     </div>
