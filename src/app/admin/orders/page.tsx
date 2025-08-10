@@ -17,23 +17,63 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
+import { 
+    AlertDialog, 
+    AlertDialogAction, 
+    AlertDialogCancel, 
+    AlertDialogContent, 
+    AlertDialogDescription, 
+    AlertDialogFooter, 
+    AlertDialogHeader, 
+    AlertDialogTitle
+} from "@/components/ui/alert-dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+
+type Order = {
+    invoiceId: string;
+    customer: string;
+    amount: number;
+    status: 'Fulfilled' | 'Processing' | 'Pending' | 'Cancelled';
+    date: string;
+}
+
+const allOrdersData: Order[] = [
+    { invoiceId: '123456', customer: 'Olivia Martin', amount: 250.00, status: 'Fulfilled', date: '2023-11-23' },
+    { invoiceId: '123457', customer: 'Jackson Lee', amount: 150.75, status: 'Processing', date: '2023-11-23' },
+    { invoiceId: '123458', customer: 'Isabella Nguyen', amount: 350.00, status: 'Fulfilled', date: '2023-11-22' },
+    { invoiceId: '123459', customer: 'William Kim', amount: 45.50, status: 'Pending', date: '2023-11-22' },
+    { invoiceId: '123460', customer: 'Sophia Davis', amount: 550.20, status: 'Fulfilled', date: '2023-11-21' },
+    { invoiceId: '123461', customer: 'Liam Garcia', amount: 89.99, status: 'Processing', date: '2023-11-21' },
+    { invoiceId: '123462', customer: 'Ava Rodriguez', amount: 120.00, status: 'Cancelled', date: '2023-11-20' },
+    { invoiceId: '123463', customer: 'Noah Martinez', amount: 75.00, status: 'Fulfilled', date: '2023-11-20' },
+];
 
 export default function OrdersPage() {
     
-    const allOrders = [
-        { invoiceId: '123456', customer: 'Olivia Martin', amount: 250.00, status: 'Fulfilled', date: '2023-11-23' },
-        { invoiceId: '123457', customer: 'Jackson Lee', amount: 150.75, status: 'Processing', date: '2023-11-23' },
-        { invoiceId: '123458', customer: 'Isabella Nguyen', amount: 350.00, status: 'Fulfilled', date: '2023-11-22' },
-        { invoiceId: '123459', customer: 'William Kim', amount: 45.50, status: 'Pending', date: '2023-11-22' },
-        { invoiceId: '123460', customer: 'Sophia Davis', amount: 550.20, status: 'Fulfilled', date: '2023-11-21' },
-        { invoiceId: '123461', customer: 'Liam Garcia', amount: 89.99, status: 'Processing', date: '2023-11-21' },
-        { invoiceId: '123462', customer: 'Ava Rodriguez', amount: 120.00, status: 'Cancelled', date: '2023-11-20' },
-        { invoiceId: '123463', customer: 'Noah Martinez', amount: 75.00, status: 'Fulfilled', date: '2023-11-20' },
-    ];
-    
+    const [orders, setOrders] = useState<Order[]>(allOrdersData);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [newStatus, setNewStatus] = useState<Order['status'] | ''>('');
 
-    const filteredOrders = allOrders.filter(order => 
+    const handleUpdateStatus = (order: Order) => {
+        setSelectedOrder(order);
+        setNewStatus(order.status);
+    };
+
+    const handleConfirmUpdate = () => {
+        if (selectedOrder && newStatus) {
+            setOrders(currentOrders =>
+                currentOrders.map(o => 
+                    o.invoiceId === selectedOrder.invoiceId ? { ...o, status: newStatus as Order['status'] } : o
+                )
+            );
+            setSelectedOrder(null);
+            setNewStatus('');
+        }
+    };
+
+    const filteredOrders = orders.filter(order => 
         String(order.invoiceId).toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.customer.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -96,7 +136,9 @@ export default function OrdersPage() {
                                                 <DropdownMenuItem asChild>
                                                     <Link href={`/admin/orders/${order.invoiceId}`}>View Order Details</Link>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem>Update Status</DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={() => handleUpdateStatus(order)}>
+                                                    Update Status
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem className="text-red-500">Cancel Order</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -107,6 +149,39 @@ export default function OrdersPage() {
                     </Table>
                 </CardContent>
             </Card>
+
+            <AlertDialog open={!!selectedOrder} onOpenChange={(isOpen) => !isOpen && setSelectedOrder(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Update Order Status</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Select the new status for order #{selectedOrder?.invoiceId}.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <RadioGroup value={newStatus} onValueChange={(value) => setNewStatus(value as Order['status'])}>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Pending" id="r-pending" />
+                            <Label htmlFor="r-pending">Pending</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Processing" id="r-processing" />
+                            <Label htmlFor="r-processing">Processing</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Fulfilled" id="r-fulfilled" />
+                            <Label htmlFor="r-fulfilled">Fulfilled</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Cancelled" id="r-cancelled" />
+                            <Label htmlFor="r-cancelled">Cancelled</Label>
+                        </div>
+                    </RadioGroup>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setSelectedOrder(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmUpdate}>Update</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
