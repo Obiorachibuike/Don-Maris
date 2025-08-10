@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Smartphone, Sparkles, Home, ShoppingCart, Package, Info, Mail, Menu, Receipt } from 'lucide-react';
+import { Smartphone, Sparkles, Home, ShoppingCart, Package, Info, Mail, Menu, CreditCard } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -56,7 +56,7 @@ export function Header() {
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center gap-2" onClick={() => setSheetOpen(false)}>
             <Smartphone className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold font-headline bg-gradient-radial from-primary to-accent bg-clip-text text-transparent">
+            <span className="text-2xl font-bold font-headline bg-gradient-to-br from-primary via-accent to-primary bg-clip-text text-transparent">
               Don Maris
             </span>
           </Link>
@@ -106,4 +106,3 @@ export function Header() {
     </header>
   );
 }
-
