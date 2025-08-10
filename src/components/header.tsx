@@ -1,18 +1,29 @@
 'use client';
 
 import Link from 'next/link';
-import { Smartphone, Sparkles, Home, ShoppingCart } from 'lucide-react';
+import { Smartphone, Sparkles, Home, ShoppingCart, Package } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useCart } from '@/hooks/use-cart';
+import { useEffect, useState } from 'react';
 
 export function Header() {
   const pathname = usePathname();
+  const { items } = useCart();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const navLinks = [
     { href: '/', label: 'Home', icon: Home },
-    { href: '/recommendations', label: 'AI Recommendations', icon: Sparkles },
+    { href: '/products', label: 'Products', icon: Package },
+    { href: '/recommendations', label: 'AI Recommender', icon: Sparkles },
   ];
+
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <header className="bg-card border-b sticky top-0 z-50 shadow-sm">
@@ -27,7 +38,7 @@ export function Header() {
 
           <nav className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href;
+              const isActive = (link.href === '/' && pathname === '/') || (link.href !== '/' && pathname.startsWith(link.href));
               return (
                 <Button key={link.href} variant="ghost" asChild className={cn(isActive && 'bg-accent text-accent-foreground')}>
                   <Link href={link.href} className="flex items-center gap-2">
@@ -40,9 +51,16 @@ export function Header() {
           </nav>
 
           <div className="flex items-center">
-            <Button variant="ghost" size="icon">
-              <ShoppingCart className="h-5 w-5" />
-              <span className="sr-only">Shopping Cart</span>
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/cart">
+                <ShoppingCart className="h-5 w-5" />
+                {isClient && totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {totalItems}
+                  </span>
+                )}
+                <span className="sr-only">Shopping Cart</span>
+              </Link>
             </Button>
           </div>
         </div>

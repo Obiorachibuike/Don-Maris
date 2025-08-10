@@ -12,7 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const AccessoryRecommendationsInputSchema = z.object({
-  phoneModel: z.string().describe('The user\u2019s phone model.'),
+  phoneModel: z.string().describe('The user’s phone model.'),
 });
 export type AccessoryRecommendationsInput = z.infer<typeof AccessoryRecommendationsInputSchema>;
 

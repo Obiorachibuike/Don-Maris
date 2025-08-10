@@ -1,3 +1,5 @@
+'use client'
+
 import { getProductById } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
@@ -6,7 +8,10 @@ import { StarRating } from '@/components/star-rating';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingCart } from 'lucide-react';
-import type { Metadata } from 'next';
+import { useCart } from '@/hooks/use-cart';
+import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
 
 type ProductPageProps = {
   params: {
@@ -14,28 +19,23 @@ type ProductPageProps = {
   };
 };
 
-export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  const product = getProductById(params.id);
-
-  if (!product) {
-    return {
-      title: 'Product Not Found',
-    };
-  }
-
-  return {
-    title: `${product.name} | Don Maris Accessories`,
-    description: product.description,
-  };
-}
-
-
 export default function ProductPage({ params }: ProductPageProps) {
+  const { addItem } = useCart();
+  const { toast } = useToast();
+  const [quantity, setQuantity] = useState(1);
   const product = getProductById(params.id);
 
   if (!product) {
     notFound();
   }
+
+  const handleAddToCart = () => {
+    addItem(product, quantity);
+    toast({
+        title: "Added to cart",
+        description: `${quantity} x ${product.name} has been added to your cart.`,
+    });
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -66,10 +66,19 @@ export default function ProductPage({ params }: ProductPageProps) {
 
           <p className="text-foreground/80 leading-relaxed mb-6">{product.longDescription}</p>
 
-          <Button size="lg" className="mt-auto bg-accent hover:bg-accent/90 text-accent-foreground">
-            <ShoppingCart className="mr-2 h-5 w-5" />
-            Add to Cart
-          </Button>
+            <div className="flex items-center gap-4 mt-auto">
+                 <Input
+                    type="number"
+                    min="1"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    className="w-20"
+                  />
+                <Button size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" onClick={handleAddToCart}>
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    Add to Cart
+                </Button>
+            </div>
         </div>
       </div>
 
