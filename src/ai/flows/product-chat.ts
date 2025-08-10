@@ -92,7 +92,7 @@ const productChatFlow = ai.defineFlow(
         outputSchema: ProductChatOutputSchema,
     },
     async (input) => {
-        const history = input.chatHistory?.map(msg => ({
+        const history = (input.chatHistory || []).map(msg => ({
             role: msg.role,
             content: [{ text: msg.content }]
         }));
@@ -100,11 +100,10 @@ const productChatFlow = ai.defineFlow(
         const { output } = await prompt(
             { ...input },
             {
-                history,
-                prompt: {
-                    history,
-                    messages: [{ role: 'user', content: [{ text: input.question }] }],
-                },
+                history: [
+                  ...history,
+                  { role: 'user', content: [{ text: input.question }] }
+                ],
             }
         );
 
