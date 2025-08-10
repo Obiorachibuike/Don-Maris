@@ -73,7 +73,7 @@ export default function OrdersPage() {
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [newStatus, setNewStatus] = useState<Order['status'] | ''>('');
     const [currentPage, setCurrentPage] = useState(1);
-    const ordersPerPage = 20;
+    const ordersPerPage = 10;
 
     const handleUpdateStatus = (order: Order) => {
         setSelectedOrder(order);
