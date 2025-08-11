@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import type { Product } from "@/lib/types";
 import { useProductStore } from "@/store/product-store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import {
@@ -17,9 +16,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, PlusCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { MoreHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { formatProductType } from "@/lib/display-utils";
+import { AddProductForm } from "@/components/add-product-form";
 
 export default function ProductsAdminPage() {
     
@@ -36,7 +36,7 @@ export default function ProductsAdminPage() {
     const filteredProducts = products.filter(product => 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.type.toLowerCase().includes(searchTerm.toLowerCase())
+        formatProductType(product.type).toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
@@ -72,10 +72,7 @@ export default function ProductsAdminPage() {
                                     setCurrentPage(1); // Reset to first page on new search
                                 }}
                             />
-                            <Button>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Add Product
-                            </Button>
+                            <AddProductForm />
                         </div>
                     </div>
                 </CardHeader>

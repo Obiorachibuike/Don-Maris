@@ -11,6 +11,7 @@ interface ProductState {
   isLoading: boolean;
   error: string | null;
   fetchProducts: () => Promise<void>;
+  addProduct: (product: Omit<Product, 'id' | 'rating' | 'reviews' | 'dateAdded'>) => void;
   decreaseStock: (productId: string, quantity: number) => void;
 }
 
@@ -31,6 +32,19 @@ export const useProductStore = create<ProductState>((set, get) => ({
         error: 'Could not fetch products. Displaying sample data.',
       });
     }
+  },
+  addProduct: (newProductData) => {
+    const newProduct: Product = {
+        ...newProductData,
+        id: `prod-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        rating: 0,
+        reviews: [],
+        dateAdded: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+    };
+    set(state => ({
+        products: [newProduct, ...state.products]
+    }));
+    // In a real app, you would also make an API call to save the product to the database.
   },
   decreaseStock: (productId: string, quantity: number) => {
     set(state => ({
