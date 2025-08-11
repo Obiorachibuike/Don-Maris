@@ -9,8 +9,20 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from '@/components/ui/separator';
 import { StarRating } from '@/components/star-rating';
 import { formatProductType } from '@/lib/display-utils';
-import { Tag, DollarSign, Package, CheckCircle, BarChart2 } from 'lucide-react';
+import { Tag, DollarSign, Package, CheckCircle, BarChart2, ShoppingBag, Calendar, User } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { dummyOrders } from '@/lib/dummy-orders';
+import type { Order, Customer } from '@/lib/types';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Link from 'next/link';
+
+interface PurchaseHistoryEntry {
+    orderId: string;
+    customer: Customer;
+    date: string;
+    quantity: number;
+}
 
 export default function AdminProductDetailsPage() {
     const params = useParams();
@@ -19,10 +31,25 @@ export default function AdminProductDetailsPage() {
 
     const product = products.find(p => p.id === productId);
 
+    // Find all orders containing this product
+    const purchaseHistory: PurchaseHistoryEntry[] = dummyOrders
+        .map(order => {
+            const item = order.items.find(item => item.productId === productId);
+            if (item) {
+                return {
+                    orderId: order.id,
+                    customer: order.customer,
+                    date: order.date,
+                    quantity: item.quantity,
+                };
+            }
+            return null;
+        })
+        .filter((entry): entry is PurchaseHistoryEntry => entry !== null);
+
+
     if (!product) {
         // Handle case where product is not found after loading
-        // You can show a not-found component or redirect
-        // For now, showing a simple skeleton or message
         if (useProductStore.getState().isLoading) {
             return (
                  <div className="space-y-6">
@@ -122,7 +149,7 @@ export default function AdminProductDetailsPage() {
                                 </div>
                             </div>
                              <div className="flex items-center gap-3">
-                                <BarChart2 className="h-5 w-5 text-muted-foreground" />
+                                <Calendar className="h-5 w-5 text-muted-foreground" />
                                 <div>
                                     <p className="text-sm text-muted-foreground">Date Added</p>
                                     <p className="font-medium">{new Date(product.dateAdded).toLocaleDateString()}</p>
@@ -149,6 +176,57 @@ export default function AdminProductDetailsPage() {
                     </Card>
                 </div>
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Purchase History</CardTitle>
+                    <CardDescription>
+                         {purchaseHistory.length > 0
+                            ? `This product has been purchased ${purchaseHistory.length} time(s).`
+                            : 'This product has not been purchased yet.'
+                        }
+                    </CardDescription>
+                </CardHeader>
+                {purchaseHistory.length > 0 && (
+                     <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Customer</TableHead>
+                                    <TableHead>Order ID</TableHead>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead className="text-right">Quantity</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {purchaseHistory.map(purchase => (
+                                    <TableRow key={purchase.orderId}>
+                                        <TableCell>
+                                            <div className="flex items-center gap-3">
+                                                <Avatar>
+                                                    <AvatarImage src={purchase.customer.avatar} alt={purchase.customer.name} />
+                                                    <AvatarFallback>{purchase.customer.name.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div>
+                                                    <p className="font-medium">{purchase.customer.name}</p>
+                                                    <p className="text-sm text-muted-foreground">{purchase.customer.email}</p>
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Link href={`/admin/orders/${purchase.orderId}`} className="text-primary hover:underline">
+                                                {purchase.orderId}
+                                            </Link>
+                                        </TableCell>
+                                        <TableCell>{new Date(purchase.date).toLocaleDateString()}</TableCell>
+                                        <TableCell className="text-right">{purchase.quantity}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                )}
+            </Card>
 
              <Card>
                 <CardHeader>

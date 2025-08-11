@@ -1,4 +1,5 @@
 
+
 export type ProductType = 'Power Flex' | 'Charging Flex' | 'Screen' | 'Backglass' | 'Glass' | 'Tools';
 
 export type Product = {
@@ -33,3 +34,27 @@ export type CartItem = {
 };
 
 export type PaymentStatus = 'paid' | 'unpaid';
+
+// New types for Orders
+export interface OrderItem {
+  productId: string;
+  quantity: number;
+}
+
+export interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+}
+
+export interface Order {
+  id: string;
+  customer: Customer;
+  shippingAddress: string;
+  amount: number;
+  status: 'Fulfilled' | 'Processing' | 'Pending' | 'Cancelled';
+  date: string;
+  paymentMethod: string;
+  items: OrderItem[];
+}

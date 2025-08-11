@@ -29,53 +29,30 @@ import {
 } from "@/components/ui/alert-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { dummyOrders } from "@/lib/dummy-orders";
+import type { Order } from "@/lib/types";
 
-type Order = {
-    invoiceId: string;
-    customer: string;
-    amount: number;
-    status: 'Fulfilled' | 'Processing' | 'Pending' | 'Cancelled';
-    date: string;
-}
+// Flatten order data for the main table view
+const allOrdersData = dummyOrders.map(order => ({
+    id: order.id,
+    customer: order.customer.name,
+    amount: order.amount,
+    status: order.status,
+    date: order.date,
+}));
 
-const allOrdersData: Order[] = [
-    { invoiceId: '123456', customer: 'Olivia Martin', amount: 250.00, status: 'Fulfilled', date: '2023-11-23' },
-    { invoiceId: '123457', customer: 'Jackson Lee', amount: 150.75, status: 'Processing', date: '2023-11-23' },
-    { invoiceId: '123458', customer: 'Isabella Nguyen', amount: 350.00, status: 'Fulfilled', date: '2023-11-22' },
-    { invoiceId: '123459', customer: 'William Kim', amount: 45.50, status: 'Pending', date: '2023-11-22' },
-    { invoiceId: '123460', customer: 'Sophia Davis', amount: 550.20, status: 'Fulfilled', date: '2023-11-21' },
-    { invoiceId: '123461', customer: 'Liam Garcia', amount: 89.99, status: 'Processing', date: '2023-11-21' },
-    { invoiceId: '123462', customer: 'Ava Rodriguez', amount: 120.00, status: 'Cancelled', date: '2023-11-20' },
-    { invoiceId: '123463', customer: 'Noah Martinez', amount: 75.00, status: 'Fulfilled', date: '2023-11-20' },
-    { invoiceId: '123464', customer: 'Emma Brown', amount: 300.00, status: 'Fulfilled', date: '2023-11-19' },
-    { invoiceId: '123465', customer: 'James Wilson', amount: 99.50, status: 'Processing', date: '2023-11-19' },
-    { invoiceId: '123466', customer: 'Charlotte Jones', amount: 180.00, status: 'Fulfilled', date: '2023-11-18' },
-    { invoiceId: '123467', customer: 'Benjamin Taylor', amount: 25.00, status: 'Pending', date: '2023-11-18' },
-    { invoiceId: '123468', customer: 'Amelia Miller', amount: 600.00, status: 'Cancelled', date: '2023-11-17' },
-    { invoiceId: '123469', customer: 'Elijah Anderson', amount: 420.00, status: 'Fulfilled', date: '2023-11-17' },
-    { invoiceId: '123470', customer: 'Mia Thomas', amount: 110.25, status: 'Processing', date: '2023-11-16' },
-    { invoiceId: '123471', customer: 'Lucas Hernandez', amount: 70.00, status: 'Fulfilled', date: '2023-11-16' },
-    { invoiceId: '123472', customer: 'Harper Moore', amount: 85.00, status: 'Pending', date: '2023-11-15' },
-    { invoiceId: '123473', customer: 'Henry White', amount: 199.99, status: 'Fulfilled', date: '2023-11-15' },
-    { invoiceId: '123474', customer: 'Evelyn Harris', amount: 325.50, status: 'Processing', date: '2023-11-14' },
-    { invoiceId: '123475', customer: 'Alexander Clark', amount: 50.00, status: 'Fulfilled', date: '2023-11-14' },
-    { invoiceId: '123476', customer: 'Abigail Lewis', amount: 400.00, status: 'Cancelled', date: '2023-11-13' },
-    { invoiceId: '123477', customer: 'Daniel Robinson', amount: 135.00, status: 'Fulfilled', date: '2023-11-13' },
-    { invoiceId: '123478', customer: 'Madison Walker', amount: 275.00, status: 'Processing', date: '2023-11-12' },
-    { invoiceId: '123479', customer: 'Matthew Perez', amount: 95.80, status: 'Fulfilled', date: '2023-11-12' },
-    { invoiceId: '123480', customer: 'Chloe Hall', amount: 65.00, status: 'Pending', date: '2023-11-11' },
-];
+type DisplayOrder = typeof allOrdersData[0];
 
 export default function OrdersPage() {
     
-    const [orders, setOrders] = useState<Order[]>(allOrdersData);
+    const [orders, setOrders] = useState<DisplayOrder[]>(allOrdersData);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [selectedOrder, setSelectedOrder] = useState<DisplayOrder | null>(null);
     const [newStatus, setNewStatus] = useState<Order['status'] | ''>('');
     const [currentPage, setCurrentPage] = useState(1);
     const ordersPerPage = 10;
 
-    const handleUpdateStatus = (order: Order) => {
+    const handleUpdateStatus = (order: DisplayOrder) => {
         setSelectedOrder(order);
         setNewStatus(order.status);
     };
@@ -84,16 +61,22 @@ export default function OrdersPage() {
         if (selectedOrder && newStatus) {
             setOrders(currentOrders =>
                 currentOrders.map(o => 
-                    o.invoiceId === selectedOrder.invoiceId ? { ...o, status: newStatus as Order['status'] } : o
+                    o.id === selectedOrder.id ? { ...o, status: newStatus as Order['status'] } : o
                 )
             );
+            // In a real app, you'd also update the master dummyOrders array or call an API
+            const orderInMaster = dummyOrders.find(o => o.id === selectedOrder.id);
+            if(orderInMaster) {
+                orderInMaster.status = newStatus as Order['status'];
+            }
+
             setSelectedOrder(null);
             setNewStatus('');
         }
     };
 
     const filteredOrders = orders.filter(order => 
-        String(order.invoiceId).toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(order.id).toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.customer.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -143,8 +126,8 @@ export default function OrdersPage() {
                         </TableHeader>
                         <TableBody>
                             {currentOrders.map(order => (
-                                <TableRow key={order.invoiceId}>
-                                    <TableCell className="font-medium">{order.invoiceId}</TableCell>
+                                <TableRow key={order.id}>
+                                    <TableCell className="font-medium">{order.id}</TableCell>
                                     <TableCell>{order.customer}</TableCell>
                                     <TableCell>${order.amount.toFixed(2)}</TableCell>
                                     <TableCell>
@@ -168,7 +151,7 @@ export default function OrdersPage() {
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                 <DropdownMenuItem asChild>
-                                                    <Link href={`/admin/orders/${order.invoiceId}`}>View Order Details</Link>
+                                                    <Link href={`/admin/orders/${order.id}`}>View Order Details</Link>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onSelect={() => handleUpdateStatus(order)}>
                                                     Update Status
@@ -219,7 +202,7 @@ export default function OrdersPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Update Order Status</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Select the new status for order #{selectedOrder?.invoiceId}.
+                            Select the new status for order #{selectedOrder?.id}.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <RadioGroup value={newStatus} onValueChange={(value) => setNewStatus(value as Order['status'])}>

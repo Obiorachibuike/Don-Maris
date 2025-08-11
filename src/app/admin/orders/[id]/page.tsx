@@ -3,7 +3,7 @@
 
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableHeader,
@@ -15,34 +15,18 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { dummyOrders } from '@/lib/dummy-orders';
+import { useProductStore } from '@/store/product-store';
 
-// Mock data - in a real app, you'd fetch this based on the ID
 const getOrderDetails = (id: string) => {
-    const orders = {
-        '123456': {
-            invoiceId: '123456',
-            customer: { name: 'Olivia Martin', email: 'olivia.martin@email.com', avatar: 'https://placehold.co/100x100.png' },
-            shippingAddress: '123 Main St, Anytown, USA 12345',
-            amount: 250.00,
-            status: 'Fulfilled',
-            date: '2023-11-23',
-            paymentMethod: 'Credit Card (**** **** **** 4242)',
-            items: [
-                { id: '1', name: 'AuraShield Case for iPhone 15', image: 'https://placehold.co/100x100.png', quantity: 1, price: 29.99 },
-                { id: '2', name: 'VoltSprint 45W GaN Charger', image: 'https://placehold.co/100x100.png', quantity: 2, price: 34.99 },
-                { id: '7', name: 'DuraWeave Braided USB-C Cable', image: 'https://placehold.co/100x100.png', quantity: 3, price: 19.99 },
-            ]
-        },
-        // Add other mock orders here if needed
-    };
-    // @ts-ignore
-    return orders[id] || null;
+    return dummyOrders.find(order => order.id === id);
 }
 
 export default function OrderDetailsPage() {
     const params = useParams();
     const orderId = params.id as string;
     const order = getOrderDetails(orderId);
+    const { products } = useProductStore();
 
     if (!order) {
         return (
@@ -57,7 +41,15 @@ export default function OrderDetailsPage() {
         )
     }
 
-    const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const orderItems = order.items.map(item => {
+        const product = products.find(p => p.id === item.productId);
+        return {
+            ...item,
+            product: product || { name: 'Unknown Product', image: 'https://placehold.co/100x100.png', price: 0 }
+        };
+    });
+
+    const subtotal = orderItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
     const shipping = 5.00; // Example shipping cost
     const total = subtotal + shipping;
 
@@ -66,7 +58,7 @@ export default function OrderDetailsPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold">Order Details</h1>
-                    <p className="text-muted-foreground">Invoice ID: {order.invoiceId}</p>
+                    <p className="text-muted-foreground">Invoice ID: {order.id}</p>
                 </div>
                 <Badge variant={
                     order.status === 'Fulfilled' ? 'default' :
@@ -93,17 +85,17 @@ export default function OrderDetailsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {order.items.map(item => (
-                                    <TableRow key={item.id}>
+                                {orderItems.map(item => (
+                                    <TableRow key={item.productId}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
-                                                <Image src={item.image} alt={item.name} width={40} height={40} className="rounded-md object-cover" />
-                                                <span className="font-medium">{item.name}</span>
+                                                <Image src={item.product.image} alt={item.product.name} width={40} height={40} className="rounded-md object-cover" />
+                                                <span className="font-medium">{item.product.name}</span>
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-center">{item.quantity}</TableCell>
-                                        <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
-                                        <TableCell className="text-right">${(item.price * item.quantity).toFixed(2)}</TableCell>
+                                        <TableCell className="text-right">${item.product.price.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right">${(item.product.price * item.quantity).toFixed(2)}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -140,7 +132,7 @@ export default function OrderDetailsPage() {
                         <CardContent className="space-y-2">
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Order Date:</span>
-                                <span>{order.date}</span>
+                                <span>{new Date(order.date).toLocaleDateString()}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Payment Method:</span>
