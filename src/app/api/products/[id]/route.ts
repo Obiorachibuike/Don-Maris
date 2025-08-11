@@ -53,3 +53,22 @@ export async function PUT(
         return new NextResponse('Error updating product', { status: 500 });
     }
 }
+
+export async function DELETE(
+    request: Request,
+    { params }: { params: { id: string } }
+) {
+    const { id } = params;
+    const productIndex = products.findIndex(p => p.id === id);
+
+    if (productIndex === -1) {
+        return new NextResponse('Product not found', { status: 404 });
+    }
+
+    products.splice(productIndex, 1);
+
+    // Simulate a delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    return new NextResponse(null, { status: 204 }); // No Content
+}

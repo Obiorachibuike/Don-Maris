@@ -13,6 +13,7 @@ interface ProductState {
   fetchProducts: () => Promise<void>;
   addProduct: (product: Omit<Product, 'id' | 'rating' | 'reviews' | 'dateAdded'>) => void;
   editProduct: (productId: string, updatedData: Omit<Product, 'id' | 'rating' | 'reviews' | 'dateAdded'>) => Promise<void>;
+  deleteProduct: (productId: string) => Promise<void>;
   decreaseStock: (productId: string, quantity: number) => void;
 }
 
@@ -70,6 +71,24 @@ export const useProductStore = create<ProductState>((set, get) => ({
         console.error("Failed to update product:", error);
         // Optionally handle the error in the UI
         set({ error: 'Failed to update product. Please try again.' });
+    }
+  },
+  deleteProduct: async (productId) => {
+    try {
+        const response = await fetch(`/api/products/${productId}`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete product on server');
+        }
+
+        set(state => ({
+            products: state.products.filter(p => p.id !== productId)
+        }));
+    } catch (error) {
+        console.error("Failed to delete product:", error);
+        set({ error: 'Failed to delete product. Please try again.' });
     }
   },
   decreaseStock: (productId: string, quantity: number) => {

@@ -23,14 +23,27 @@ import { AddProductForm } from "@/components/add-product-form";
 import type { Product, ProductType } from "@/lib/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EditProductForm } from "@/components/edit-product-form";
+import { 
+    AlertDialog, 
+    AlertDialogAction, 
+    AlertDialogCancel, 
+    AlertDialogContent, 
+    AlertDialogDescription, 
+    AlertDialogFooter, 
+    AlertDialogHeader, 
+    AlertDialogTitle
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 type SortKey = keyof Product | null;
 
 export default function ProductsAdminPage() {
     
-    const { products, isLoading, fetchProducts } = useProductStore();
+    const { products, isLoading, fetchProducts, deleteProduct } = useProductStore();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+    const { toast } = useToast();
     
     useEffect(() => {
         fetchProducts();
@@ -48,6 +61,21 @@ export default function ProductsAdminPage() {
     const handleEdit = (product: Product) => {
         setSelectedProduct(product);
         setIsEditModalOpen(true);
+    };
+
+    const handleDelete = (product: Product) => {
+        setProductToDelete(product);
+    };
+
+    const confirmDelete = async () => {
+        if (productToDelete) {
+            await deleteProduct(productToDelete.id);
+            toast({
+                title: "Product Deleted",
+                description: `"${productToDelete.name}" has been removed.`,
+            });
+            setProductToDelete(null);
+        }
     };
 
     const filteredProducts = useMemo(() => products.filter(product => {
@@ -217,7 +245,7 @@ export default function ProductsAdminPage() {
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                     <DropdownMenuItem onSelect={() => handleEdit(product)}>Edit Product</DropdownMenuItem>
                                                     <DropdownMenuItem>View on Storefront</DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-red-500">Delete Product</DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-red-500" onSelect={() => handleDelete(product)}>Delete Product</DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
@@ -265,6 +293,22 @@ export default function ProductsAdminPage() {
                     product={selectedProduct}
                 />
             )}
+            <AlertDialog open={!!productToDelete} onOpenChange={(isOpen) => !isOpen && setProductToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the product "{productToDelete?.name}" from your store.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setProductToDelete(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
+                            Yes, delete product
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }
