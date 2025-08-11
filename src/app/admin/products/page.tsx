@@ -34,6 +34,7 @@ import {
     AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 type SortKey = keyof Product | null;
 
@@ -243,8 +244,10 @@ export default function ProductsAdminPage() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                     <DropdownMenuItem asChild>
+                                                        <Link href={`/admin/products/${product.id}`}>View Details</Link>
+                                                    </DropdownMenuItem>
                                                     <DropdownMenuItem onSelect={() => handleEdit(product)}>Edit Product</DropdownMenuItem>
-                                                    <DropdownMenuItem>View on Storefront</DropdownMenuItem>
                                                     <DropdownMenuItem className="text-red-500" onSelect={() => handleDelete(product)}>Delete Product</DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
