@@ -40,6 +40,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, Loader2, Upload } from 'lucide-react';
 import { ProductType } from '@/lib/types';
 import Image from 'next/image';
+import { Label } from '@/components/ui/label';
 
 const productTypes: ProductType[] = ['Power Flex', 'Charging Flex', 'Screen', 'Backglass', 'Glass', 'Tools'];
 
