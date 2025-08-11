@@ -21,6 +21,7 @@ import Image from "next/image";
 import { formatProductType } from "@/lib/display-utils";
 import { AddProductForm } from "@/components/add-product-form";
 import type { Product } from "@/lib/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type SortKey = keyof Product | null;
 
@@ -35,13 +36,33 @@ export default function ProductsAdminPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' | null }>({ key: null, direction: null });
+    const [timeFilter, setTimeFilter] = useState('all');
     const productsPerPage = 10;
 
-    const filteredProducts = useMemo(() => products.filter(product => 
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        formatProductType(product.type).toLowerCase().includes(searchTerm.toLowerCase())
-    ), [products, searchTerm]);
+    const filteredProducts = useMemo(() => products.filter(product => {
+        const searchMatch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            formatProductType(product.type).toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const timeMatch = (() => {
+            if (timeFilter === 'all') return true;
+            const productDate = new Date(product.dateAdded);
+            const now = new Date();
+            let days = 0;
+            if (timeFilter === 'last-week') days = 7;
+            if (timeFilter === 'last-month') days = 30;
+            if (timeFilter === 'last-year') days = 365;
+            
+            if (days === 0) return true;
+
+            const filterDate = new Date();
+            filterDate.setDate(now.getDate() - days);
+            
+            return productDate >= filterDate;
+        })();
+
+        return searchMatch && timeMatch;
+    }), [products, searchTerm, timeFilter]);
 
     const sortedProducts = useMemo(() => {
         let sortableItems = [...filteredProducts];
@@ -105,18 +126,31 @@ export default function ProductsAdminPage() {
                             <CardTitle>Manage Products</CardTitle>
                             <CardDescription>Add, edit, and manage all products in your store.</CardDescription>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <Input 
-                                placeholder="Search products..." 
-                                className="w-full max-w-sm"
-                                value={searchTerm}
-                                onChange={(e) => {
-                                    setSearchTerm(e.target.value);
-                                    setCurrentPage(1); // Reset to first page on new search
-                                }}
-                            />
+                         <div className="flex items-center gap-4">
                             <AddProductForm />
                         </div>
+                    </div>
+                     <div className="flex items-center gap-4 mt-4">
+                        <Input 
+                            placeholder="Search products..." 
+                            className="w-full max-w-sm"
+                            value={searchTerm}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setCurrentPage(1); // Reset to first page on new search
+                            }}
+                        />
+                         <Select value={timeFilter} onValueChange={setTimeFilter}>
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Filter by date" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Time</SelectItem>
+                                <SelectItem value="last-week">Last Week</SelectItem>
+                                <SelectItem value="last-month">Last Month</SelectItem>
+                                <SelectItem value="last-year">Last Year</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </CardHeader>
                 <CardContent>
