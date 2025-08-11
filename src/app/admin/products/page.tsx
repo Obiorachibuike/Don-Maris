@@ -44,7 +44,7 @@ export default function ProductsAdminPage() {
     ), [products, searchTerm]);
 
     const sortedProducts = useMemo(() => {
-        const sortableItems = [...filteredProducts];
+        let sortableItems = [...filteredProducts];
         if (sortConfig.key && sortConfig.direction) {
             sortableItems.sort((a, b) => {
                 const aValue = a[sortConfig.key!];
