@@ -4,7 +4,7 @@ import type { Product } from './types';
 export const dummyProducts: Product[] = [
   {
     id: '3',
-    name: 'iPhone 14 Pro Max Screen Replacement',
+    name: 'iPhone 14 Pro Max Screen',
     description: 'Vibrant and responsive OLED replacement screen.',
     longDescription: 'Restore your iPhone 14 Pro Max to its former glory with this high-quality OLED screen replacement. It offers the same vibrant colors, deep blacks, and responsive touch as the original. Each kit includes the necessary tools for installation.',
     price: 189.99,
@@ -36,7 +36,7 @@ export const dummyProducts: Product[] = [
   },
   {
     id: '6',
-    name: 'X650 Charging Port Flex Cable',
+    name: 'X650 C/F',
     description: 'OEM-grade replacement for faulty charging ports.',
     longDescription: 'Fix charging issues with your phone with this replacement flex cable. This component includes the USB-C port, primary microphone, and cellular antenna connections. Ensures reliable charging and data sync.',
     price: 22.50,
@@ -51,7 +51,7 @@ export const dummyProducts: Product[] = [
   },
     {
     id: '8',
-    name: 'iPhone 12 Power & Volume Flex Cable',
+    name: 'iPhone 12 P/F',
     description: 'Replacement for power button and volume controls.',
     longDescription: 'This flex cable assembly replaces the power button, volume buttons, and mute/ring switch for various iPhone models. Ideal for fixing unresponsive or malfunctioning buttons. Please select your specific model before ordering.',
     price: 18.99,
@@ -66,7 +66,7 @@ export const dummyProducts: Product[] = [
   },
   {
     id: '9',
-    name: 'Pixel 7 Pro Screen Replacement',
+    name: 'Pixel 7 Pro Screen',
     description: 'High-quality screen with included adhesive.',
     longDescription: 'Bring your Google Pixel 7 Pro display back to life. This kit includes a high-fidelity screen and pre-cut adhesive for a secure, water-resistant fit. The display offers accurate colors and touch response.',
     price: 145.00,
@@ -96,7 +96,7 @@ export const dummyProducts: Product[] = [
   },
    {
     id: '11',
-    name: 'X559 Charging Port Flex Cable',
+    name: 'X559 C/F',
     description: 'Replacement charging port for various models.',
     longDescription: 'Fix charging issues with your device using the X559 replacement flex cable. Ensures reliable charging and data sync for compatible models.',
     price: 21.99,
