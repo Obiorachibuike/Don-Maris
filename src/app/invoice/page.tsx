@@ -58,7 +58,7 @@ export default function InvoicePage() {
            <h1 className="text-4xl font-bold font-headline mb-8 text-center">Order Confirmation</h1>
            <div className="relative bg-card rounded-lg shadow-lg p-8 md:p-12 overflow-hidden">
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                    <span className="text-7xl md:text-9xl font-black font-headline text-foreground/5 rotate-[-15deg] select-none">
+                    <span className="text-7xl md:text-9xl font-black font-headline bg-gradient-to-br from-primary via-accent to-primary bg-clip-text text-transparent opacity-10 rotate-[-15deg] select-none">
                         Don Maris
                     </span>
                 </div>

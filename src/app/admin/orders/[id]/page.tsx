@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -18,6 +18,9 @@ import { Separator } from '@/components/ui/separator';
 import { dummyOrders } from '@/lib/dummy-orders';
 import { useProductStore } from '@/store/product-store';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Printer } from 'lucide-react';
+import type { CartItem } from '@/lib/types';
 
 const getOrderDetails = (id: string) => {
     return dummyOrders.find(order => order.id === id);
@@ -25,6 +28,7 @@ const getOrderDetails = (id: string) => {
 
 export default function OrderDetailsPage() {
     const params = useParams();
+    const router = useRouter();
     const orderId = params.id as string;
     const order = getOrderDetails(orderId);
     const { products } = useProductStore();
@@ -54,6 +58,36 @@ export default function OrderDetailsPage() {
     const shipping = 5.00; // Example shipping cost
     const total = subtotal + shipping;
 
+    const handlePreviewInvoice = () => {
+        const cartItems: CartItem[] = order.items.map(item => {
+            const product = products.find(p => p.id === item.productId);
+            return {
+                id: item.productId,
+                product: product!,
+                quantity: item.quantity
+            }
+        }).filter(item => item.product);
+
+         const invoiceData = {
+            items: cartItems,
+            total: order.amount,
+            invoiceId: order.id,
+            date: new Date(order.date).toLocaleDateString(),
+            customer: {
+                name: order.customer.name,
+                email: order.customer.email,
+                address: order.shippingAddress.split(', ')[0],
+                city: order.shippingAddress.split(', ')[1],
+                state: order.shippingAddress.split(', ')[2].split(' ')[0],
+                zip: order.shippingAddress.split(', ')[2].split(' ')[1],
+            },
+            paymentStatus: order.status === 'Fulfilled' ? 'paid' : 'unpaid',
+        };
+
+        sessionStorage.setItem('don_maris_order', JSON.stringify(invoiceData));
+        router.push('/invoice');
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -61,13 +95,19 @@ export default function OrderDetailsPage() {
                     <h1 className="text-2xl font-bold">Order Details</h1>
                     <p className="text-muted-foreground">Invoice ID: {order.id}</p>
                 </div>
-                <Badge variant={
-                    order.status === 'Fulfilled' ? 'default' :
-                    order.status === 'Processing' ? 'secondary' :
-                    'destructive'
-                } className={`capitalize ${order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : order.status === 'Cancelled' ? 'bg-gray-500/20 text-gray-700 border-gray-500/20' : ''}`}>
-                    {order.status}
-                </Badge>
+                <div className='flex items-center gap-4'>
+                    <Button onClick={handlePreviewInvoice} variant="outline">
+                        <Printer className="mr-2 h-4 w-4" />
+                        Preview Invoice
+                    </Button>
+                    <Badge variant={
+                        order.status === 'Fulfilled' ? 'default' :
+                        order.status === 'Processing' ? 'secondary' :
+                        'destructive'
+                    } className={`capitalize ${order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : order.status === 'Cancelled' ? 'bg-gray-500/20 text-gray-700 border-gray-500/20' : ''}`}>
+                        {order.status}
+                    </Badge>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
