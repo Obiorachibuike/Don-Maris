@@ -22,7 +22,7 @@ import { formatProductType } from "@/lib/display-utils";
 import { AddProductForm } from "@/components/add-product-form";
 import type { Product } from "@/lib/types";
 
-type SortKey = keyof Product;
+type SortKey = keyof Product | null;
 
 export default function ProductsAdminPage() {
     
@@ -34,7 +34,7 @@ export default function ProductsAdminPage() {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' }>({ key: 'name', direction: 'ascending' });
+    const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' | null }>({ key: null, direction: null });
     const productsPerPage = 10;
 
     const filteredProducts = useMemo(() => products.filter(product => 
@@ -45,10 +45,10 @@ export default function ProductsAdminPage() {
 
     const sortedProducts = useMemo(() => {
         const sortableItems = [...filteredProducts];
-        if (sortConfig.key) {
+        if (sortConfig.key && sortConfig.direction) {
             sortableItems.sort((a, b) => {
-                const aValue = a[sortConfig.key];
-                const bValue = b[sortConfig.key];
+                const aValue = a[sortConfig.key!];
+                const bValue = b[sortConfig.key!];
 
                 if (aValue < bValue) {
                     return sortConfig.direction === 'ascending' ? -1 : 1;
@@ -68,9 +68,19 @@ export default function ProductsAdminPage() {
     const currentProducts = sortedProducts.slice(indexOfFirstProduct, indexOfLastOrder);
 
     const requestSort = (key: SortKey) => {
-        let direction: 'ascending' | 'descending' = 'ascending';
-        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-            direction = 'descending';
+        if (!key) {
+            setSortConfig({ key: null, direction: null });
+            return;
+        }
+
+        let direction: 'ascending' | 'descending' | null = 'ascending';
+        if (sortConfig.key === key) {
+            if (sortConfig.direction === 'ascending') {
+                direction = 'descending';
+            } else if (sortConfig.direction === 'descending') {
+                direction = null; // Return to default
+                key = null;
+            }
         }
         setSortConfig({ key, direction });
     };
@@ -83,7 +93,7 @@ export default function ProductsAdminPage() {
         setCurrentPage(prev => Math.min(prev + 1, totalPages));
     };
 
-    const SortableHeader = ({ sortKey, label }: { sortKey: SortKey, label: string }) => (
+    const SortableHeader = ({ sortKey, label }: { sortKey: keyof Product, label: string }) => (
         <TableHead>
             <Button variant="ghost" onClick={() => requestSort(sortKey)}>
                 {label}
