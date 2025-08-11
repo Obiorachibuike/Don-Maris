@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 interface EditOrderFormProps {
     isOpen: boolean;
@@ -62,11 +63,11 @@ export function EditOrderForm({ isOpen, setIsOpen, order, onOrderUpdate }: EditO
     }, [order, products]);
 
     const handleQuantityChange = (productId: string, newQuantity: number) => {
-        const quantity = Math.max(0, newQuantity);
+        const quantity = isNaN(newQuantity) ? 0 : newQuantity;
         setEditableItems(currentItems => 
             currentItems.map(item => 
                 item.productId === productId ? { ...item, quantity } : item
-            ).filter(item => item.quantity > 0) // Remove if quantity is 0
+            )
         );
     };
 
@@ -96,7 +97,20 @@ export function EditOrderForm({ isOpen, setIsOpen, order, onOrderUpdate }: EditO
         return products.filter(p => !orderedProductIds.includes(p.id));
     }, [products, editableItems]);
 
+    const isFormInvalid = useMemo(() => {
+        return editableItems.some(item => item.quantity <= 0);
+    }, [editableItems]);
+
     const handleSaveChanges = () => {
+        if (isFormInvalid) {
+            toast({
+                variant: 'destructive',
+                title: "Invalid Quantity",
+                description: "One or more items have a quantity of 0. Please correct it before saving.",
+            });
+            return;
+        }
+
         setIsSaving(true);
         const newTotal = editableItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
         const updatedOrderItems = editableItems.map(({ productId, quantity }) => ({ productId, quantity }));
@@ -154,7 +168,10 @@ export function EditOrderForm({ isOpen, setIsOpen, order, onOrderUpdate }: EditO
                                                 type="number" 
                                                 value={item.quantity}
                                                 onChange={(e) => handleQuantityChange(item.productId, parseInt(e.target.value, 10))}
-                                                className="w-20"
+                                                className={cn(
+                                                    "w-20",
+                                                    item.quantity <= 0 && "border-destructive focus-visible:ring-destructive"
+                                                )}
                                                 min={1}
                                             />
                                         </TableCell>
@@ -190,7 +207,7 @@ export function EditOrderForm({ isOpen, setIsOpen, order, onOrderUpdate }: EditO
                     <DialogClose asChild>
                         <Button variant="outline">Cancel</Button>
                     </DialogClose>
-                    <Button onClick={handleSaveChanges} disabled={isSaving}>
+                    <Button onClick={handleSaveChanges} disabled={isSaving || isFormInvalid}>
                         {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Save Changes
                     </Button>
