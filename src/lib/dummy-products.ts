@@ -109,4 +109,32 @@ export const dummyProducts: Product[] = [
     dateAdded: '2023-11-22',
     stock: 180,
   },
+  ...Array.from({ length: 60 }, (_, i) => {
+    const id = (i + 12).toString();
+    const typeOptions: Product['type'][] = ['Screen', 'Tools', 'Charging Flex', 'Power Flex', 'Backglass', 'Glass'];
+    const brandOptions = ['ScreenSavvy', 'Pro-Tech', 'PartPerfect', 'GlassGuard', 'FixIt'];
+    const type = typeOptions[i % typeOptions.length];
+    const brand = brandOptions[i % brandOptions.length];
+    const price = parseFloat((Math.random() * (200 - 15) + 15).toFixed(2));
+    const rating = parseFloat((Math.random() * (5 - 3.5) + 3.5).toFixed(1));
+    const stock = Math.floor(Math.random() * 250);
+    const date = new Date(new Date('2023-01-01').getTime() + Math.random() * (new Date().getTime() - new Date('2023-01-01').getTime())).toISOString().split('T')[0];
+
+    return {
+        id: id,
+        name: `${brand} Model ${id}`,
+        description: `A high-quality ${type.toLowerCase()} for various devices.`,
+        longDescription: `This is a premium ${type.toLowerCase()} from ${brand}, designed for reliability and performance. Model ${id} ensures perfect compatibility and function.`,
+        price: price,
+        image: `https://placehold.co/600x600.png`,
+        data_ai_hint: `${type.toLowerCase().split(' ')[0]}`,
+        brand: brand,
+        type: type,
+        rating: rating,
+        reviews: [],
+        isFeatured: i < 3,
+        dateAdded: date,
+        stock: stock,
+    };
+  }),
 ];
