@@ -12,6 +12,7 @@ interface ProductState {
   error: string | null;
   fetchProducts: () => Promise<void>;
   addProduct: (product: Omit<Product, 'id' | 'rating' | 'reviews' | 'dateAdded'>) => void;
+  editProduct: (productId: string, updatedData: Omit<Product, 'id' | 'rating' | 'reviews' | 'dateAdded'>) => Promise<void>;
   decreaseStock: (productId: string, quantity: number) => void;
 }
 
@@ -45,6 +46,31 @@ export const useProductStore = create<ProductState>((set, get) => ({
         products: [newProduct, ...state.products]
     }));
     // In a real app, you would also make an API call to save the product to the database.
+  },
+  editProduct: async (productId, updatedData) => {
+    try {
+      const response = await fetch(`/api/products/${productId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update product on server');
+      }
+
+      const updatedProductFromServer: Product = await response.json();
+
+      set(state => ({
+        products: state.products.map(p => p.id === productId ? updatedProductFromServer : p)
+      }));
+    } catch (error) {
+        console.error("Failed to update product:", error);
+        // Optionally handle the error in the UI
+        set({ error: 'Failed to update product. Please try again.' });
+    }
   },
   decreaseStock: (productId: string, quantity: number) => {
     set(state => ({
