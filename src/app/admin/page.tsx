@@ -128,7 +128,7 @@ export default function AdminDashboard() {
             </Card>
              <Card className="lg:col-span-2">
                 <CardHeader>
-                    <CardTitle>Sales Overview</CardTitle>
+                    <CardTitle>Sales Overview (Line Chart)</CardTitle>
                     <CardDescription>A line chart showing total sales and revenue per month.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -148,6 +148,7 @@ export default function AdminDashboard() {
                             axisLine={false}
                             tickMargin={8}
                           />
+                           <YAxis />
                           <ChartTooltip
                             cursor={false}
                             content={<ChartTooltipContent />}
@@ -168,6 +169,33 @@ export default function AdminDashboard() {
                             dot={false}
                           />
                         </LineChart>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Sales Overview (Bar Chart)</CardTitle>
+                    <CardDescription>A bar chart showing total sales and revenue per month.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                        <BarChart accessibilityLayer data={salesData}>
+                            <CartesianGrid vertical={false} />
+                            <XAxis
+                                dataKey="month"
+                                tickLine={false}
+                                tickMargin={10}
+                                axisLine={false}
+                            />
+                            <YAxis />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <ChartLegend content={<ChartLegendContent />} />
+                            <Bar dataKey="sales" fill="var(--color-sales)" radius={4} />
+                            <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
+                        </BarChart>
                     </ChartContainer>
                 </CardContent>
             </Card>
@@ -200,7 +228,7 @@ export default function AdminDashboard() {
                                         order.status === 'Fulfilled' ? 'default' :
                                         order.status === 'Processing' ? 'secondary' :
                                         'destructive'
-                                    } className={order.status === 'Pending' ? 'bg-red-500/20 text-red-700 border-red-500/20' : ''}>
+                                    } className={order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : order.status === 'Cancelled' ? 'bg-gray-500/20 text-gray-700 border-gray-500/20' : ''}>
                                         {order.status}
                                     </Badge>
                                 </TableCell>
@@ -214,4 +242,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-
