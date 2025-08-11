@@ -48,6 +48,11 @@ export interface Customer {
   avatar: string;
 }
 
+export interface User extends Customer {
+    role: 'admin' | 'sales' | 'accountant' | 'supplier' | 'customer';
+    dateJoined: string;
+}
+
 export interface Order {
   id: string;
   customer: Customer;

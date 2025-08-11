@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { dummyOrders } from '@/lib/dummy-orders';
 import { useProductStore } from '@/store/product-store';
+import Link from 'next/link';
 
 const getOrderDetails = (id: string) => {
     return dummyOrders.find(order => order.id === id);
@@ -109,16 +110,16 @@ export default function OrderDetailsPage() {
                             <CardTitle>Customer</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="flex items-center gap-3">
+                            <Link href={`/admin/users/${order.customer.id}`} className="flex items-center gap-3 group">
                                 <Avatar>
                                     <AvatarImage src={order.customer.avatar} alt={order.customer.name} />
                                     <AvatarFallback>{order.customer.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <p className="font-medium">{order.customer.name}</p>
-                                    <p className="text-sm text-muted-foreground">{order.customer.email}</p>
+                                    <p className="font-medium group-hover:underline">{order.customer.name}</p>
+                                    <p className="text-sm text-muted-foreground group-hover:underline">{order.customer.email}</p>
                                 </div>
-                            </div>
+                            </Link>
                             <Separator className="my-4" />
                             <h4 className="font-semibold mb-2">Shipping Address</h4>
                             <p className="text-sm text-muted-foreground">{order.shippingAddress}</p>

@@ -202,16 +202,16 @@ export default function AdminProductDetailsPage() {
                                 {purchaseHistory.map(purchase => (
                                     <TableRow key={purchase.orderId}>
                                         <TableCell>
-                                            <div className="flex items-center gap-3">
+                                            <Link href={`/admin/users/${purchase.customer.id}`} className="flex items-center gap-3 group">
                                                 <Avatar>
                                                     <AvatarImage src={purchase.customer.avatar} alt={purchase.customer.name} />
                                                     <AvatarFallback>{purchase.customer.name.charAt(0)}</AvatarFallback>
                                                 </Avatar>
                                                 <div>
-                                                    <p className="font-medium">{purchase.customer.name}</p>
-                                                    <p className="text-sm text-muted-foreground">{purchase.customer.email}</p>
+                                                    <p className="font-medium group-hover:underline">{purchase.customer.name}</p>
+                                                    <p className="text-sm text-muted-foreground group-hover:underline">{purchase.customer.email}</p>
                                                 </div>
-                                            </div>
+                                            </Link>
                                         </TableCell>
                                         <TableCell>
                                             <Link href={`/admin/orders/${purchase.orderId}`} className="text-primary hover:underline">

@@ -17,16 +17,12 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getAllUsers } from "@/lib/dummy-users";
+import Link from "next/link";
 
 export default function UsersPage() {
     
-    const allUsers = [
-        { id: 'USR001', name: 'Alex Maris', email: 'alex@donmaris.com', role: 'admin', dateJoined: '2023-01-15', avatar: 'https://placehold.co/100x100.png' },
-        { id: 'USR002', name: 'Jessica Lane', email: 'jessica@donmaris.com', role: 'supplier', dateJoined: '2023-02-20', avatar: 'https://placehold.co/100x100.png' },
-        { id: 'USR003', name: 'David Chen', email: 'david@donmaris.com', role: 'sales', dateJoined: '2023-03-10', avatar: 'https://placehold.co/100x100.png' },
-        { id: 'USR004', name: 'Maria Rodriguez', email: 'maria@donmaris.com', role: 'accountant', dateJoined: '2023-04-05', avatar: 'https://placehold.co/100x100.png' },
-        { id: 'USR005', name: 'John Smith', email: 'john@donmaris.com', role: 'sales', dateJoined: '2023-05-12', avatar: 'https://placehold.co/100x100.png' },
-    ];
+    const allUsers = getAllUsers();
     
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -73,21 +69,21 @@ export default function UsersPage() {
                             {filteredUsers.map(user => (
                                 <TableRow key={user.id}>
                                     <TableCell className="font-medium">
-                                        <div className="flex items-center gap-3">
+                                        <Link href={`/admin/users/${user.id}`} className="flex items-center gap-3 group">
                                             <Avatar>
                                                 <AvatarImage src={user.avatar} alt={user.name} />
                                                 <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <div>
-                                                <p>{user.name}</p>
-                                                <p className="text-sm text-muted-foreground">{user.email}</p>
+                                                <p className="group-hover:underline">{user.name}</p>
+                                                <p className="text-sm text-muted-foreground group-hover:underline">{user.email}</p>
                                             </div>
-                                        </div>
+                                        </Link>
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant="secondary" className="capitalize">{user.role}</Badge>
                                     </TableCell>
-                                    <TableCell>{user.dateJoined}</TableCell>
+                                    <TableCell>{new Date(user.dateJoined).toLocaleDateString()}</TableCell>
                                     <TableCell>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
@@ -98,6 +94,9 @@ export default function UsersPage() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/admin/users/${user.id}`}>View Details</Link>
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem>Edit User</DropdownMenuItem>
                                                 <DropdownMenuItem>Change Role</DropdownMenuItem>
                                                 <DropdownMenuItem className="text-red-500">Deactivate User</DropdownMenuItem>
