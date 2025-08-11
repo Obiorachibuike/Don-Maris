@@ -61,28 +61,22 @@ export default function ProductsAdminPage() {
         }
         return sortableItems;
     }, [filteredProducts, sortConfig]);
-
+    
     const totalPages = Math.ceil(sortedProducts.length / productsPerPage);
-    const indexOfLastOrder = currentPage * productsPerPage;
-    const indexOfFirstProduct = indexOfLastOrder - productsPerPage;
-    const currentProducts = sortedProducts.slice(indexOfFirstProduct, indexOfLastOrder);
+    const indexOfLastProduct = currentPage * productsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+    const currentProducts = sortedProducts.slice(indexOfFirstProduct, indexOfLastProduct);
 
     const requestSort = (key: SortKey) => {
-        if (!key) {
-            setSortConfig({ key: null, direction: null });
-            return;
-        }
-
         let direction: 'ascending' | 'descending' | null = 'ascending';
-        if (sortConfig.key === key) {
-            if (sortConfig.direction === 'ascending') {
-                direction = 'descending';
-            } else if (sortConfig.direction === 'descending') {
-                direction = null; // Return to default
-                key = null;
-            }
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        } else if (sortConfig.key === key && sortConfig.direction === 'descending') {
+            direction = null;
+            key = null;
         }
         setSortConfig({ key, direction });
+        setCurrentPage(1); // Reset to first page on sort
     };
 
     const handlePreviousPage = () => {
@@ -177,7 +171,7 @@ export default function ProductsAdminPage() {
                  <CardFooter>
                      <div className="flex items-center justify-between w-full">
                         <div className="text-sm text-muted-foreground">
-                            Showing {Math.min(indexOfFirstProduct + 1, sortedProducts.length)} to {Math.min(indexOfLastOrder, sortedProducts.length)} of {sortedProducts.length} products.
+                            Showing {Math.min(indexOfFirstProduct + 1, sortedProducts.length)} to {Math.min(indexOfLastProduct, sortedProducts.length)} of {sortedProducts.length} products.
                         </div>
                         <div className="flex items-center gap-2">
                             <Button
