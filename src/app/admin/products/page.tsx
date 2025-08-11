@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, PlusCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
+import { formatProductType } from "@/lib/display-utils";
 
 export default function ProductsAdminPage() {
     
@@ -101,7 +102,7 @@ export default function ProductsAdminPage() {
                                     <TableCell className="font-medium">{product.name}</TableCell>
                                     <TableCell>{product.brand}</TableCell>
                                     <TableCell>
-                                        <Badge variant="outline">{product.type}</Badge>
+                                        <Badge variant="outline">{formatProductType(product.type)}</Badge>
                                     </TableCell>
                                     <TableCell>${product.price.toFixed(2)}</TableCell>
                                     <TableCell>{product.stock}</TableCell>

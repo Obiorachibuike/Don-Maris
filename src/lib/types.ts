@@ -1,4 +1,6 @@
 
+export type ProductType = 'Power Flex' | 'Charging Flex' | 'Screen' | 'Backglass' | 'Glass' | 'Tools';
+
 export type Product = {
   id: string;
   name: string;
@@ -7,7 +9,7 @@ export type Product = {
   price: number;
   image: string;
   brand: string;
-  type: 'Power Flex' | 'Charging Flex' | 'Screen' | 'Backglass' | 'Glass' | 'Tools';
+  type: ProductType;
   rating: number;
   reviews: Review[];
   data_ai_hint: string;

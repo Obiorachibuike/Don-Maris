@@ -17,6 +17,7 @@ import { AnimatedSection } from '@/components/animated-section';
 import { ProductChat } from '@/components/product-chat';
 import type { Product } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { formatProductType } from '@/lib/display-utils';
 
 type ProductPageProps = {
   params: {
@@ -94,7 +95,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 
           <div className="flex flex-col">
             <h1 className="text-3xl md:text-4xl font-bold font-headline mb-2">{product.name}</h1>
-            <p className="text-lg text-muted-foreground mb-4">{product.brand} - {product.type}</p>
+            <p className="text-lg text-muted-foreground mb-4">{product.brand} - {formatProductType(product.type)}</p>
             
             <div className="flex items-center gap-2 mb-4">
               <StarRating rating={product.rating} />
