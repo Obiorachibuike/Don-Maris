@@ -20,7 +20,7 @@ import { MoreHorizontal, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-r
 import Image from "next/image";
 import { formatProductType } from "@/lib/display-utils";
 import { AddProductForm } from "@/components/add-product-form";
-import type { Product } from "@/lib/types";
+import type { Product, ProductType } from "@/lib/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type SortKey = keyof Product | null;
@@ -37,7 +37,10 @@ export default function ProductsAdminPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' | null }>({ key: null, direction: null });
     const [timeFilter, setTimeFilter] = useState('all');
+    const [typeFilter, setTypeFilter] = useState('all');
     const productsPerPage = 10;
+
+    const productTypes = useMemo(() => ['all', ...[...new Set(products.map((p) => p.type))].sort()], [products]) as ('all' | ProductType)[];
 
     const filteredProducts = useMemo(() => products.filter(product => {
         const searchMatch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -61,8 +64,10 @@ export default function ProductsAdminPage() {
             return productDate >= filterDate;
         })();
 
-        return searchMatch && timeMatch;
-    }), [products, searchTerm, timeFilter]);
+        const typeMatch = typeFilter === 'all' || product.type === typeFilter;
+
+        return searchMatch && timeMatch && typeMatch;
+    }), [products, searchTerm, timeFilter, typeFilter]);
 
     const sortedProducts = useMemo(() => {
         let sortableItems = [...filteredProducts];
@@ -149,6 +154,16 @@ export default function ProductsAdminPage() {
                                 <SelectItem value="last-week">Last Week</SelectItem>
                                 <SelectItem value="last-month">Last Month</SelectItem>
                                 <SelectItem value="last-year">Last Year</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Select value={typeFilter} onValueChange={setTypeFilter}>
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Filter by type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {productTypes.map(type => (
+                                     <SelectItem key={type} value={type}>{type === 'all' ? 'All Types' : formatProductType(type)}</SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
