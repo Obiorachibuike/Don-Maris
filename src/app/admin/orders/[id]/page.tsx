@@ -21,6 +21,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 import type { CartItem } from '@/lib/types';
+import { getProductsSync } from '@/lib/data';
 
 const getOrderDetails = (id: string) => {
     return dummyOrders.find(order => order.id === id);
@@ -32,6 +33,7 @@ export default function OrderDetailsPage() {
     const orderId = params.id as string;
     const order = getOrderDetails(orderId);
     const { products } = useProductStore();
+    const allProducts = getProductsSync();
 
     if (!order) {
         return (
@@ -47,7 +49,7 @@ export default function OrderDetailsPage() {
     }
 
     const orderItems = order.items.map(item => {
-        const product = products.find(p => p.id === item.productId);
+        const product = allProducts.find(p => p.id === item.productId);
         return {
             ...item,
             product: product || { name: 'Unknown Product', image: 'https://placehold.co/100x100.png', price: 0 }
@@ -60,7 +62,7 @@ export default function OrderDetailsPage() {
 
     const handlePreviewInvoice = () => {
         const cartItems: CartItem[] = order.items.map(item => {
-            const product = products.find(p => p.id === item.productId);
+            const product = allProducts.find(p => p.id === item.productId);
             return {
                 id: item.productId,
                 product: product!,
