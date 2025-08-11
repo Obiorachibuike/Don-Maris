@@ -85,7 +85,7 @@ export default function OrderDetailsPage() {
         };
 
         sessionStorage.setItem('don_maris_order', JSON.stringify(invoiceData));
-        router.push('/invoice');
+        router.push(`/admin/orders/${orderId}/invoice`);
     };
 
     return (
