@@ -16,6 +16,7 @@ import type { PaymentStatus, CartItem } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import axios from 'axios';
+import { useProductStore } from '@/store/product-store';
 
 
 interface CustomerDetails {
@@ -42,7 +43,8 @@ interface VirtualAccount {
 }
 
 export default function PaymentPage() {
-    const { clearCart } = useCart();
+    const { items, total, clearCart } = useCart();
+    const { decreaseStock } = useProductStore();
     const { toast } = useToast();
     const router = useRouter();
     const [shippingDetails, setShippingDetails] = useState<ShippingDetails | null>(null);
@@ -101,6 +103,11 @@ export default function PaymentPage() {
         const result = await submitOrder(orderDetails);
 
         if (result.status === 'success' || result.id) {
+            // Deduct stock for each item in the cart
+            shippingDetails.items.forEach(item => {
+                decreaseStock(item.product.id, item.quantity);
+            });
+
             const finalOrder = {
                 ...orderDetails,
                 invoiceId: result.id || `DM-${new Date().getTime()}`,
@@ -137,8 +144,6 @@ export default function PaymentPage() {
         );
     }
     
-    const { items, total } = shippingDetails;
-
     return (
         <div className="container mx-auto px-4 py-12">
             <h1 className="text-4xl font-bold font-headline mb-8 text-center">Payment - Step 2 of 2</h1>

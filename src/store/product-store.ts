@@ -11,9 +11,10 @@ interface ProductState {
   isLoading: boolean;
   error: string | null;
   fetchProducts: () => Promise<void>;
+  decreaseStock: (productId: string, quantity: number) => void;
 }
 
-export const useProductStore = create<ProductState>((set) => ({
+export const useProductStore = create<ProductState>((set, get) => ({
   products: [],
   isLoading: true,
   error: null,
@@ -31,4 +32,14 @@ export const useProductStore = create<ProductState>((set) => ({
       });
     }
   },
+  decreaseStock: (productId: string, quantity: number) => {
+    set(state => ({
+        products: state.products.map(p => {
+            if (p.id === productId) {
+                return { ...p, stock: p.stock - quantity };
+            }
+            return p;
+        })
+    }));
+  }
 }));
