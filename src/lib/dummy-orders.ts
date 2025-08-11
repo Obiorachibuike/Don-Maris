@@ -67,3 +67,20 @@ export const dummyOrders: Order[] = [
         ]
     },
 ];
+
+export function updateOrder(orderId: string, updatedItems: { productId: string, quantity: number }[], updatedAmount: number): Order | undefined {
+    const orderIndex = dummyOrders.findIndex(o => o.id === orderId);
+    if (orderIndex === -1) {
+        return undefined;
+    }
+    
+    const updatedOrder = {
+        ...dummyOrders[orderIndex],
+        items: updatedItems,
+        amount: updatedAmount,
+    };
+
+    dummyOrders[orderIndex] = updatedOrder;
+
+    return updatedOrder;
+}
