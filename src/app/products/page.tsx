@@ -34,6 +34,7 @@ export default function ProductsPage() {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState([0, maxPrice]);
   const [sortOption, setSortOption] = useState('newest');
+  const [timeFilter, setTimeFilter] = useState('all');
 
   useEffect(() => {
       setPriceRange([0, maxPrice]);
@@ -57,6 +58,7 @@ export default function ProductsPage() {
     setSelectedBrands([]);
     setPriceRange([0, maxPrice]);
     setSortOption('newest');
+    setTimeFilter('all');
   };
 
   const filteredAndSortedProducts = useMemo(() => {
@@ -65,7 +67,23 @@ export default function ProductsPage() {
       const typeMatch = selectedTypes.length === 0 || selectedTypes.includes(product.type);
       const brandMatch = selectedBrands.length === 0 || selectedBrands.includes(product.brand);
       const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
-      return searchMatch && typeMatch && brandMatch && priceMatch;
+      
+      const timeMatch = (() => {
+        if (timeFilter === 'all') return true;
+        const productDate = new Date(product.dateAdded);
+        const now = new Date();
+        let days = 0;
+        if (timeFilter === 'last-week') days = 7;
+        if (timeFilter === 'last-month') days = 30;
+        if (timeFilter === 'last-year') days = 365;
+        
+        const filterDate = new Date();
+        filterDate.setDate(now.getDate() - days);
+        
+        return productDate >= filterDate;
+      })();
+
+      return searchMatch && typeMatch && brandMatch && priceMatch && timeMatch;
     });
 
     switch (sortOption) {
@@ -84,7 +102,7 @@ export default function ProductsPage() {
     }
 
     return filtered;
-  }, [products, searchQuery, selectedTypes, selectedBrands, priceRange, sortOption]);
+  }, [products, searchQuery, selectedTypes, selectedBrands, priceRange, sortOption, timeFilter]);
 
   const FilterControls = () => (
     <div className="flex flex-col gap-6">
@@ -127,6 +145,20 @@ export default function ProductsPage() {
           <span>${priceRange[0]}</span>
           <span>${priceRange[1]}</span>
         </div>
+      </div>
+      <div>
+        <h3 className="text-lg font-semibold mb-3 font-headline">Date Added</h3>
+        <Select value={timeFilter} onValueChange={setTimeFilter}>
+          <SelectTrigger>
+            <SelectValue placeholder="Filter by date" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Time</SelectItem>
+            <SelectItem value="last-week">Last Week</SelectItem>
+            <SelectItem value="last-month">Last Month</SelectItem>
+            <SelectItem value="last-year">Last Year</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
        <Button onClick={clearFilters} variant="outline">
         <X className="mr-2 h-4 w-4" /> Clear Filters
