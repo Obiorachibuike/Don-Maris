@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useProductStore } from "@/store/product-store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import {
@@ -16,10 +16,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
+import { MoreHorizontal, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
 import Image from "next/image";
 import { formatProductType } from "@/lib/display-utils";
 import { AddProductForm } from "@/components/add-product-form";
+import type { Product } from "@/lib/types";
+
+type SortKey = keyof Product;
 
 export default function ProductsAdminPage() {
     
@@ -31,19 +34,46 @@ export default function ProductsAdminPage() {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' }>({ key: 'name', direction: 'ascending' });
     const productsPerPage = 10;
 
-    const filteredProducts = products.filter(product => 
+    const filteredProducts = useMemo(() => products.filter(product => 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
         formatProductType(product.type).toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    ), [products, searchTerm]);
 
-    const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+    const sortedProducts = useMemo(() => {
+        const sortableItems = [...filteredProducts];
+        if (sortConfig.key) {
+            sortableItems.sort((a, b) => {
+                const aValue = a[sortConfig.key];
+                const bValue = b[sortConfig.key];
+
+                if (aValue < bValue) {
+                    return sortConfig.direction === 'ascending' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return sortConfig.direction === 'ascending' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [filteredProducts, sortConfig]);
+
+    const totalPages = Math.ceil(sortedProducts.length / productsPerPage);
     const indexOfLastOrder = currentPage * productsPerPage;
     const indexOfFirstProduct = indexOfLastOrder - productsPerPage;
-    const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastOrder);
+    const currentProducts = sortedProducts.slice(indexOfFirstProduct, indexOfLastOrder);
 
+    const requestSort = (key: SortKey) => {
+        let direction: 'ascending' | 'descending' = 'ascending';
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setSortConfig({ key, direction });
+    };
 
     const handlePreviousPage = () => {
         setCurrentPage(prev => Math.max(prev - 1, 1));
@@ -52,6 +82,15 @@ export default function ProductsAdminPage() {
     const handleNextPage = () => {
         setCurrentPage(prev => Math.min(prev + 1, totalPages));
     };
+
+    const SortableHeader = ({ sortKey, label }: { sortKey: SortKey, label: string }) => (
+        <TableHead>
+            <Button variant="ghost" onClick={() => requestSort(sortKey)}>
+                {label}
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+        </TableHead>
+    );
 
     return (
         <div className="space-y-6">
@@ -81,12 +120,12 @@ export default function ProductsAdminPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-[80px]">Image</TableHead>
-                                <TableHead>Name</TableHead>
+                                <SortableHeader sortKey="name" label="Name" />
                                 <TableHead>Brand</TableHead>
                                 <TableHead>Type</TableHead>
-                                <TableHead>Price</TableHead>
-                                <TableHead>Stock</TableHead>
-                                <TableHead>Rating</TableHead>
+                                <SortableHeader sortKey="price" label="Price" />
+                                <SortableHeader sortKey="stock" label="Stock" />
+                                <SortableHeader sortKey="rating" label="Rating" />
                                 <TableHead><span className="sr-only">Actions</span></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -128,7 +167,7 @@ export default function ProductsAdminPage() {
                  <CardFooter>
                      <div className="flex items-center justify-between w-full">
                         <div className="text-sm text-muted-foreground">
-                            Showing {Math.min(indexOfFirstProduct + 1, filteredProducts.length)} to {Math.min(indexOfLastOrder, filteredProducts.length)} of {filteredProducts.length} products.
+                            Showing {Math.min(indexOfFirstProduct + 1, sortedProducts.length)} to {Math.min(indexOfLastOrder, sortedProducts.length)} of {sortedProducts.length} products.
                         </div>
                         <div className="flex items-center gap-2">
                             <Button
