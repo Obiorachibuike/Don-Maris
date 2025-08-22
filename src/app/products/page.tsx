@@ -18,8 +18,9 @@ import { AnimatedSection } from '@/components/animated-section';
 import { ProductChat } from '@/components/product-chat';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSearchParams } from 'next/navigation';
+import { ProductsPageWrapper } from './page-wrapper';
 
-export default function ProductsPage() {
+function ProductsPageComponent() {
   const { products, isLoading, fetchProducts } = useProductStore();
   const searchParams = useSearchParams();
 
@@ -294,4 +295,12 @@ export default function ProductsPage() {
     <ProductChat />
     </>
   );
+}
+
+export default function ProductsPage() {
+    return (
+        <ProductsPageWrapper>
+            <ProductsPageComponent />
+        </ProductsPageWrapper>
+    )
 }
