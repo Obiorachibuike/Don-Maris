@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Trash2, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Smartphone } from 'lucide-react';
 
 export default function CartPage() {
   const { items, removeItem, updateItemQuantity, clearCart, total } = useCart();
@@ -32,10 +31,12 @@ export default function CartPage() {
   return (
     <div className="container mx-auto px-4 py-8">
        <h1 className="text-4xl font-bold font-headline mb-8 text-center">Your Shopping Cart</h1>
-       <div className="relative bg-card rounded-lg shadow-lg p-8 md:p-12">
+       <div className="relative bg-card rounded-lg shadow-lg p-8 md:p-12 overflow-hidden">
             {/* Watermark */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                <Smartphone className="text-foreground/5 h-[20rem] w-[20rem] md:h-[30rem] md:w-[30rem] rotate-[-15deg]" />
+                <span className="text-7xl md:text-9xl font-black font-headline bg-gradient-to-br from-primary via-accent to-primary bg-clip-text text-transparent opacity-10 rotate-[-15deg] select-none">
+                    Don Maris
+                </span>
             </div>
 
             <div className="relative z-10">
