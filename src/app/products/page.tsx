@@ -17,9 +17,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AnimatedSection } from '@/components/animated-section';
 import { ProductChat } from '@/components/product-chat';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useSearchParams } from 'next/navigation';
 
 export default function ProductsPage() {
   const { products, isLoading, fetchProducts } = useProductStore();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     fetchProducts();
@@ -35,10 +37,24 @@ export default function ProductsPage() {
   const [priceRange, setPriceRange] = useState([0, maxPrice]);
   const [sortOption, setSortOption] = useState('newest');
   const [timeFilter, setTimeFilter] = useState('all');
+  const [isFeatured, setIsFeatured] = useState(false);
 
   useEffect(() => {
       setPriceRange([0, maxPrice]);
   }, [maxPrice]);
+    
+  useEffect(() => {
+    const sortParam = searchParams.get('sort');
+    const featuredParam = searchParams.get('featured');
+
+    if (sortParam) {
+        setSortOption(sortParam);
+    }
+    if(featuredParam) {
+        setIsFeatured(featuredParam === 'true');
+    }
+
+  }, [searchParams]);
 
   const handleTypeChange = (type: string) => {
     setSelectedTypes(prev =>
@@ -59,6 +75,7 @@ export default function ProductsPage() {
     setPriceRange([0, maxPrice]);
     setSortOption('newest');
     setTimeFilter('all');
+    setIsFeatured(false);
   };
 
   const filteredAndSortedProducts = useMemo(() => {
@@ -67,6 +84,7 @@ export default function ProductsPage() {
       const typeMatch = selectedTypes.length === 0 || selectedTypes.includes(product.type);
       const brandMatch = selectedBrands.length === 0 || selectedBrands.includes(product.brand);
       const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
+      const featuredMatch = !isFeatured || product.isFeatured;
       
       const timeMatch = (() => {
         if (timeFilter === 'all') return true;
@@ -83,7 +101,7 @@ export default function ProductsPage() {
         return productDate >= filterDate;
       })();
 
-      return searchMatch && typeMatch && brandMatch && priceMatch && timeMatch;
+      return searchMatch && typeMatch && brandMatch && priceMatch && timeMatch && featuredMatch;
     });
 
     switch (sortOption) {
@@ -102,10 +120,17 @@ export default function ProductsPage() {
     }
 
     return filtered;
-  }, [products, searchQuery, selectedTypes, selectedBrands, priceRange, sortOption, timeFilter]);
+  }, [products, searchQuery, selectedTypes, selectedBrands, priceRange, sortOption, timeFilter, isFeatured]);
 
   const FilterControls = () => (
     <div className="flex flex-col gap-6">
+       <div>
+        <h3 className="text-lg font-semibold mb-3 font-headline">Featured</h3>
+        <div className="flex items-center space-x-2">
+            <Checkbox id="filter-featured" checked={isFeatured} onCheckedChange={(checked) => setIsFeatured(!!checked)} />
+            <Label htmlFor="filter-featured" className="font-normal cursor-pointer">Only Featured Products</Label>
+        </div>
+      </div>
       <div>
         <h3 className="text-lg font-semibold mb-3 font-headline">Category</h3>
         <ScrollArea className="h-48">

@@ -1,4 +1,5 @@
 
+'use client';
 import { getProductsSync } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
@@ -6,11 +7,19 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, CheckCircle, Smartphone, Truck } from 'lucide-react';
 import { AnimatedSection } from '@/components/animated-section';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import * as React from 'react';
+import Autoplay from "embla-carousel-autoplay"
+
 
 export default function Home() {
   const allProducts = getProductsSync();
   const featuredProducts = allProducts.filter(p => p.isFeatured);
-  const newArrivals = allProducts.sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).slice(0, 4);
+  const newArrivals = allProducts.sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).slice(0, 8);
+
+  const plugin = React.useRef(
+    Autoplay({ delay: 4000, stopOnInteraction: true })
+  )
 
   return (
     <div className="flex flex-col">
@@ -51,12 +60,34 @@ export default function Home() {
       <AnimatedSection>
         <section className="py-16">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-10 font-headline">Featured Products</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProducts.map(product => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+             <div className="flex justify-between items-center mb-10">
+                <h2 className="text-3xl font-bold font-headline">Featured Products</h2>
+                <Button asChild variant="link">
+                    <Link href="/products?featured=true">See All <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                </Button>
             </div>
+            <Carousel 
+                opts={{
+                    align: "start",
+                    loop: true,
+                }}
+                plugins={[plugin.current]}
+                onMouseEnter={plugin.current.stop}
+                onMouseLeave={plugin.current.reset}
+                className="w-full"
+            >
+                <CarouselContent>
+                    {featuredProducts.map((product) => (
+                    <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/4">
+                        <div className="p-1">
+                          <ProductCard product={product} />
+                        </div>
+                    </CarouselItem>
+                    ))}
+                </CarouselContent>
+                <CarouselPrevious className="hidden md:flex" />
+                <CarouselNext className="hidden md:flex"/>
+            </Carousel>
           </div>
         </section>
       </AnimatedSection>
@@ -91,12 +122,34 @@ export default function Home() {
       <AnimatedSection>
         <section className="py-16">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-10 font-headline">New Arrivals</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {newArrivals.map(product => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+             <div className="flex justify-between items-center mb-10">
+                <h2 className="text-3xl font-bold font-headline">New Arrivals</h2>
+                 <Button asChild variant="link">
+                    <Link href="/products?sort=newest">See All <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                </Button>
             </div>
+             <Carousel 
+                opts={{
+                    align: "start",
+                    loop: true,
+                }}
+                 plugins={[plugin.current]}
+                 onMouseEnter={plugin.current.stop}
+                 onMouseLeave={plugin.current.reset}
+                className="w-full"
+            >
+                <CarouselContent>
+                    {newArrivals.map((product) => (
+                    <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/4">
+                        <div className="p-1">
+                          <ProductCard product={product} />
+                        </div>
+                    </CarouselItem>
+                    ))}
+                </CarouselContent>
+                <CarouselPrevious className="hidden md:flex" />
+                <CarouselNext className="hidden md:flex"/>
+            </Carousel>
           </div>
         </section>
       </AnimatedSection>
