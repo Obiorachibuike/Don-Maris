@@ -141,11 +141,10 @@ export default function LandingPage() {
                     </div>
                   </CardHeader>
                 </Card>
-              </Card>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
       </AnimatedSection>
 
       {/* Team Section */}
