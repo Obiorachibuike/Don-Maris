@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, CheckCircle, Smartphone, Truck } from 'lucide-react';
+import { ArrowRight, CheckCircle, Smartphone, Truck, TrendingUp } from 'lucide-react';
 import { AnimatedSection } from '@/components/animated-section';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import * as React from 'react';
@@ -16,6 +16,8 @@ export default function Home() {
   const allProducts = getProductsSync();
   const featuredProducts = allProducts.filter(p => p.isFeatured);
   const newArrivals = allProducts.sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).slice(0, 8);
+  const bestSellers = allProducts.sort((a, b) => b.rating - a.rating).slice(0, 8);
+
 
   const plugin = React.useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true })
@@ -117,6 +119,39 @@ export default function Home() {
           </div>
         </section>
       </AnimatedSection>
+
+        {/* Best Sellers Section */}
+        <AnimatedSection>
+            <section className="py-16">
+            <div className="container mx-auto px-4">
+                <div className="flex justify-between items-center mb-10">
+                    <h2 className="text-3xl font-bold font-headline">Best Sellers</h2>
+                    <Button asChild variant="link">
+                        <Link href="/products?sort=rating">See All <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                    </Button>
+                </div>
+                <Carousel
+                    opts={{ align: "start", loop: true }}
+                    plugins={[plugin.current]}
+                    onMouseEnter={plugin.current.stop}
+                    onMouseLeave={plugin.current.reset}
+                    className="w-full"
+                >
+                    <CarouselContent>
+                        {bestSellers.map((product) => (
+                            <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/4">
+                                <div className="p-1">
+                                    <ProductCard product={product} />
+                                </div>
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="hidden md:flex" />
+                    <CarouselNext className="hidden md:flex" />
+                </Carousel>
+            </div>
+            </section>
+        </AnimatedSection>
 
       {/* New Arrivals Section */}
       <AnimatedSection>
