@@ -115,10 +115,15 @@ export const dummyProducts: Product[] = [
     const brandOptions = ['ScreenSavvy', 'Pro-Tech', 'PartPerfect', 'GlassGuard', 'FixIt'];
     const type = typeOptions[i % typeOptions.length];
     const brand = brandOptions[i % brandOptions.length];
-    const price = parseFloat((Math.random() * (200 - 15) + 15).toFixed(2));
-    const rating = parseFloat((Math.random() * (5 - 3.5) + 3.5).toFixed(1));
-    const stock = Math.floor(Math.random() * 250);
-    const date = new Date(new Date('2023-01-01').getTime() + Math.random() * (new Date().getTime() - new Date('2023-01-01').getTime())).toISOString().split('T')[0];
+    
+    // Deterministic generation based on index `i`
+    const price = parseFloat(((i * 3.14) % 185 + 15).toFixed(2));
+    const rating = parseFloat((((i * 0.1) % 1.5) + 3.5).toFixed(1));
+    const stock = (i * 17) % 250;
+    const baseDate = new Date('2023-01-01').getTime();
+    const dateOffset = i * 24 * 60 * 60 * 1000 * 3; // 3 days per product
+    const date = new Date(baseDate + dateOffset).toISOString().split('T')[0];
+
 
     return {
         id: id,
