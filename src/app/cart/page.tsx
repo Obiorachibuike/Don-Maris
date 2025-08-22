@@ -35,7 +35,7 @@ export default function CartPage() {
             {/* Watermark */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
                 <span className="text-7xl md:text-9xl font-black font-headline bg-gradient-to-br from-primary via-accent to-primary bg-clip-text text-transparent opacity-10 rotate-[-15deg] select-none">
-                    Don Maris
+                    Don Maris Phone Accessories
                 </span>
             </div>
 
