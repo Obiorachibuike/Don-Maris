@@ -93,32 +93,6 @@ export default function Home() {
           </div>
         </section>
       </AnimatedSection>
-      
-      {/* Why Choose Us Section */}
-      <AnimatedSection>
-        <section className="bg-card py-16">
-          <div className="container mx-auto px-4">
-              <h2 className="text-3xl font-bold text-center mb-10 font-headline">Why Choose Don Maris?</h2>
-              <div className="grid md:grid-cols-3 gap-8 text-center">
-                  <div className="p-6">
-                      <CheckCircle className="h-12 w-12 text-primary mx-auto mb-4" />
-                      <h3 className="text-xl font-bold font-headline mb-2">Quality Guaranteed</h3>
-                      <p className="text-muted-foreground">We source only the highest-quality parts and accessories to ensure performance and longevity.</p>
-                  </div>
-                  <div className="p-6">
-                      <Truck className="h-12 w-12 text-primary mx-auto mb-4" />
-                      <h3 className="text-xl font-bold font-headline mb-2">Fast Shipping</h3>
-                      <p className="text-muted-foreground">Get your orders quickly with our reliable and efficient shipping network.</p>
-                  </div>
-                  <div className="p-6">
-                      <Smartphone className="h-12 w-12 text-primary mx-auto mb-4" />
-                      <h3 className="text-xl font-bold font-headline mb-2">Expert Support</h3>
-                      <p className="text-muted-foreground">Our knowledgeable team is here to help you find the perfect part for your repair or upgrade.</p>
-                  </div>
-              </div>
-          </div>
-        </section>
-      </AnimatedSection>
 
         {/* Best Sellers Section */}
         <AnimatedSection>
@@ -185,6 +159,32 @@ export default function Home() {
                 <CarouselPrevious className="hidden md:flex" />
                 <CarouselNext className="hidden md:flex"/>
             </Carousel>
+          </div>
+        </section>
+      </AnimatedSection>
+      
+      {/* Why Choose Us Section */}
+      <AnimatedSection>
+        <section className="bg-card py-16">
+          <div className="container mx-auto px-4">
+              <h2 className="text-3xl font-bold text-center mb-10 font-headline">Why Choose Don Maris?</h2>
+              <div className="grid md:grid-cols-3 gap-8 text-center">
+                  <div className="p-6">
+                      <CheckCircle className="h-12 w-12 text-primary mx-auto mb-4" />
+                      <h3 className="text-xl font-bold font-headline mb-2">Quality Guaranteed</h3>
+                      <p className="text-muted-foreground">We source only the highest-quality parts and accessories to ensure performance and longevity.</p>
+                  </div>
+                  <div className="p-6">
+                      <Truck className="h-12 w-12 text-primary mx-auto mb-4" />
+                      <h3 className="text-xl font-bold font-headline mb-2">Fast Shipping</h3>
+                      <p className="text-muted-foreground">Get your orders quickly with our reliable and efficient shipping network.</p>
+                  </div>
+                  <div className="p-6">
+                      <Smartphone className="h-12 w-12 text-primary mx-auto mb-4" />
+                      <h3 className="text-xl font-bold font-headline mb-2">Expert Support</h3>
+                      <p className="text-muted-foreground">Our knowledgeable team is here to help you find the perfect part for your repair or upgrade.</p>
+                  </div>
+              </div>
           </div>
         </section>
       </AnimatedSection>
