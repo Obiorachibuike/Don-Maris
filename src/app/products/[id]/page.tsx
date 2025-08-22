@@ -39,7 +39,7 @@ export default function ProductPage({ params }: ProductPageProps) {
     if (params.id) {
       loadProduct();
     }
-  }, [params.id]);
+  }, [params]);
 
   if (product === undefined) {
     notFound();
