@@ -32,12 +32,11 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [product, setProduct] = useState<Product | null | undefined>(null);
 
   useEffect(() => {
-    const id = params.id;
     async function loadProduct() {
-      const fetchedProduct = await getProductById(id);
+      const fetchedProduct = await getProductById(params.id);
       setProduct(fetchedProduct);
     }
-    if (id) {
+    if (params.id) {
       loadProduct();
     }
   }, [params]);
