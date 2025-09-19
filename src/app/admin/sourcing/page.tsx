@@ -75,9 +75,9 @@ export default function SourcingPage() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Product Sourcing Requests</CardTitle>
+                <CardTitle>Product Sourcing To-Do</CardTitle>
                 <CardDescription>
-                    Track and manage products requested by customers that are not currently in your inventory.
+                    A to-do list for sourcing and adding new products based on customer requests.
                 </CardDescription>
             </CardHeader>
             <CardContent>
