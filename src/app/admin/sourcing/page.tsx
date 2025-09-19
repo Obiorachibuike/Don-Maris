@@ -7,8 +7,9 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, PlusCircle } from "lucide-react";
 import Link from 'next/link';
+import { Input } from '@/components/ui/input';
 
 type RequestStatus = 'Pending' | 'Sourced' | 'Unavailable' | 'In Stock';
 
@@ -61,6 +62,12 @@ const dummyRequests: ProductRequest[] = [
 
 export default function SourcingPage() {
     const [requests, setRequests] = useState<ProductRequest[]>(dummyRequests);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredRequests = requests.filter(request =>
+        request.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.requestedBy.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
     
     const getStatusBadgeVariant = (status: RequestStatus) => {
         switch (status) {
@@ -75,10 +82,26 @@ export default function SourcingPage() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Product Sourcing To-Do</CardTitle>
-                <CardDescription>
-                    A to-do list for sourcing and adding new products based on customer requests.
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle>Product Sourcing To-Do</CardTitle>
+                        <CardDescription>
+                            A to-do list for sourcing and adding new products based on customer requests.
+                        </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <Input
+                            placeholder="Search requests..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full max-w-sm"
+                        />
+                        <Button>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Create Request
+                        </Button>
+                    </div>
+                </div>
             </CardHeader>
             <CardContent>
                 <Table>
@@ -92,7 +115,7 @@ export default function SourcingPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {requests.map((request) => (
+                        {filteredRequests.map((request) => (
                             <TableRow key={request.id}>
                                 <TableCell className="font-medium">{request.productName}</TableCell>
                                 <TableCell>
