@@ -90,12 +90,6 @@ export default function SourcingPage() {
                         </CardDescription>
                     </div>
                     <div className="flex items-center gap-4">
-                        <Input
-                            placeholder="Search requests..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full max-w-sm"
-                        />
                         <Button>
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Create Request
@@ -104,6 +98,14 @@ export default function SourcingPage() {
                 </div>
             </CardHeader>
             <CardContent>
+                <div className="mb-4">
+                     <Input
+                        placeholder="Search to-do items..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full max-w-sm"
+                    />
+                </div>
                 <Table>
                     <TableHeader>
                         <TableRow>
