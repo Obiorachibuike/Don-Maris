@@ -33,7 +33,7 @@ const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'sales', 'accountant', 'supplier'] },
     { href: '/admin/orders', label: 'Orders', icon: ShoppingBag, roles: ['admin', 'sales'] },
     { href: '/admin/products', label: 'Products', icon: Package, roles: ['admin', 'supplier'] },
-    { href: '/admin/sourcing', label: 'Sourcing', icon: PackageSearch, roles: ['admin', 'supplier'] },
+    { href: '/admin/sourcing', label: 'Posting Department', icon: PackageSearch, roles: ['admin', 'supplier'] },
     { href: '/admin/users', label: 'Users', icon: Users, roles: ['admin'] },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart2, roles: ['admin', 'sales'] },
     { href: '/admin/settings', label: 'Settings', icon: Settings, roles: ['admin'] },
