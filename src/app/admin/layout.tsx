@@ -15,7 +15,7 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
-import { Home, ShoppingBag, Package, Users, BarChart2, Settings, UserCircle, LifeBuoy, LayoutDashboard } from 'lucide-react';
+import { Home, ShoppingBag, Package, Users, BarChart2, Settings, UserCircle, LifeBuoy, LayoutDashboard, PackageSearch } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -33,6 +33,7 @@ const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'sales', 'accountant', 'supplier'] },
     { href: '/admin/orders', label: 'Orders', icon: ShoppingBag, roles: ['admin', 'sales'] },
     { href: '/admin/products', label: 'Products', icon: Package, roles: ['admin', 'supplier'] },
+    { href: '/admin/sourcing', label: 'Sourcing', icon: PackageSearch, roles: ['admin', 'supplier'] },
     { href: '/admin/users', label: 'Users', icon: Users, roles: ['admin'] },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart2, roles: ['admin', 'sales'] },
     { href: '/admin/settings', label: 'Settings', icon: Settings, roles: ['admin'] },
@@ -102,7 +103,7 @@ export default function AdminLayout({
                  <div className="p-4 sm:p-6 lg:p-8">
                    <div className="flex items-center gap-4 mb-6">
                         <SidebarTrigger className="md:hidden" />
-                        <h1 className="text-2xl font-bold capitalize">{pathname.split('/').pop() || 'Dashboard'}</h1>
+                        <h1 className="text-2xl font-bold capitalize">{pathname.split('/').pop()?.replace('-', ' ') || 'Dashboard'}</h1>
                    </div>
                    {children}
                  </div>
