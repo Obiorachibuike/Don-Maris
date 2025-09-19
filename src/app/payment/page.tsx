@@ -218,7 +218,7 @@ export default function PaymentPage() {
                     <div className="mt-6 text-center">
                         <p className="text-muted-foreground mb-2">Or, place your order now and pay later.</p>
                         <Button onClick={() => handleSubmit(false)} variant="secondary" size="lg" className="w-full">
-                            Place Order Without Payment
+                            Place Order
                         </Button>
                     </div>
                 </div>
