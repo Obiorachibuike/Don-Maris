@@ -149,7 +149,7 @@ export default function SourcingPage() {
         };
 
         sessionStorage.setItem('don_maris_order', JSON.stringify(invoiceData));
-        router.push(`/invoice`);
+        router.push(`/admin/sourcing/invoice`);
     };
 
     return (
