@@ -62,12 +62,22 @@ const dummyRequests: ProductRequest[] = [
 
 export default function SourcingPage() {
     const [requests, setRequests] = useState<ProductRequest[]>(dummyRequests);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [newItem, setNewItem] = useState('');
 
-    const filteredRequests = requests.filter(request =>
-        request.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.requestedBy.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const handleAddItem = () => {
+        if (!newItem.trim()) return;
+
+        const newRequest: ProductRequest = {
+            id: `REQ${Date.now()}`,
+            productName: newItem,
+            requestedBy: { id: 'USR001', name: 'Admin' }, // Assuming admin is creating it
+            date: new Date().toISOString().split('T')[0],
+            status: 'Pending',
+        };
+        
+        setRequests([newRequest, ...requests]);
+        setNewItem(''); // Clear the input after adding
+    };
     
     const getStatusBadgeVariant = (status: RequestStatus) => {
         switch (status) {
@@ -89,22 +99,19 @@ export default function SourcingPage() {
                             A to-do list for sourcing and adding new products based on customer requests.
                         </CardDescription>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <Button>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Create Request
-                        </Button>
-                    </div>
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="mb-4">
-                     <Input
-                        placeholder="Search to-do items..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full max-w-sm"
+                <div className="flex w-full max-w-sm items-center space-x-2 mb-4">
+                    <Input
+                        placeholder="Add a new item to the list..."
+                        value={newItem}
+                        onChange={(e) => setNewItem(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
                     />
+                    <Button onClick={handleAddItem}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add
+                    </Button>
                 </div>
                 <Table>
                     <TableHeader>
@@ -117,7 +124,7 @@ export default function SourcingPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredRequests.map((request) => (
+                        {requests.map((request) => (
                             <TableRow key={request.id}>
                                 <TableCell className="font-medium">{request.productName}</TableCell>
                                 <TableCell>
