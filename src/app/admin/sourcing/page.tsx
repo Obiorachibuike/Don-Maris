@@ -79,8 +79,9 @@ export default function SourcingPage() {
     const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
     const router = useRouter();
 
-    const allUsers = useMemo(() => getAllUsers(), []);
+    const [allUsers, setAllUsers] = useState<User[]>(getAllUsers());
     const customers = useMemo(() => allUsers.filter(u => u.role === 'customer'), [allUsers]);
+    const [customerSearch, setCustomerSearch] = useState('');
 
     const [customerName, setCustomerName] = useState("Sourcing Department");
     const [customerEmail, setCustomerEmail] = useState("sourcing@donmaris.com");
@@ -124,17 +125,27 @@ export default function SourcingPage() {
         return product ? product.name : "Select product to add...";
     }, [selectedProduct, products]);
 
-    const displayedCustomerName = useMemo(() => {
-        return selectedCustomer ? selectedCustomer.name : "Select a customer...";
-    }, [selectedCustomer]);
-
-
     const handleCustomerSelect = (customer: User) => {
         setSelectedCustomer(customer);
         setCustomerName(customer.name);
         setCustomerEmail(customer.email);
         setCustomerPopoverOpen(false);
     }
+    
+    const handleCreateCustomer = (name: string) => {
+        const newUser: User = {
+            id: `CUST${Date.now()}`,
+            name,
+            email: '', // email can be filled in the input
+            role: 'customer',
+            dateJoined: new Date().toISOString(),
+            avatar: `https://placehold.co/100x100.png`
+        };
+        setAllUsers(prev => [...prev, newUser]);
+        handleCustomerSelect(newUser);
+        setCustomerEmail(''); // Clear email for new customer
+        setCustomerSearch('');
+    };
 
     const handlePreviewInvoice = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -225,12 +236,22 @@ export default function SourcingPage() {
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-[300px] p-0">
-                                        <Command>
-                                            <CommandInput placeholder="Search customers..." />
+                                        <Command shouldFilter={false}>
+                                            <CommandInput 
+                                                value={customerSearch}
+                                                onValueChange={setCustomerSearch}
+                                                placeholder="Search customers..." 
+                                            />
                                             <CommandList>
-                                                <CommandEmpty>No customer found.</CommandEmpty>
+                                                <CommandEmpty>
+                                                    <Button variant="ghost" className="w-full" onSelect={() => handleCreateCustomer(customerSearch)}>
+                                                        Create "{customerSearch}"
+                                                    </Button>
+                                                </CommandEmpty>
                                                 <CommandGroup>
-                                                    {customers.map((customer) => (
+                                                    {customers
+                                                        .filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()))
+                                                        .map((customer) => (
                                                         <CommandItem
                                                             key={customer.id}
                                                             value={customer.name}
