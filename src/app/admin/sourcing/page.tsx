@@ -85,6 +85,7 @@ export default function SourcingPage() {
 
     const [customerName, setCustomerName] = useState("Sourcing Department");
     const [customerEmail, setCustomerEmail] = useState("sourcing@donmaris.com");
+    const [address, setAddress] = useState("123 Internal Way\nBusinesstown, CA 90210");
 
     useEffect(() => {
         if (products.length === 0) {
@@ -149,9 +150,8 @@ export default function SourcingPage() {
 
     const handlePreviewInvoice = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const formData = new FormData(e.currentTarget);
         
-        const fullAddress = formData.get('address') as string;
+        const fullAddress = address;
         const addressParts = fullAddress.split('\n');
         const street = addressParts[0] || '';
         const cityStateZip = addressParts.length > 1 ? addressParts[addressParts.length - 1].split(',') : ['', ''];
@@ -244,7 +244,7 @@ export default function SourcingPage() {
                                             />
                                             <CommandList>
                                                 <CommandEmpty>
-                                                    <Button variant="ghost" className="w-full" onSelect={() => handleCreateCustomer(customerSearch)}>
+                                                    <Button variant="ghost" className="w-full" onClick={() => handleCreateCustomer(customerSearch)}>
                                                         Create "{customerSearch}"
                                                     </Button>
                                                 </CommandEmpty>
@@ -272,7 +272,7 @@ export default function SourcingPage() {
                             </div>
                             <div className="md:col-span-2 space-y-2">
                                 <Label htmlFor="address">Address</Label>
-                                <Textarea id="address" name="address" rows={3} defaultValue="123 Internal Way\nBusinesstown, CA 90210" />
+                                <Textarea id="address" name="address" rows={3} value={address} onChange={e => setAddress(e.target.value)} />
                             </div>
                              <div className="md:col-span-2 flex justify-end">
                                 <Button type="submit" variant="outline">
