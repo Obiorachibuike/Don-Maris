@@ -13,10 +13,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useProductStore } from '@/store/product-store';
 import { useRouter } from 'next/navigation';
-import type { CartItem } from '@/lib/types';
+import type { CartItem, User } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { getAllUsers } from '@/lib/dummy-users';
 
 type RequestStatus = 'Pending' | 'Sourced' | 'Unavailable' | 'In Stock';
 
@@ -72,9 +73,17 @@ const dummyRequests: ProductRequest[] = [
 export default function SourcingPage() {
     const [requests, setRequests] = useState<ProductRequest[]>(dummyRequests);
     const { products, fetchProducts, isLoading } = useProductStore();
-    const [open, setOpen] = useState(false);
+    const [productPopoverOpen, setProductPopoverOpen] = useState(false);
+    const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+    const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
     const router = useRouter();
+
+    const allUsers = useMemo(() => getAllUsers(), []);
+    const customers = useMemo(() => allUsers.filter(u => u.role === 'customer'), [allUsers]);
+
+    const [customerName, setCustomerName] = useState("Sourcing Department");
+    const [customerEmail, setCustomerEmail] = useState("sourcing@donmaris.com");
 
     useEffect(() => {
         if (products.length === 0) {
@@ -115,6 +124,18 @@ export default function SourcingPage() {
         return product ? product.name : "Select product to add...";
     }, [selectedProduct, products]);
 
+    const displayedCustomerName = useMemo(() => {
+        return selectedCustomer ? selectedCustomer.name : "Select a customer...";
+    }, [selectedCustomer]);
+
+
+    const handleCustomerSelect = (customer: User) => {
+        setSelectedCustomer(customer);
+        setCustomerName(customer.name);
+        setCustomerEmail(customer.email);
+        setCustomerPopoverOpen(false);
+    }
+
     const handlePreviewInvoice = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
@@ -129,8 +150,8 @@ export default function SourcingPage() {
         const zip = stateZip.slice(1).join(' ') || '';
 
         const customerDetails = {
-            name: formData.get('customerName') as string,
-            email: formData.get('customerEmail') as string,
+            name: customerName,
+            email: customerEmail,
             address: street,
             city: city,
             state: state,
@@ -191,11 +212,42 @@ export default function SourcingPage() {
                         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="customerName">Customer Name</Label>
-                                <Input id="customerName" name="customerName" defaultValue="Sourcing Department" />
+                                <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={customerPopoverOpen}
+                                            className="w-full justify-between"
+                                        >
+                                            {customerName === 'Sourcing Department' ? 'Select a customer...' : customerName}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[300px] p-0">
+                                        <Command>
+                                            <CommandInput placeholder="Search customers..." />
+                                            <CommandList>
+                                                <CommandEmpty>No customer found.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {customers.map((customer) => (
+                                                        <CommandItem
+                                                            key={customer.id}
+                                                            value={customer.name}
+                                                            onSelect={() => handleCustomerSelect(customer)}
+                                                        >
+                                                            {customer.name}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="customerEmail">Customer Email</Label>
-                                <Input id="customerEmail" name="customerEmail" type="email" defaultValue="sourcing@donmaris.com" />
+                                <Input id="customerEmail" name="customerEmail" type="email" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} />
                             </div>
                             <div className="md:col-span-2 space-y-2">
                                 <Label htmlFor="address">Address</Label>
@@ -212,12 +264,12 @@ export default function SourcingPage() {
                 </form>
 
                 <div className="flex w-full max-w-sm items-center space-x-2 mb-4">
-                    <Popover open={open} onOpenChange={setOpen}>
+                    <Popover open={productPopoverOpen} onOpenChange={setProductPopoverOpen}>
                         <PopoverTrigger asChild>
                             <Button
                                 variant="outline"
                                 role="combobox"
-                                aria-expanded={open}
+                                aria-expanded={productPopoverOpen}
                                 className="w-full justify-between"
                             >
                                 {displayedProductName}
@@ -236,7 +288,7 @@ export default function SourcingPage() {
                                                 value={product.name}
                                                 onSelect={() => {
                                                     setSelectedProduct(product.id);
-                                                    setOpen(false);
+                                                    setProductPopoverOpen(false);
                                                 }}
                                             >
                                                 {product.name}
