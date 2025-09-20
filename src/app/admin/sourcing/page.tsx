@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import type { CartItem } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 type RequestStatus = 'Pending' | 'Sourced' | 'Unavailable' | 'In Stock';
 
@@ -117,13 +118,23 @@ export default function SourcingPage() {
     const handlePreviewInvoice = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
+        
+        const fullAddress = formData.get('address') as string;
+        const addressParts = fullAddress.split('\n');
+        const street = addressParts[0] || '';
+        const cityStateZip = addressParts.length > 1 ? addressParts[addressParts.length - 1].split(',') : ['', ''];
+        const city = cityStateZip[0]?.trim() || '';
+        const stateZip = (cityStateZip[1] || '').trim().split(' ');
+        const state = stateZip[0] || '';
+        const zip = stateZip.slice(1).join(' ') || '';
+
         const customerDetails = {
-            name: formData.get('departmentName') as string,
-            email: 'sourcing@donmaris.com',
-            address: formData.get('address') as string,
-            city: formData.get('city') as string,
-            state: formData.get('state') as string,
-            zip: formData.get('zip') as string,
+            name: formData.get('customerName') as string,
+            email: formData.get('customerEmail') as string,
+            address: street,
+            city: city,
+            state: state,
+            zip: zip,
         };
 
         const itemsToInvoice = requests
@@ -177,28 +188,20 @@ export default function SourcingPage() {
                             <CardTitle className="text-xl">Invoice Details</CardTitle>
                             <CardDescription>Set the "Billed To" information for the invoice preview.</CardDescription>
                         </CardHeader>
-                        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="md:col-span-3 space-y-2">
-                                <Label htmlFor="departmentName">Department Name</Label>
-                                <Input id="departmentName" name="departmentName" defaultValue="Sourcing Department" />
+                        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="customerName">Customer Name</Label>
+                                <Input id="customerName" name="customerName" defaultValue="Sourcing Department" />
                             </div>
-                            <div className="md:col-span-3 space-y-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="customerEmail">Customer Email</Label>
+                                <Input id="customerEmail" name="customerEmail" type="email" defaultValue="sourcing@donmaris.com" />
+                            </div>
+                            <div className="md:col-span-2 space-y-2">
                                 <Label htmlFor="address">Address</Label>
-                                <Input id="address" name="address" defaultValue="123 Internal Way" />
+                                <Textarea id="address" name="address" rows={3} defaultValue="123 Internal Way\nBusinesstown, CA 90210" />
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="city">City</Label>
-                                <Input id="city" name="city" defaultValue="Businesstown" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="state">State</Label>
-                                <Input id="state" name="state" defaultValue="CA" />
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="zip">ZIP Code</Label>
-                                <Input id="zip" name="zip" defaultValue="90210" />
-                            </div>
-                             <div className="md:col-span-3 flex justify-end">
+                             <div className="md:col-span-2 flex justify-end">
                                 <Button type="submit" variant="outline">
                                     <Printer className="mr-2 h-4 w-4" />
                                     Preview Invoice
