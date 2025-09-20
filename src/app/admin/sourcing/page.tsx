@@ -150,6 +150,11 @@ export default function SourcingPage() {
 
     const handlePreviewInvoice = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (!customerName.trim() || !address.trim()) {
+            alert("Please fill out the Customer Name and Address before previewing the invoice.");
+            return;
+        }
         
         const fullAddress = address;
         const addressParts = fullAddress.split('\n');
