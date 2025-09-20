@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, FormEvent } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { useProductStore } from '@/store/product-store';
 import { useRouter } from 'next/navigation';
 import type { CartItem } from '@/lib/types';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 type RequestStatus = 'Pending' | 'Sourced' | 'Unavailable' | 'In Stock';
 
@@ -112,7 +114,18 @@ export default function SourcingPage() {
         return product ? product.name : "Select product to add...";
     }, [selectedProduct, products]);
 
-    const handlePreviewInvoice = () => {
+    const handlePreviewInvoice = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const customerDetails = {
+            name: formData.get('departmentName') as string,
+            email: 'sourcing@donmaris.com',
+            address: formData.get('address') as string,
+            city: formData.get('city') as string,
+            state: formData.get('state') as string,
+            zip: formData.get('zip') as string,
+        };
+
         const itemsToInvoice = requests
             .map(req => {
                 if (req.productId) {
@@ -137,14 +150,7 @@ export default function SourcingPage() {
             total: total,
             invoiceId: `PREVIEW-${Date.now()}`,
             date: new Date().toLocaleDateString(),
-            customer: {
-                name: 'Sourcing Department',
-                email: 'sourcing@donmaris.com',
-                address: '123 Internal Way',
-                city: 'Businesstown',
-                state: 'CA',
-                zip: '90210',
-            },
+            customer: customerDetails,
             paymentStatus: 'unpaid',
         };
 
@@ -162,15 +168,46 @@ export default function SourcingPage() {
                             A to-do list for sourcing and adding new products based on customer requests.
                         </CardDescription>
                     </div>
-                     <div className="flex items-center gap-2">
-                        <Button onClick={handlePreviewInvoice} variant="outline">
-                            <Printer className="mr-2 h-4 w-4" />
-                            Preview Invoice
-                        </Button>
-                    </div>
                 </div>
             </CardHeader>
             <CardContent>
+                <form onSubmit={handlePreviewInvoice}>
+                    <Card className="mb-6">
+                        <CardHeader>
+                            <CardTitle className="text-xl">Invoice Details</CardTitle>
+                            <CardDescription>Set the "Billed To" information for the invoice preview.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="md:col-span-3 space-y-2">
+                                <Label htmlFor="departmentName">Department Name</Label>
+                                <Input id="departmentName" name="departmentName" defaultValue="Sourcing Department" />
+                            </div>
+                            <div className="md:col-span-3 space-y-2">
+                                <Label htmlFor="address">Address</Label>
+                                <Input id="address" name="address" defaultValue="123 Internal Way" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="city">City</Label>
+                                <Input id="city" name="city" defaultValue="Businesstown" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="state">State</Label>
+                                <Input id="state" name="state" defaultValue="CA" />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="zip">ZIP Code</Label>
+                                <Input id="zip" name="zip" defaultValue="90210" />
+                            </div>
+                             <div className="md:col-span-3 flex justify-end">
+                                <Button type="submit" variant="outline">
+                                    <Printer className="mr-2 h-4 w-4" />
+                                    Preview Invoice
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </form>
+
                 <div className="flex w-full max-w-sm items-center space-x-2 mb-4">
                     <Popover open={open} onOpenChange={setOpen}>
                         <PopoverTrigger asChild>
