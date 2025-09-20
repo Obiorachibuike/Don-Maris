@@ -1,21 +1,24 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, PlusCircle } from "lucide-react";
+import { MoreHorizontal, PlusCircle, ChevronsUpDown } from "lucide-react";
 import Link from 'next/link';
-import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { useProductStore } from '@/store/product-store';
 
 type RequestStatus = 'Pending' | 'Sourced' | 'Unavailable' | 'In Stock';
 
 interface ProductRequest {
     id: string;
     productName: string;
+    productId?: string;
     requestedBy: {
         id: string;
         name: string;
@@ -62,21 +65,31 @@ const dummyRequests: ProductRequest[] = [
 
 export default function SourcingPage() {
     const [requests, setRequests] = useState<ProductRequest[]>(dummyRequests);
-    const [newItem, setNewItem] = useState('');
+    const { products, fetchProducts, isLoading } = useProductStore();
+    const [open, setOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (products.length === 0) {
+            fetchProducts();
+        }
+    }, [products.length, fetchProducts]);
 
     const handleAddItem = () => {
-        if (!newItem.trim()) return;
+        const product = products.find(p => p.id === selectedProduct);
+        if (!product) return;
 
         const newRequest: ProductRequest = {
             id: `REQ${Date.now()}`,
-            productName: newItem,
-            requestedBy: { id: 'USR001', name: 'Admin' }, // Assuming admin is creating it
+            productName: product.name,
+            productId: product.id,
+            requestedBy: { id: 'USR001', name: 'Admin' }, 
             date: new Date().toISOString().split('T')[0],
             status: 'Pending',
         };
         
         setRequests([newRequest, ...requests]);
-        setNewItem(''); // Clear the input after adding
+        setSelectedProduct(null);
     };
     
     const getStatusBadgeVariant = (status: RequestStatus) => {
@@ -88,6 +101,12 @@ export default function SourcingPage() {
             default: return 'secondary';
         }
     };
+    
+    const displayedProductName = useMemo(() => {
+        if (!selectedProduct) return "Select product to add...";
+        const product = products.find(p => p.id === selectedProduct);
+        return product ? product.name : "Select product to add...";
+    }, [selectedProduct, products]);
 
     return (
         <Card>
@@ -103,13 +122,42 @@ export default function SourcingPage() {
             </CardHeader>
             <CardContent>
                 <div className="flex w-full max-w-sm items-center space-x-2 mb-4">
-                    <Input
-                        placeholder="Add a new item to the list..."
-                        value={newItem}
-                        onChange={(e) => setNewItem(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
-                    />
-                    <Button onClick={handleAddItem}>
+                    <Popover open={open} onOpenChange={setOpen}>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={open}
+                                className="w-full justify-between"
+                            >
+                                {displayedProductName}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0">
+                            <Command>
+                                <CommandInput placeholder="Search product..." />
+                                <CommandList>
+                                    <CommandEmpty>{isLoading ? 'Loading products...' : 'No product found.'}</CommandEmpty>
+                                    <CommandGroup>
+                                        {products.map((product) => (
+                                            <CommandItem
+                                                key={product.id}
+                                                value={product.name}
+                                                onSelect={() => {
+                                                    setSelectedProduct(product.id);
+                                                    setOpen(false);
+                                                }}
+                                            >
+                                                {product.name}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+                    <Button onClick={handleAddItem} disabled={!selectedProduct}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Add
                     </Button>
                 </div>
@@ -126,7 +174,15 @@ export default function SourcingPage() {
                     <TableBody>
                         {requests.map((request) => (
                             <TableRow key={request.id}>
-                                <TableCell className="font-medium">{request.productName}</TableCell>
+                                <TableCell className="font-medium">
+                                    {request.productId ? (
+                                        <Link href={`/admin/products/${request.productId}`} className="text-primary hover:underline">
+                                            {request.productName}
+                                        </Link>
+                                    ) : (
+                                        request.productName
+                                    )}
+                                </TableCell>
                                 <TableCell>
                                     <Link href={`/admin/users/${request.requestedBy.id}`} className="text-primary hover:underline">
                                         {request.requestedBy.name}
