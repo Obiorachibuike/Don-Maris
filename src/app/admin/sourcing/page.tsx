@@ -7,11 +7,13 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, PlusCircle, ChevronsUpDown } from "lucide-react";
+import { MoreHorizontal, PlusCircle, ChevronsUpDown, Printer } from "lucide-react";
 import Link from 'next/link';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useProductStore } from '@/store/product-store';
+import { useRouter } from 'next/navigation';
+import type { CartItem } from '@/lib/types';
 
 type RequestStatus = 'Pending' | 'Sourced' | 'Unavailable' | 'In Stock';
 
@@ -56,6 +58,7 @@ const dummyRequests: ProductRequest[] = [
     {
         id: 'REQ004',
         productName: 'Google Pixel 8 Pro Camera Lens',
+        productId: '9',
         requestedBy: { id: 'CUST005', name: 'Sophia Davis' },
         date: '2023-11-20',
         status: 'In Stock',
@@ -68,6 +71,7 @@ export default function SourcingPage() {
     const { products, fetchProducts, isLoading } = useProductStore();
     const [open, setOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+    const router = useRouter();
 
     useEffect(() => {
         if (products.length === 0) {
@@ -108,6 +112,46 @@ export default function SourcingPage() {
         return product ? product.name : "Select product to add...";
     }, [selectedProduct, products]);
 
+    const handlePreviewInvoice = () => {
+        const itemsToInvoice = requests
+            .map(req => {
+                if (req.productId) {
+                    const product = products.find(p => p.id === req.productId);
+                    if (product) {
+                        return { id: product.id, product, quantity: 1 } as CartItem;
+                    }
+                }
+                return null;
+            })
+            .filter((item): item is CartItem => item !== null);
+
+        if (itemsToInvoice.length === 0) {
+            alert("No available products in the request list to create an invoice.");
+            return;
+        }
+
+        const total = itemsToInvoice.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+
+        const invoiceData = {
+            items: itemsToInvoice,
+            total: total,
+            invoiceId: `PREVIEW-${Date.now()}`,
+            date: new Date().toLocaleDateString(),
+            customer: {
+                name: 'Sourcing Department',
+                email: 'sourcing@donmaris.com',
+                address: '123 Internal Way',
+                city: 'Businesstown',
+                state: 'CA',
+                zip: '90210',
+            },
+            paymentStatus: 'unpaid',
+        };
+
+        sessionStorage.setItem('don_maris_order', JSON.stringify(invoiceData));
+        router.push(`/invoice`);
+    };
+
     return (
         <Card>
             <CardHeader>
@@ -117,6 +161,12 @@ export default function SourcingPage() {
                         <CardDescription>
                             A to-do list for sourcing and adding new products based on customer requests.
                         </CardDescription>
+                    </div>
+                     <div className="flex items-center gap-2">
+                        <Button onClick={handlePreviewInvoice} variant="outline">
+                            <Printer className="mr-2 h-4 w-4" />
+                            Preview Invoice
+                        </Button>
                     </div>
                 </div>
             </CardHeader>
