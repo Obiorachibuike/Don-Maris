@@ -18,7 +18,7 @@ export default function SupplyDepartmentPage() {
     const ordersPerPage = 10;
 
     // Filter orders to show only those relevant for the supply department (e.g., 'Processing')
-    const supplyOrders = dummyOrders.filter(order => order.status === 'Processing');
+    const supplyOrders = dummyOrders.filter(order => order.status === 'Processing' || order.status === 'Pending');
 
     const filteredOrders = supplyOrders.filter(order => 
         order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -79,7 +79,7 @@ export default function SupplyDepartmentPage() {
                                 <TableCell>{order.customer.name}</TableCell>
                                 <TableCell className="text-right">${order.amount.toFixed(2)}</TableCell>
                                 <TableCell>
-                                    <Badge variant="secondary">{order.status}</Badge>
+                                    <Badge variant={order.status === 'Processing' ? 'secondary' : 'destructive'} className={order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : ''}>{order.status}</Badge>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -89,7 +89,7 @@ export default function SupplyDepartmentPage() {
              <CardFooter>
                  <div className="flex items-center justify-between w-full">
                     <div className="text-sm text-muted-foreground">
-                        Showing {indexOfFirstOrder + 1} to {Math.min(indexOfLastOrder, filteredOrders.length)} of {filteredOrders.length} orders.
+                        Showing {Math.min(indexOfFirstOrder + 1, filteredOrders.length)} to {Math.min(indexOfLastOrder, filteredOrders.length)} of {filteredOrders.length} orders.
                     </div>
                     <div className="flex items-center gap-2">
                         <Button
@@ -102,13 +102,13 @@ export default function SupplyDepartmentPage() {
                             Previous
                         </Button>
                         <span className="text-sm text-muted-foreground">
-                            Page {currentPage} of {totalPages}
+                            Page {currentPage} of {totalPages > 0 ? totalPages : 1}
                         </span>
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={handleNextPage}
-                            disabled={currentPage === totalPages}
+                            disabled={currentPage === totalPages || totalPages === 0}
                         >
                             Next
                             <ChevronRight className="h-4 w-4" />
@@ -119,4 +119,3 @@ export default function SupplyDepartmentPage() {
         </Card>
     );
 }
-
