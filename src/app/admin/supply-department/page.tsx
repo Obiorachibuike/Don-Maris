@@ -92,7 +92,7 @@ export default function SupplyDepartmentPage() {
     return (
         <Card>
             <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
                         <CardTitle>Supply Department</CardTitle>
                         <CardDescription>
@@ -101,7 +101,7 @@ export default function SupplyDepartmentPage() {
                     </div>
                      <Input 
                         placeholder="Search orders..." 
-                        className="w-full max-w-sm"
+                        className="w-full md:max-w-sm"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -157,7 +157,7 @@ export default function SupplyDepartmentPage() {
                 </div>
             </CardContent>
              <CardFooter>
-                 <div className="flex items-center justify-between w-full">
+                 <div className="flex flex-col md:flex-row items-center justify-between w-full gap-4">
                     <div className="text-sm text-muted-foreground">
                         Showing {Math.min(indexOfFirstOrder + 1, sortedOrders.length)} to {Math.min(indexOfLastOrder, sortedOrders.length)} of {sortedOrders.length} orders.
                     </div>
