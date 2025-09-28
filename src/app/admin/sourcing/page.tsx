@@ -19,6 +19,7 @@ import { useProductStore } from '@/store/product-store';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { submitOrder } from '@/lib/data';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface SupplyItem {
     id: string; // Changed to product ID for consistency
@@ -42,6 +43,7 @@ export default function SourcingPage() {
     const [productSearch, setProductSearch] = useState("");
     const [address, setAddress] = useState("");
     const [customerEmail, setCustomerEmail] = useState("");
+    const [deliveryMethod, setDeliveryMethod] = useState('');
     const [previousBalance, setPreviousBalance] = useState(0);
     const [productToAdd, setProductToAdd] = useState<string | null>(null);
     const [quantityToAdd, setQuantityToAdd] = useState(1);
@@ -159,11 +161,11 @@ export default function SourcingPage() {
     const totalCost = currentSubtotal + previousBalance;
 
     const processSubmission = async (action: 'preview' | 'purchase') => {
-         if (!selectedCustomer || !address) {
+         if (!selectedCustomer || !address || !deliveryMethod) {
             toast({
                 variant: 'destructive',
                 title: 'Missing Information',
-                description: 'Please select a customer and provide an address.',
+                description: 'Please select a customer, provide an address, and choose a delivery method.',
             });
             return;
         }
@@ -239,6 +241,7 @@ export default function SourcingPage() {
                 setAddress('');
                 setCustomerEmail('');
                 setPreviousBalance(0);
+                setDeliveryMethod('');
 
                 router.push(`/admin/sourcing/invoice`);
             } else {
@@ -252,7 +255,7 @@ export default function SourcingPage() {
     }
     
     const isItemLimitReached = supplyItems.length >= MAX_ITEMS;
-    const isFormSubmittable = selectedCustomer && address && supplyItems.length > 0;
+    const isFormSubmittable = selectedCustomer && address && deliveryMethod && supplyItems.length > 0;
 
     return (
         <form onSubmit={(e) => e.preventDefault()}>
@@ -264,7 +267,7 @@ export default function SourcingPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid md:grid-cols-2 gap-8 mb-8">
+                    <div className="grid md:grid-cols-3 gap-8 mb-8">
                         <div className="space-y-4">
                             <h3 className="text-lg font-semibold">Customer Details</h3>
                             <div className="space-y-2">
@@ -336,7 +339,11 @@ export default function SourcingPage() {
                                     placeholder="customer@example.com"
                                 />
                             </div>
-                            <div className="space-y-2">
+                        </div>
+
+                         <div className="space-y-4">
+                            <h3 className="text-lg font-semibold">Shipping & Delivery</h3>
+                             <div className="space-y-2">
                                 <Label htmlFor="address">Address</Label>
                                 <Textarea
                                     id="address"
@@ -344,6 +351,18 @@ export default function SourcingPage() {
                                     onChange={(e) => setAddress(e.target.value)}
                                     placeholder="123 Main St&#10;Anytown, CA 12345"
                                 />
+                            </div>
+                             <div className="space-y-2">
+                                <Label>Delivery Method</Label>
+                                <Select value={deliveryMethod} onValueChange={setDeliveryMethod}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select delivery method" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="come-market">Come Market</SelectItem>
+                                        <SelectItem value="waybill">Waybill</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
                     </div>
