@@ -53,7 +53,11 @@ export default function SourcingPage() {
     const [supplyItems] = useState<SupplyItem[]>(initialSupplyItems);
 
     const totalQuantity = supplyItems.reduce((acc, item) => acc + item.quantity, 0);
-    const totalCost = supplyItems.reduce((acc, item) => acc + (item.quantity * item.unitCost * (1 - item.discount)), 0);
+    const totalCost = supplyItems.reduce((acc, item) => {
+        const itemTotal = item.quantity * item.unitCost;
+        const discountAmount = itemTotal * item.discount;
+        return acc + (itemTotal - discountAmount);
+    }, 0);
 
     return (
         <Card>
@@ -77,14 +81,16 @@ export default function SourcingPage() {
                     </TableHeader>
                     <TableBody>
                         {supplyItems.map((item, index) => {
-                            const price = item.quantity * item.unitCost * (1 - item.discount);
+                            const itemTotal = item.quantity * item.unitCost;
+                            const discountAmount = itemTotal * item.discount;
+                            const price = itemTotal - discountAmount;
                             return (
                                 <TableRow key={item.id}>
                                     <TableCell>{index + 1}</TableCell>
                                     <TableCell className="font-medium">{item.itemName}</TableCell>
                                     <TableCell className="text-center">{item.quantity}</TableCell>
                                     <TableCell className="text-right">{item.unitCost.toLocaleString()}</TableCell>
-                                    <TableCell className="text-right">{item.discount}</TableCell>
+                                    <TableCell className="text-right">{(item.discount * 100).toFixed(0)}%</TableCell>
                                     <TableCell className="text-right">{price.toLocaleString()}</TableCell>
                                 </TableRow>
                             )
