@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Check, ChevronsUpDown, PlusCircle, Printer } from 'lucide-react';
+import { Check, ChevronsUpDown, PlusCircle, Printer, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
@@ -421,11 +421,7 @@ export default function SourcingPage() {
                         </Table>
                     </ScrollArea>
                 </CardContent>
-                <CardFooter className="flex justify-between items-start pt-6">
-                    <Button type="submit">
-                        <Printer className="mr-2 h-4 w-4" />
-                        Preview Invoice
-                    </Button>
+                <CardFooter className="flex flex-col md:flex-row justify-between items-start gap-6 pt-6">
                     <div className="w-full max-w-sm space-y-2">
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Subtotal:</span>
@@ -440,8 +436,20 @@ export default function SourcingPage() {
                             <span>₦{totalCost.toLocaleString()}</span>
                         </div>
                     </div>
+                     <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                        <Button type="submit" variant="outline" className="w-full">
+                            <Printer className="mr-2 h-4 w-4" />
+                            Preview Invoice
+                        </Button>
+                         <Button type="submit" className="w-full">
+                            <ShoppingCart className="mr-2 h-4 w-4" />
+                            Purchase
+                        </Button>
+                    </div>
                 </CardFooter>
             </Card>
         </form>
     );
 }
+
+    
