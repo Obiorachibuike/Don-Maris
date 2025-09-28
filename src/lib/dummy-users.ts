@@ -3,7 +3,7 @@ import type { User, Order, Product } from './types';
 import { dummyOrders } from './dummy-orders';
 import { dummyProducts } from './dummy-products';
 
-const allUsers: User[] = [
+let allUsers: User[] = [
     { id: 'USR001', name: 'Alex Maris', email: 'alex@donmaris.com', role: 'admin', dateJoined: '2023-01-15', avatar: 'https://placehold.co/100x100.png' },
     { id: 'USR002', name: 'Jessica Lane', email: 'jessica@donmaris.com', role: 'supplier', dateJoined: '2023-02-20', avatar: 'https://placehold.co/100x100.png' },
     { id: 'USR003', name: 'David Chen', email: 'david@donmaris.com', role: 'sales', dateJoined: '2023-03-10', avatar: 'https://placehold.co/100x100.png' },
@@ -27,3 +27,18 @@ export function getUserById(id: string): User | undefined {
 export function getOrdersByUserId(userId: string): Order[] {
     return dummyOrders.filter(order => order.customer.id === userId);
 }
+
+export function addUser(userData: { name: string; email?: string }): User {
+    const newUser: User = {
+        id: `CUST${Date.now()}`,
+        name: userData.name,
+        email: userData.email || '',
+        role: 'customer',
+        dateJoined: new Date().toISOString(),
+        avatar: 'https://placehold.co/100x100.png',
+    };
+    allUsers.push(newUser);
+    return newUser;
+}
+
+    
