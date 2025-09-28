@@ -53,6 +53,8 @@ export interface User extends Customer {
     dateJoined: string;
 }
 
+export type DeliveryMethod = 'Waybill' | 'Come Market';
+
 export interface Order {
   id: string;
   customer: Customer;
@@ -62,4 +64,5 @@ export interface Order {
   date: string;
   paymentMethod: string;
   items: OrderItem[];
+  deliveryMethod: DeliveryMethod;
 }

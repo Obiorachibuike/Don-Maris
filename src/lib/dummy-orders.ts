@@ -1,5 +1,6 @@
 
-import type { Order } from './types';
+
+import type { Order, DeliveryMethod } from './types';
 
 // More detailed mock data for orders, including items.
 export const dummyOrders: Order[] = [
@@ -11,6 +12,7 @@ export const dummyOrders: Order[] = [
         status: 'Fulfilled',
         date: '2023-11-23',
         paymentMethod: 'Credit Card (**** **** **** 4242)',
+        deliveryMethod: 'Waybill',
         items: [
             { productId: '3', quantity: 1 }, // iPhone 14 Pro Max Screen
             { productId: '5', quantity: 1 }, // Pro-Tech 25-in-1 Repair Toolkit
@@ -24,6 +26,7 @@ export const dummyOrders: Order[] = [
         date: '2023-11-23',
         shippingAddress: '456 Oak Ave, Anytown, USA 12345',
         paymentMethod: 'PayPal',
+        deliveryMethod: 'Come Market',
         items: [
              { productId: '9', quantity: 1 } // Pixel 7 Pro Screen
         ]
@@ -36,6 +39,7 @@ export const dummyOrders: Order[] = [
         date: '2023-11-22',
         shippingAddress: '789 Pine Ln, Anytown, USA 12345',
         paymentMethod: 'Credit Card (**** **** **** 5678)',
+        deliveryMethod: 'Waybill',
         items: [
             { productId: '10', quantity: 1 }, // S22 Ultra Backglass
             { productId: '6', quantity: 1 }, // X650 C/F
@@ -50,6 +54,7 @@ export const dummyOrders: Order[] = [
         date: '2023-11-22',
         shippingAddress: '101 Maple Dr, Anytown, USA 12345',
         paymentMethod: 'Bank Transfer',
+        deliveryMethod: 'Come Market',
         items: [
             { productId: '5', quantity: 1 } // Pro-Tech 25-in-1 Repair Toolkit
         ]
@@ -62,6 +67,7 @@ export const dummyOrders: Order[] = [
         date: '2023-11-21',
         shippingAddress: '212 Birch Rd, Anytown, USA 12345',
         paymentMethod: 'Credit Card (**** **** **** 1121)',
+        deliveryMethod: 'Waybill',
         items: [
             { productId: '3', quantity: 1 } // iPhone 14 Pro Max Screen
         ]
@@ -75,6 +81,7 @@ export const dummyOrders: Order[] = [
         const baseDate = new Date('2023-11-20').getTime();
         const dateOffset = i * 12 * 60 * 60 * 1000; // 12 hours per order
         const date = new Date(baseDate - dateOffset).toISOString().split('T')[0];
+        const deliveryMethod: DeliveryMethod = i % 2 === 0 ? 'Waybill' : 'Come Market';
         
         return {
             id: orderId,
@@ -84,6 +91,7 @@ export const dummyOrders: Order[] = [
             status: 'Processing' as 'Processing',
             date: date,
             paymentMethod: 'Credit Card',
+            deliveryMethod: deliveryMethod,
             items: [
                 { productId: `${(i % 10) + 3}`, quantity: 1 + (i % 3) }
             ]

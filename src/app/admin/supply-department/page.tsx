@@ -22,7 +22,8 @@ export default function SupplyDepartmentPage() {
 
     const filteredOrders = supplyOrders.filter(order => 
         order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customer.name.toLowerCase().includes(searchTerm.toLowerCase())
+        order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.deliveryMethod.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const indexOfLastOrder = currentPage * ordersPerPage;
@@ -64,6 +65,7 @@ export default function SupplyDepartmentPage() {
                         <TableRow>
                             <TableHead>Invoice ID</TableHead>
                             <TableHead>Customer</TableHead>
+                            <TableHead>Delivery Method</TableHead>
                             <TableHead className="text-right">Total Amount</TableHead>
                             <TableHead>Status</TableHead>
                         </TableRow>
@@ -77,6 +79,7 @@ export default function SupplyDepartmentPage() {
                                     </Link>
                                 </TableCell>
                                 <TableCell>{order.customer.name}</TableCell>
+                                <TableCell>{order.deliveryMethod}</TableCell>
                                 <TableCell className="text-right">${order.amount.toFixed(2)}</TableCell>
                                 <TableCell>
                                     <Badge variant={order.status === 'Processing' ? 'secondary' : 'destructive'} className={order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : ''}>{order.status}</Badge>
