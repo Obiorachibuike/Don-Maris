@@ -27,6 +27,7 @@ interface OrderDetails {
     date: string;
     customer: CustomerDetails;
     paymentStatus: PaymentStatus;
+    previousBalance?: number;
 }
 
 export default function SourcingInvoicePage() {
@@ -50,8 +51,8 @@ export default function SourcingInvoicePage() {
         );
     }
     
-    const { items, total, invoiceId, date, customer, paymentStatus } = order;
-    const amountDue = paymentStatus === 'paid' ? 0 : total;
+    const { items, total, invoiceId, date, customer, paymentStatus, previousBalance = 0 } = order;
+    const amountDue = total + previousBalance;
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -130,16 +131,12 @@ export default function SourcingInvoicePage() {
                                 <span className="font-medium">${total.toFixed(2)}</span>
                             </div>
                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Shipping</span>
-                                <span className="font-medium">Free</span>
-                            </div>
-                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Total Paid</span>
-                                <span className="font-medium">${paymentStatus === 'paid' ? total.toFixed(2) : (0).toFixed(2)}</span>
+                                <span className="text-muted-foreground">Previous Balance</span>
+                                <span className="font-medium">${previousBalance.toFixed(2)}</span>
                             </div>
                             <Separator />
                             <div className="flex justify-between font-bold text-lg">
-                                <span>Amount Due</span>
+                                <span>Total Amount Due</span>
                                 <span className={amountDue > 0 ? 'text-destructive' : ''}>${amountDue.toFixed(2)}</span>
                             </div>
                         </div>
