@@ -42,6 +42,7 @@ export default function SourcingPage() {
     const [customerEmail, setCustomerEmail] = useState("");
     const [previousBalance, setPreviousBalance] = useState(0);
     const [productToAdd, setProductToAdd] = useState<string | null>(null);
+    const [quantityToAdd, setQuantityToAdd] = useState(1);
     const { products, fetchProducts } = useProductStore();
     const { toast } = useToast();
     const router = useRouter();
@@ -61,6 +62,11 @@ export default function SourcingPage() {
             customer.name.toLowerCase().includes(customerSearch.toLowerCase())
         );
     }, [customers, customerSearch]);
+    
+    const selectedProductForAdding = useMemo(() => {
+        if (!productToAdd) return null;
+        return products.find(p => p.id === productToAdd);
+    }, [productToAdd, products]);
 
     const handleSelectCustomer = (customer: User) => {
         setSelectedCustomer(customer);
@@ -71,7 +77,7 @@ export default function SourcingPage() {
         const balance = unpaidOrders.reduce((acc, order) => acc + order.amount, 0);
         setPreviousBalance(balance);
 
-        if (userOrders.length > 0) {
+        if (userOrders.length > 0 && userOrders[0].shippingAddress) {
             setAddress(userOrders[0].shippingAddress);
         } else {
             setAddress('');
@@ -91,7 +97,7 @@ export default function SourcingPage() {
             return;
         }
 
-        if (!productToAdd) return;
+        if (!productToAdd || quantityToAdd < 1) return;
         
         const product = products.find(p => p.id === productToAdd);
         if (!product) return;
@@ -100,19 +106,20 @@ export default function SourcingPage() {
 
         if (existingItemIndex > -1) {
             const newItems = [...supplyItems];
-            newItems[existingItemIndex].quantity += 1;
+            newItems[existingItemIndex].quantity += quantityToAdd;
             setSupplyItems(newItems);
         } else {
             const newItem: SupplyItem = {
                 id: product.id,
                 itemName: product.name,
-                quantity: 1,
+                quantity: quantityToAdd,
                 unitCost: product.price,
                 discount: 0,
             };
             setSupplyItems(currentItems => [...currentItems, newItem]);
         }
         setProductToAdd(null);
+        setQuantityToAdd(1);
     };
 
     const availableProducts = useMemo(() => {
@@ -281,23 +288,55 @@ export default function SourcingPage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 pt-4 border-t mb-4">
-                        <Select onValueChange={setProductToAdd} value={productToAdd || ''}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select a product to add" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {availableProducts.map(p => (
-                                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Button type="button" onClick={handleAddProduct} disabled={!productToAdd}>
-                            <PlusCircle className="mr-2 h-4 w-4" /> Add Product
+                    <div className="space-y-4 pt-4 border-t">
+                        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                            <div className="space-y-2">
+                                <Label>Product to Add</Label>
+                                <Select onValueChange={setProductToAdd} value={productToAdd || ''}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a product" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableProducts.map(p => (
+                                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className='grid grid-cols-2 gap-2'>
+                                <div className="space-y-2">
+                                    <Label>Available</Label>
+                                    <Input
+                                        type="number"
+                                        value={selectedProductForAdding?.stock ?? ''}
+                                        readOnly
+                                        className="bg-muted"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="quantity-to-add">Quantity</Label>
+                                    <Input
+                                        id="quantity-to-add"
+                                        type="number"
+                                        min="1"
+                                        value={quantityToAdd}
+                                        onChange={(e) => setQuantityToAdd(parseInt(e.target.value, 10))}
+                                        disabled={!productToAdd}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                         <Button
+                            type="button"
+                            onClick={handleAddProduct}
+                            disabled={!productToAdd || quantityToAdd < 1 || quantityToAdd > (selectedProductForAdding?.stock ?? 0)}
+                            className="w-full md:w-auto"
+                        >
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add Product to Invoice
                         </Button>
                     </div>
 
-                    <ScrollArea className="h-72">
+                    <ScrollArea className="h-72 mt-4">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -353,3 +392,5 @@ export default function SourcingPage() {
         </form>
     );
 }
+
+    
