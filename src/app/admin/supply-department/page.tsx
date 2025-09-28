@@ -1,36 +1,76 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { dummyOrders } from '@/lib/dummy-orders';
-import type { Order } from '@/lib/types';
+import type { Order, OrderPaymentStatus } from '@/lib/types';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
+
+type SortKey = keyof Order | 'balance';
 
 export default function SupplyDepartmentPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [sortConfig, setSortConfig] = useState<{ key: SortKey | null; direction: 'ascending' | 'descending' | null }>({ key: 'date', direction: 'descending' });
     const ordersPerPage = 10;
 
-    // Filter orders to show only those relevant for the supply department (e.g., 'Processing' or 'Pending')
     const supplyOrders = dummyOrders.filter(order => order.status === 'Processing' || order.status === 'Pending');
 
-    const filteredOrders = supplyOrders.filter(order => 
+    const filteredOrders = useMemo(() => supplyOrders.filter(order => 
         order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.deliveryMethod.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    ), [supplyOrders, searchTerm]);
+
+    const requestSort = (key: SortKey) => {
+        let direction: 'ascending' | 'descending' | null = 'ascending';
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        } else if (sortConfig.key === key && sortConfig.direction === 'descending') {
+            direction = null;
+            key = null;
+        }
+        setSortConfig({ key, direction });
+        setCurrentPage(1);
+    };
+
+    const sortedOrders = useMemo(() => {
+        let sortableItems = [...filteredOrders];
+        if (sortConfig.key && sortConfig.direction) {
+            sortableItems.sort((a, b) => {
+                let aValue, bValue;
+
+                if (sortConfig.key === 'balance') {
+                    aValue = a.amount - a.amountPaid;
+                    bValue = b.amount - b.amountPaid;
+                } else {
+                    aValue = a[sortConfig.key!];
+                    bValue = b[sortConfig.key!];
+                }
+
+                if (aValue < bValue) {
+                    return sortConfig.direction === 'ascending' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return sortConfig.direction === 'ascending' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [filteredOrders, sortConfig]);
 
     const indexOfLastOrder = currentPage * ordersPerPage;
     const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-    const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+    const currentOrders = sortedOrders.slice(indexOfFirstOrder, indexOfLastOrder);
 
-    const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+    const totalPages = Math.ceil(sortedOrders.length / ordersPerPage);
 
     const handlePreviousPage = () => {
         setCurrentPage(prev => Math.max(prev - 1, 1));
@@ -40,6 +80,14 @@ export default function SupplyDepartmentPage() {
         setCurrentPage(prev => Math.min(prev + 1, totalPages));
     };
 
+    const SortableHeader = ({ sortKey, label, className }: { sortKey: SortKey, label: string, className?: string }) => (
+        <TableHead className={className}>
+            <Button variant="ghost" onClick={() => requestSort(sortKey)} className="px-0">
+                {label}
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+        </TableHead>
+    );
 
     return (
         <Card>
@@ -64,14 +112,14 @@ export default function SupplyDepartmentPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Invoice ID</TableHead>
+                                <SortableHeader sortKey="id" label="Invoice ID" />
                                 <TableHead>Customer</TableHead>
-                                <TableHead>Delivery Method</TableHead>
-                                <TableHead>Fulfillment</TableHead>
-                                <TableHead>Payment</TableHead>
-                                <TableHead className="text-right">Total Amount</TableHead>
-                                <TableHead className="text-right">Amount Paid</TableHead>
-                                <TableHead className="text-right">Balance</TableHead>
+                                <SortableHeader sortKey="deliveryMethod" label="Delivery Method" />
+                                <SortableHeader sortKey="status" label="Fulfillment" />
+                                <SortableHeader sortKey="paymentStatus" label="Payment" />
+                                <SortableHeader sortKey="amount" label="Total Amount" className="text-right" />
+                                <SortableHeader sortKey="amountPaid" label="Amount Paid" className="text-right" />
+                                <SortableHeader sortKey="balance" label="Balance" className="text-right" />
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -111,7 +159,7 @@ export default function SupplyDepartmentPage() {
              <CardFooter>
                  <div className="flex items-center justify-between w-full">
                     <div className="text-sm text-muted-foreground">
-                        Showing {Math.min(indexOfFirstOrder + 1, filteredOrders.length)} to {Math.min(indexOfLastOrder, filteredOrders.length)} of {filteredOrders.length} orders.
+                        Showing {Math.min(indexOfFirstOrder + 1, sortedOrders.length)} to {Math.min(indexOfLastOrder, sortedOrders.length)} of {sortedOrders.length} orders.
                     </div>
                     <div className="flex items-center gap-2">
                         <Button
