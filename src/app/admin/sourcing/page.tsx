@@ -17,7 +17,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
 import { useProductStore } from '@/store/product-store';
 import { useToast } from '@/hooks/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface SupplyItem {
@@ -35,9 +34,11 @@ const MAX_ITEMS = 25;
 export default function SourcingPage() {
     const [supplyItems, setSupplyItems] = useState<SupplyItem[]>(initialSupplyItems);
     const [allUsers, setAllUsers] = useState<User[]>([]);
-    const [open, setOpen] = useState(false);
+    const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
+    const [productPopoverOpen, setProductPopoverOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
     const [customerSearch, setCustomerSearch] = useState("");
+    const [productSearch, setProductSearch] = useState("");
     const [address, setAddress] = useState("");
     const [customerEmail, setCustomerEmail] = useState("");
     const [previousBalance, setPreviousBalance] = useState(0);
@@ -83,9 +84,15 @@ export default function SourcingPage() {
             setAddress('');
         }
 
-        setOpen(false);
+        setCustomerPopoverOpen(false);
         setCustomerSearch("");
     };
+
+    const handleSelectProduct = (productId: string) => {
+        setProductToAdd(productId);
+        setProductPopoverOpen(false);
+        setProductSearch("");
+    }
     
     const handleAddProduct = () => {
         if (supplyItems.length >= MAX_ITEMS) {
@@ -124,8 +131,12 @@ export default function SourcingPage() {
 
     const availableProducts = useMemo(() => {
         const addedProductIds = supplyItems.map(item => item.id);
-        return products.filter(p => !addedProductIds.includes(p.id));
-    }, [products, supplyItems]);
+        let available = products.filter(p => !addedProductIds.includes(p.id));
+        if (productSearch) {
+            available = available.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()));
+        }
+        return available;
+    }, [products, supplyItems, productSearch]);
 
 
     const handleCreateCustomer = () => {
@@ -211,12 +222,12 @@ export default function SourcingPage() {
                             <h3 className="text-lg font-semibold">Customer Details</h3>
                             <div className="space-y-2">
                                 <Label htmlFor="customer-name">Customer Name</Label>
-                                <Popover open={open} onOpenChange={setOpen}>
+                                <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
                                     <PopoverTrigger asChild>
                                         <Button
                                             variant="outline"
                                             role="combobox"
-                                            aria-expanded={open}
+                                            aria-expanded={customerPopoverOpen}
                                             className="w-full justify-between"
                                         >
                                             {selectedCustomer
@@ -294,16 +305,51 @@ export default function SourcingPage() {
                         <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                             <div className="space-y-2">
                                 <Label>Product to Add</Label>
-                                <Select onValueChange={setProductToAdd} value={productToAdd || ''} disabled={isItemLimitReached}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a product" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {availableProducts.map(p => (
-                                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Popover open={productPopoverOpen} onOpenChange={setProductPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={productPopoverOpen}
+                                            className="w-full justify-between"
+                                            disabled={isItemLimitReached}
+                                        >
+                                            {selectedProductForAdding
+                                                ? selectedProductForAdding.name
+                                                : "Select product..."}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                        <Command>
+                                            <CommandInput
+                                                placeholder="Search product..."
+                                                value={productSearch}
+                                                onValueChange={setProductSearch}
+                                            />
+                                            <CommandList>
+                                                <CommandEmpty>No product found.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {availableProducts.map((p) => (
+                                                        <CommandItem
+                                                            key={p.id}
+                                                            value={p.name}
+                                                            onSelect={() => handleSelectProduct(p.id)}
+                                                        >
+                                                            <Check
+                                                                className={cn(
+                                                                    "mr-2 h-4 w-4",
+                                                                    productToAdd === p.id ? "opacity-100" : "opacity-0"
+                                                                )}
+                                                            />
+                                                            {p.name}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
                             </div>
                             <div className='grid grid-cols-2 gap-2'>
                                 <div className="space-y-2">
@@ -399,5 +445,3 @@ export default function SourcingPage() {
         </form>
     );
 }
-
-    
