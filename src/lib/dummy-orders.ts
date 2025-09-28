@@ -66,6 +66,29 @@ export const dummyOrders: Order[] = [
             { productId: '3', quantity: 1 } // iPhone 14 Pro Max Screen
         ]
     },
+    ...Array.from({ length: 50 }, (_, i) => {
+        const orderId = `${123461 + i}`;
+        const customerId = `CUST${100 + i}`;
+        const customerName = `Customer ${100 + i}`;
+        const email = `customer${100 + i}@example.com`;
+        const amount = parseFloat(((i * 12.34) % 200 + 20).toFixed(2));
+        const baseDate = new Date('2023-11-20').getTime();
+        const dateOffset = i * 12 * 60 * 60 * 1000; // 12 hours per order
+        const date = new Date(baseDate - dateOffset).toISOString().split('T')[0];
+        
+        return {
+            id: orderId,
+            customer: { id: customerId, name: customerName, email: email, avatar: 'https://placehold.co/100x100.png' },
+            shippingAddress: `${100 + i} Supply St, Testville, USA 54321`,
+            amount: amount,
+            status: 'Processing' as 'Processing',
+            date: date,
+            paymentMethod: 'Credit Card',
+            items: [
+                { productId: `${(i % 10) + 3}`, quantity: 1 + (i % 3) }
+            ]
+        };
+    })
 ];
 
 export function updateOrder(orderId: string, updatedItems: { productId: string, quantity: number }[], updatedAmount: number): Order | undefined {
