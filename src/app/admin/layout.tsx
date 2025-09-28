@@ -15,7 +15,7 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
-import { Home, ShoppingBag, Package, Users, BarChart2, Settings, UserCircle, LifeBuoy, LayoutDashboard, PackageSearch } from 'lucide-react';
+import { Home, ShoppingBag, Package, Users, BarChart2, Settings, UserCircle, LifeBuoy, LayoutDashboard, PackageSearch, Truck } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -33,7 +33,8 @@ const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'sales', 'accountant', 'supplier'] },
     { href: '/admin/orders', label: 'Orders', icon: ShoppingBag, roles: ['admin', 'sales'] },
     { href: '/admin/products', label: 'Products', icon: Package, roles: ['admin', 'supplier'] },
-    { href: '/admin/sourcing', label: 'Sourcing Department', icon: PackageSearch, roles: ['admin', 'supplier'] },
+    { href: '/admin/sourcing', label: 'Posting Department', icon: PackageSearch, roles: ['admin', 'supplier'] },
+    { href: '/admin/supply-department', label: 'Supply Department', icon: Truck, roles: ['admin', 'supplier'] },
     { href: '/admin/users', label: 'Users', icon: Users, roles: ['admin'] },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart2, roles: ['admin', 'sales'] },
     { href: '/admin/settings', label: 'Settings', icon: Settings, roles: ['admin'] },

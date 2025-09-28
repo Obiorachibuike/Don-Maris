@@ -207,181 +207,181 @@ export default function SourcingPage() {
     };
 
     return (
-        <Card>
-            <CardHeader>
-                <div className="flex items-center justify-between">
-                    <div>
-                        <CardTitle>Sourcing Department</CardTitle>
-                        <CardDescription>
-                            A to-do list for sourcing and adding new products based on customer requests.
-                        </CardDescription>
+        <form onSubmit={handlePreviewInvoice}>
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle>Posting Department</CardTitle>
+                            <CardDescription>
+                                A to-do list for sourcing and adding new products based on customer requests.
+                            </CardDescription>
+                        </div>
                     </div>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <form onSubmit={handlePreviewInvoice}>
-                    <Card className="mb-6">
-                        <CardHeader>
-                            <CardTitle className="text-xl">Invoice Details</CardTitle>
-                            <CardDescription>Set the "Billed To" information for the invoice preview.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="customerName">Customer Name</Label>
-                                <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            role="combobox"
-                                            aria-expanded={customerPopoverOpen}
-                                            className="w-full justify-between"
-                                        >
-                                            {customerName === 'Sourcing Department' ? 'Select a customer...' : customerName}
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-[300px] p-0">
-                                        <Command shouldFilter={false}>
-                                            <CommandInput 
-                                                value={customerSearch}
-                                                onValueChange={setCustomerSearch}
-                                                placeholder="Search customers..." 
-                                            />
-                                            <CommandList>
-                                                <CommandEmpty>
-                                                    <Button variant="ghost" className="w-full" onClick={() => handleCreateCustomer(customerSearch)}>
-                                                        Create "{customerSearch}"
-                                                    </Button>
-                                                </CommandEmpty>
-                                                <CommandGroup>
-                                                    {customers
-                                                        .filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()))
-                                                        .map((customer) => (
-                                                        <CommandItem
-                                                            key={customer.id}
-                                                            value={customer.name}
-                                                            onSelect={() => handleCustomerSelect(customer)}
-                                                        >
-                                                            {customer.name}
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="customerEmail">Customer Email</Label>
-                                <Input id="customerEmail" name="customerEmail" type="email" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} />
-                            </div>
-                            <div className="md:col-span-2 space-y-2">
-                                <Label htmlFor="address">Address</Label>
-                                <Textarea id="address" name="address" rows={3} value={address} onChange={e => setAddress(e.target.value)} />
-                            </div>
-                             <div className="md:col-span-2 flex justify-end">
-                                <Button type="submit" variant="outline">
-                                    <Printer className="mr-2 h-4 w-4" />
-                                    Preview Invoice
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </form>
-
-                <div className="flex w-full max-w-sm items-center space-x-2 mb-4">
-                    <Popover open={productPopoverOpen} onOpenChange={setProductPopoverOpen}>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant="outline"
-                                role="combobox"
-                                aria-expanded={productPopoverOpen}
-                                className="w-full justify-between"
-                            >
-                                {displayedProductName}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-0">
-                            <Command>
-                                <CommandInput placeholder="Search product..." />
-                                <CommandList>
-                                    <CommandEmpty>{isLoading ? 'Loading products...' : 'No product found.'}</CommandEmpty>
-                                    <CommandGroup>
-                                        {products.map((product) => (
-                                            <CommandItem
-                                                key={product.id}
-                                                value={product.name}
-                                                onSelect={() => {
-                                                    setSelectedProduct(product.id);
-                                                    setProductPopoverOpen(false);
-                                                }}
+                </CardHeader>
+                <CardContent>
+                        <Card className="mb-6">
+                            <CardHeader>
+                                <CardTitle className="text-xl">Invoice Details</CardTitle>
+                                <CardDescription>Set the "Billed To" information for the invoice preview.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="customerName">Customer Name</Label>
+                                    <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                aria-expanded={customerPopoverOpen}
+                                                className="w-full justify-between"
                                             >
-                                                {product.name}
-                                            </CommandItem>
-                                        ))}
-                                    </CommandGroup>
-                                </CommandList>
-                            </Command>
-                        </PopoverContent>
-                    </Popover>
-                    <Button onClick={handleAddItem} disabled={!selectedProduct}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add
-                    </Button>
-                </div>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Product Name</TableHead>
-                            <TableHead>Requested By</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead><span className="sr-only">Actions</span></TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {requests.map((request) => (
-                            <TableRow key={request.id}>
-                                <TableCell className="font-medium">
-                                    {request.productId ? (
-                                        <Link href={`/admin/products/${request.productId}`} className="text-primary hover:underline">
-                                            {request.productName}
-                                        </Link>
-                                    ) : (
-                                        request.productName
-                                    )}
-                                </TableCell>
-                                <TableCell>
-                                    <Link href={`/admin/users/${request.requestedBy.id}`} className="text-primary hover:underline">
-                                        {request.requestedBy.name}
-                                    </Link>
-                                </TableCell>
-                                <TableCell>{new Date(request.date).toLocaleDateString()}</TableCell>
-                                <TableCell>
-                                    <Badge variant={getStatusBadgeVariant(request.status)}>
-                                        {request.status}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                                <MoreHorizontal className="h-4 w-4" />
+                                                {customerName === 'Sourcing Department' ? 'Select a customer...' : customerName}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                            <DropdownMenuItem>View Notes</DropdownMenuItem>
-                                            <DropdownMenuItem>Update Status</DropdownMenuItem>
-                                            <DropdownMenuItem>Mark as In Stock</DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[300px] p-0">
+                                            <Command shouldFilter={false}>
+                                                <CommandInput 
+                                                    value={customerSearch}
+                                                    onValueChange={setCustomerSearch}
+                                                    placeholder="Search customers..." 
+                                                />
+                                                <CommandList>
+                                                    <CommandEmpty>
+                                                        <Button variant="ghost" className="w-full" onClick={() => handleCreateCustomer(customerSearch)}>
+                                                            Create "{customerSearch}"
+                                                        </Button>
+                                                    </CommandEmpty>
+                                                    <CommandGroup>
+                                                        {customers
+                                                            .filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()))
+                                                            .map((customer) => (
+                                                            <CommandItem
+                                                                key={customer.id}
+                                                                value={customer.name}
+                                                                onSelect={() => handleCustomerSelect(customer)}
+                                                            >
+                                                                {customer.name}
+                                                            </CommandItem>
+                                                        ))}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="customerEmail">Customer Email</Label>
+                                    <Input id="customerEmail" name="customerEmail" type="email" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} />
+                                </div>
+                                <div className="md:col-span-2 space-y-2">
+                                    <Label htmlFor="address">Address</Label>
+                                    <Textarea id="address" name="address" rows={3} value={address} onChange={e => setAddress(e.target.value)} />
+                                </div>
+                                <div className="md:col-span-2 flex justify-end">
+                                    <Button type="submit" variant="outline">
+                                        <Printer className="mr-2 h-4 w-4" />
+                                        Preview Invoice
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                    <div className="flex w-full max-w-sm items-center space-x-2 mb-4">
+                        <Popover open={productPopoverOpen} onOpenChange={setProductPopoverOpen}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={productPopoverOpen}
+                                    className="w-full justify-between"
+                                >
+                                    {displayedProductName}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[300px] p-0">
+                                <Command>
+                                    <CommandInput placeholder="Search product..." />
+                                    <CommandList>
+                                        <CommandEmpty>{isLoading ? 'Loading products...' : 'No product found.'}</CommandEmpty>
+                                        <CommandGroup>
+                                            {products.map((product) => (
+                                                <CommandItem
+                                                    key={product.id}
+                                                    value={product.name}
+                                                    onSelect={() => {
+                                                        setSelectedProduct(product.id);
+                                                        setProductPopoverOpen(false);
+                                                    }}
+                                                >
+                                                    {product.name}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                        <Button onClick={handleAddItem} disabled={!selectedProduct} type="button">
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add
+                        </Button>
+                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Product Name</TableHead>
+                                <TableHead>Requested By</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead><span className="sr-only">Actions</span></TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+                        </TableHeader>
+                        <TableBody>
+                            {requests.map((request) => (
+                                <TableRow key={request.id}>
+                                    <TableCell className="font-medium">
+                                        {request.productId ? (
+                                            <Link href={`/admin/products/${request.productId}`} className="text-primary hover:underline">
+                                                {request.productName}
+                                            </Link>
+                                        ) : (
+                                            request.productName
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Link href={`/admin/users/${request.requestedBy.id}`} className="text-primary hover:underline">
+                                            {request.requestedBy.name}
+                                        </Link>
+                                    </TableCell>
+                                    <TableCell>{new Date(request.date).toLocaleDateString()}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={getStatusBadgeVariant(request.status)}>
+                                            {request.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                <DropdownMenuItem>View Notes</DropdownMenuItem>
+                                                <DropdownMenuItem>Update Status</DropdownMenuItem>
+                                                <DropdownMenuItem>Mark as In Stock</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </form>
     );
 }
