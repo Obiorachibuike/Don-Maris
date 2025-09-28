@@ -5,19 +5,20 @@ import { useState, useMemo, FormEvent, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { getAllUsers, addUser, getOrdersByUserId } from '@/lib/dummy-users';
-import type { User, CartItem, Product } from '@/lib/types';
+import type { User, CartItem, Product, PaymentStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Check, ChevronsUpDown, PlusCircle, Printer, ShoppingCart } from 'lucide-react';
+import { Check, ChevronsUpDown, PlusCircle, Printer, ShoppingCart, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
 import { useProductStore } from '@/store/product-store';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { submitOrder } from '@/lib/data';
 
 interface SupplyItem {
     id: string; // Changed to product ID for consistency
@@ -44,7 +45,8 @@ export default function SourcingPage() {
     const [previousBalance, setPreviousBalance] = useState(0);
     const [productToAdd, setProductToAdd] = useState<string | null>(null);
     const [quantityToAdd, setQuantityToAdd] = useState(1);
-    const { products, fetchProducts } = useProductStore();
+    const [isPurchasing, setIsPurchasing] = useState(false);
+    const { products, fetchProducts, decreaseStock } = useProductStore();
     const { toast } = useToast();
     const router = useRouter();
 
@@ -156,18 +158,24 @@ export default function SourcingPage() {
     
     const totalCost = currentSubtotal + previousBalance;
 
-
-    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        if (!selectedCustomer || !address) {
+    const processSubmission = async (action: 'preview' | 'purchase') => {
+         if (!selectedCustomer || !address) {
             toast({
                 variant: 'destructive',
                 title: 'Missing Information',
-                description: 'Please provide customer name and address.',
+                description: 'Please select a customer and provide an address.',
             });
             return;
         }
+        if (supplyItems.length === 0) {
+            toast({
+                variant: 'destructive',
+                title: 'No Items Added',
+                description: 'Please add at least one product to the invoice.',
+            });
+            return;
+        }
+
 
         const customerName = selectedCustomer.name;
         const [firstName, ...lastNameParts] = customerName.split(' ');
@@ -197,18 +205,57 @@ export default function SourcingPage() {
             invoiceId: `INV-${Date.now()}`,
             date: new Date().toLocaleDateString(),
             customer: customerDetails,
-            paymentStatus: 'unpaid',
+            paymentStatus: 'unpaid' as PaymentStatus,
             previousBalance: previousBalance,
         };
-
+        
         sessionStorage.setItem('don_maris_order', JSON.stringify(invoiceData));
-        router.push(`/admin/sourcing/invoice`);
-    };
+
+        if (action === 'preview') {
+            router.push(`/admin/sourcing/invoice`);
+        } else {
+            setIsPurchasing(true);
+            const orderDetails = {
+                items: cartItems,
+                total: currentSubtotal,
+                customer: customerDetails,
+                date: new Date().toISOString(),
+                paymentStatus: 'unpaid' as PaymentStatus,
+            };
+            const result = await submitOrder(orderDetails);
+            setIsPurchasing(false);
+
+            if (result.status === 'success' || result.id) {
+                cartItems.forEach(item => {
+                    decreaseStock(item.product.id, item.quantity);
+                });
+                toast({
+                    title: "Purchase Recorded!",
+                    description: "The order has been successfully created.",
+                });
+                // Optionally reset form
+                setSupplyItems([]);
+                setSelectedCustomer(null);
+                setAddress('');
+                setCustomerEmail('');
+                setPreviousBalance(0);
+
+                router.push(`/admin/sourcing/invoice`);
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: "Purchase Failed",
+                    description: "There was a problem recording the purchase. Please try again.",
+                });
+            }
+        }
+    }
     
     const isItemLimitReached = supplyItems.length >= MAX_ITEMS;
+    const isFormSubmittable = selectedCustomer && address && supplyItems.length > 0;
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => e.preventDefault()}>
             <Card>
                 <CardHeader>
                     <CardTitle>Posting Department</CardTitle>
@@ -305,7 +352,7 @@ export default function SourcingPage() {
                         <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                             <div className="space-y-2">
                                 <Label>Product to Add</Label>
-                                <Popover open={productPopoverOpen} onOpenChange={setProductPopoverOpen}>
+                                 <Popover open={productPopoverOpen} onOpenChange={setProductPopoverOpen}>
                                     <PopoverTrigger asChild>
                                         <Button
                                             variant="outline"
@@ -437,13 +484,17 @@ export default function SourcingPage() {
                         </div>
                     </div>
                      <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-                        <Button type="submit" variant="outline" className="w-full">
+                        <Button type="button" variant="outline" className="w-full" onClick={() => processSubmission('preview')} disabled={!isFormSubmittable || isPurchasing}>
                             <Printer className="mr-2 h-4 w-4" />
                             Preview Invoice
                         </Button>
-                         <Button type="submit" className="w-full">
-                            <ShoppingCart className="mr-2 h-4 w-4" />
-                            Purchase
+                         <Button type="button" className="w-full" onClick={() => processSubmission('purchase')} disabled={!isFormSubmittable || isPurchasing}>
+                            {isPurchasing ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <ShoppingCart className="mr-2 h-4 w-4" />
+                            )}
+                            {isPurchasing ? 'Purchasing...' : 'Purchase'}
                         </Button>
                     </div>
                 </CardFooter>
@@ -451,5 +502,3 @@ export default function SourcingPage() {
         </form>
     );
 }
-
-    
