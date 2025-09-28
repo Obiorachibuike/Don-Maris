@@ -30,7 +30,7 @@ export function getOrdersByUserId(userId: string): Order[] {
 
 export function addUser(userData: { name: string; email?: string }): User {
     const newUser: User = {
-        id: `CUST${Date.now()}`,
+        id: `CUST${Date.now()}${Math.floor(Math.random() * 1000)}`,
         name: userData.name,
         email: userData.email || '',
         role: 'customer',
