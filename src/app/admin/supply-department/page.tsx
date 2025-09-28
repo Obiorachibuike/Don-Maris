@@ -44,4 +44,67 @@ const initialSupplyItems: SupplyItem[] = [
     { id: 27, itemName: "IP13pro BACK GLASS GOLD", quantity: 2, unitCost: 2180.00, discount: 0 },
     { id: 28, itemName: "IP13Pro MAX BACK GLASS GREEN", quantity: 2, unitCost: 2180.00, discount: 0 },
     { id: 29, itemName: "IP13pro BACK GLASS WHITE", quantity: 2, unitCost: 2180.00, discount: 0 },
-    { id: 30, itemName: "IP13pro BACK GLASS BLUE", quantity: 2, unitCost: 2180.00, discount:
+    { id: 30, itemName: "IP13pro BACK GLASS BLUE", quantity: 2, unitCost: 2180.00, discount: 0 },
+    { id: 31, itemName: "IP13Pro MAX BACK GLASS BLUE", quantity: 2, unitCost: 2180.00, discount: 0 },
+    { id: 32, itemName: "IP13Pro MAX BACK GLASS BLACK", quantity: 2, unitCost: 2180.00, discount: 0 },
+    { id: 33, itemName: "IP13Pro MAX BACK GLASS GREEN", quantity: 2, unitCost: 2180.00, discount: 0 },
+];
+
+export default function SupplyDepartmentPage() {
+    const [supplyItems] = useState<SupplyItem[]>(initialSupplyItems);
+
+    const totalQuantity = supplyItems.reduce((acc, item) => acc + item.quantity, 0);
+    const totalCost = supplyItems.reduce((acc, item) => acc + (item.quantity * item.unitCost * (1 - item.discount)), 0);
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Supply Department</CardTitle>
+                <CardDescription>
+                    A list of items to be supplied.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-[80px]">S/N</TableHead>
+                            <TableHead>Item</TableHead>
+                            <TableHead className="text-center">Quantity</TableHead>
+                            <TableHead className="text-right">Unit Cost (₦)</TableHead>
+                             <TableHead className="text-right">Discount</TableHead>
+                            <TableHead className="text-right">Price (₦)</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {supplyItems.map((item, index) => {
+                             const price = item.quantity * item.unitCost * (1 - item.discount);
+                             return (
+                                <TableRow key={item.id}>
+                                    <TableCell>{index + 1}</TableCell>
+                                    <TableCell className="font-medium">{item.itemName}</TableCell>
+                                    <TableCell className="text-center">{item.quantity}</TableCell>
+                                    <TableCell className="text-right">{item.unitCost.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right">{item.discount}</TableCell>
+                                    <TableCell className="text-right">{price.toLocaleString()}</TableCell>
+                                </TableRow>
+                            )
+                        })}
+                    </TableBody>
+                </Table>
+            </CardContent>
+             <CardFooter className="flex justify-end pt-6">
+                <div className="w-full max-w-sm space-y-2">
+                    <div className="flex justify-between">
+                        <span className="font-medium text-muted-foreground">Total Quantity:</span>
+                        <span className="font-bold">{totalQuantity}</span>
+                    </div>
+                     <div className="flex justify-between text-lg">
+                        <span className="font-bold">Total Cost:</span>
+                        <span className="font-bold">₦{totalCost.toLocaleString()}</span>
+                    </div>
+                </div>
+            </CardFooter>
+        </Card>
+    );
+}
