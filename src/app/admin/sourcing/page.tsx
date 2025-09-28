@@ -193,6 +193,8 @@ export default function SourcingPage() {
         sessionStorage.setItem('don_maris_order', JSON.stringify(invoiceData));
         router.push(`/admin/sourcing/invoice`);
     };
+    
+    const isItemLimitReached = supplyItems.length >= MAX_ITEMS;
 
     return (
         <form onSubmit={handleSubmit}>
@@ -292,7 +294,7 @@ export default function SourcingPage() {
                         <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                             <div className="space-y-2">
                                 <Label>Product to Add</Label>
-                                <Select onValueChange={setProductToAdd} value={productToAdd || ''}>
+                                <Select onValueChange={setProductToAdd} value={productToAdd || ''} disabled={isItemLimitReached}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a product" />
                                     </SelectTrigger>
@@ -321,7 +323,7 @@ export default function SourcingPage() {
                                         min="1"
                                         value={quantityToAdd}
                                         onChange={(e) => setQuantityToAdd(parseInt(e.target.value, 10))}
-                                        disabled={!productToAdd}
+                                        disabled={!productToAdd || isItemLimitReached}
                                     />
                                 </div>
                             </div>
@@ -329,11 +331,16 @@ export default function SourcingPage() {
                          <Button
                             type="button"
                             onClick={handleAddProduct}
-                            disabled={!productToAdd || quantityToAdd < 1 || quantityToAdd > (selectedProductForAdding?.stock ?? 0)}
+                            disabled={!productToAdd || quantityToAdd < 1 || quantityToAdd > (selectedProductForAdding?.stock ?? 0) || isItemLimitReached}
                             className="w-full md:w-auto"
                         >
                             <PlusCircle className="mr-2 h-4 w-4" /> Add Product to Invoice
                         </Button>
+                         {isItemLimitReached && (
+                            <p className="text-sm text-destructive text-center">
+                                You have reached the maximum of {MAX_ITEMS} items per invoice.
+                            </p>
+                        )}
                     </div>
 
                     <ScrollArea className="h-72 mt-4">
