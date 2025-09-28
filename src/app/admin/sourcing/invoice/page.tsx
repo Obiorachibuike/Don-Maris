@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import type { CartItem, PaymentStatus } from '@/lib/types';
-import { ArrowLeft, Printer } from 'lucide-react';
+import { ArrowLeft, Printer, Truck } from 'lucide-react';
 
 interface CustomerDetails {
     name: string;
@@ -28,6 +28,7 @@ interface OrderDetails {
     customer: CustomerDetails;
     paymentStatus: PaymentStatus;
     previousBalance?: number;
+    deliveryMethod?: string;
 }
 
 export default function SourcingInvoicePage() {
@@ -51,7 +52,7 @@ export default function SourcingInvoicePage() {
         );
     }
     
-    const { items, total, invoiceId, date, customer, paymentStatus, previousBalance = 0 } = order;
+    const { items, total, invoiceId, date, customer, paymentStatus, previousBalance = 0, deliveryMethod } = order;
     const amountDue = total + previousBalance;
 
     return (
@@ -70,6 +71,12 @@ export default function SourcingInvoicePage() {
                             <h2 className="text-2xl font-bold font-headline text-primary">Don Maris Accessories</h2>
                             <p className="text-muted-foreground">Invoice #{invoiceId}</p>
                             <p className="text-muted-foreground">Date: {date}</p>
+                             {deliveryMethod && (
+                                <div className="flex items-center gap-2 mt-2">
+                                    <Truck className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-sm text-muted-foreground">Delivery Method: <strong>{deliveryMethod}</strong></span>
+                                </div>
+                            )}
                         </div>
                         <div className="text-right">
                             <h3 className="font-bold">Billed To:</h3>
@@ -159,3 +166,5 @@ export default function SourcingInvoicePage() {
         </div>
     );
 }
+
+    

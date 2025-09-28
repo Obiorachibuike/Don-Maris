@@ -209,6 +209,7 @@ export default function SourcingPage() {
             customer: customerDetails,
             paymentStatus: 'unpaid' as PaymentStatus,
             previousBalance: previousBalance,
+            deliveryMethod: deliveryMethod
         };
         
         sessionStorage.setItem('don_maris_order', JSON.stringify(invoiceData));
@@ -359,8 +360,8 @@ export default function SourcingPage() {
                                         <SelectValue placeholder="Select delivery method" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="come-market">Come Market</SelectItem>
-                                        <SelectItem value="waybill">Waybill</SelectItem>
+                                        <SelectItem value="Come Market">Come Market</SelectItem>
+                                        <SelectItem value="Waybill">Waybill</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -521,3 +522,5 @@ export default function SourcingPage() {
         </form>
     );
 }
+
+    
