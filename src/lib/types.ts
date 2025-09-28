@@ -54,6 +54,7 @@ export interface User extends Customer {
 }
 
 export type DeliveryMethod = 'Waybill' | 'Come Market';
+export type OrderPaymentStatus = 'Paid' | 'Not Paid' | 'Incomplete';
 
 export interface Order {
   id: string;
@@ -65,4 +66,6 @@ export interface Order {
   paymentMethod: string;
   items: OrderItem[];
   deliveryMethod: DeliveryMethod;
+  paymentStatus: OrderPaymentStatus;
+  amountPaid: number;
 }

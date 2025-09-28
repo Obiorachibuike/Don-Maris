@@ -17,7 +17,7 @@ export default function SupplyDepartmentPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const ordersPerPage = 10;
 
-    // Filter orders to show only those relevant for the supply department (e.g., 'Processing')
+    // Filter orders to show only those relevant for the supply department (e.g., 'Processing' or 'Pending')
     const supplyOrders = dummyOrders.filter(order => order.status === 'Processing' || order.status === 'Pending');
 
     const filteredOrders = supplyOrders.filter(order => 
@@ -60,34 +60,53 @@ export default function SupplyDepartmentPage() {
                 </div>
             </CardHeader>
             <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Invoice ID</TableHead>
-                            <TableHead>Customer</TableHead>
-                            <TableHead>Delivery Method</TableHead>
-                            <TableHead className="text-right">Total Amount</TableHead>
-                            <TableHead>Status</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {currentOrders.map((order) => (
-                            <TableRow key={order.id}>
-                                <TableCell className="font-medium">
-                                     <Link href={`/admin/orders/${order.id}`} className="text-primary hover:underline">
-                                        {order.id}
-                                    </Link>
-                                </TableCell>
-                                <TableCell>{order.customer.name}</TableCell>
-                                <TableCell>{order.deliveryMethod}</TableCell>
-                                <TableCell className="text-right">${order.amount.toFixed(2)}</TableCell>
-                                <TableCell>
-                                    <Badge variant={order.status === 'Processing' ? 'secondary' : 'destructive'} className={order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : ''}>{order.status}</Badge>
-                                </TableCell>
+                <div className="w-full overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Invoice ID</TableHead>
+                                <TableHead>Customer</TableHead>
+                                <TableHead>Delivery Method</TableHead>
+                                <TableHead>Fulfillment</TableHead>
+                                <TableHead>Payment</TableHead>
+                                <TableHead className="text-right">Total Amount</TableHead>
+                                <TableHead className="text-right">Amount Paid</TableHead>
+                                <TableHead className="text-right">Balance</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {currentOrders.map((order) => {
+                                const balance = order.amount - order.amountPaid;
+                                return (
+                                <TableRow key={order.id}>
+                                    <TableCell className="font-medium">
+                                        <Link href={`/admin/orders/${order.id}`} className="text-primary hover:underline">
+                                            {order.id}
+                                        </Link>
+                                    </TableCell>
+                                    <TableCell>{order.customer.name}</TableCell>
+                                    <TableCell>{order.deliveryMethod}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={order.status === 'Processing' ? 'secondary' : 'destructive'} className={order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : ''}>{order.status}</Badge>
+                                    </TableCell>
+                                     <TableCell>
+                                        <Badge variant={
+                                            order.paymentStatus === 'Paid' ? 'default' :
+                                            order.paymentStatus === 'Not Paid' ? 'destructive' :
+                                            'secondary'
+                                        } className={order.paymentStatus === 'Incomplete' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : ''}>
+                                            {order.paymentStatus}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">${order.amount.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right">${order.amountPaid.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right font-medium text-destructive">${balance.toFixed(2)}</TableCell>
+                                </TableRow>
+                                )
+                            })}
+                        </TableBody>
+                    </Table>
+                </div>
             </CardContent>
              <CardFooter>
                  <div className="flex items-center justify-between w-full">

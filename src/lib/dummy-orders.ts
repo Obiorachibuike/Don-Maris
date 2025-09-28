@@ -1,6 +1,6 @@
 
 
-import type { Order, DeliveryMethod } from './types';
+import type { Order, DeliveryMethod, OrderPaymentStatus } from './types';
 
 // More detailed mock data for orders, including items.
 export const dummyOrders: Order[] = [
@@ -16,7 +16,9 @@ export const dummyOrders: Order[] = [
         items: [
             { productId: '3', quantity: 1 }, // iPhone 14 Pro Max Screen
             { productId: '5', quantity: 1 }, // Pro-Tech 25-in-1 Repair Toolkit
-        ]
+        ],
+        paymentStatus: 'Paid',
+        amountPaid: 219.95,
     },
     {
         id: '123457',
@@ -29,7 +31,9 @@ export const dummyOrders: Order[] = [
         deliveryMethod: 'Come Market',
         items: [
              { productId: '9', quantity: 1 } // Pixel 7 Pro Screen
-        ]
+        ],
+        paymentStatus: 'Paid',
+        amountPaid: 145.00,
     },
     {
         id: '123458',
@@ -44,7 +48,9 @@ export const dummyOrders: Order[] = [
             { productId: '10', quantity: 1 }, // S22 Ultra Backglass
             { productId: '6', quantity: 1 }, // X650 C/F
             { productId: '8', quantity: 1 }, // iPhone 12 P/F
-        ]
+        ],
+        paymentStatus: 'Paid',
+        amountPaid: 92.48,
     },
     {
         id: '123459',
@@ -57,7 +63,9 @@ export const dummyOrders: Order[] = [
         deliveryMethod: 'Come Market',
         items: [
             { productId: '5', quantity: 1 } // Pro-Tech 25-in-1 Repair Toolkit
-        ]
+        ],
+        paymentStatus: 'Not Paid',
+        amountPaid: 0,
     },
      {
         id: '123460',
@@ -70,7 +78,9 @@ export const dummyOrders: Order[] = [
         deliveryMethod: 'Waybill',
         items: [
             { productId: '3', quantity: 1 } // iPhone 14 Pro Max Screen
-        ]
+        ],
+        paymentStatus: 'Paid',
+        amountPaid: 189.99,
     },
     ...Array.from({ length: 50 }, (_, i) => {
         const orderId = `${123461 + i}`;
@@ -82,6 +92,9 @@ export const dummyOrders: Order[] = [
         const dateOffset = i * 12 * 60 * 60 * 1000; // 12 hours per order
         const date = new Date(baseDate - dateOffset).toISOString().split('T')[0];
         const deliveryMethod: DeliveryMethod = i % 2 === 0 ? 'Waybill' : 'Come Market';
+        const paymentStatusOptions: OrderPaymentStatus[] = ['Paid', 'Not Paid', 'Incomplete'];
+        const paymentStatus = paymentStatusOptions[i % paymentStatusOptions.length];
+        const amountPaid = paymentStatus === 'Paid' ? amount : (paymentStatus === 'Incomplete' ? amount / 2 : 0);
         
         return {
             id: orderId,
@@ -94,7 +107,9 @@ export const dummyOrders: Order[] = [
             deliveryMethod: deliveryMethod,
             items: [
                 { productId: `${(i % 10) + 3}`, quantity: 1 + (i % 3) }
-            ]
+            ],
+            paymentStatus,
+            amountPaid: parseFloat(amountPaid.toFixed(2)),
         };
     })
 ];
