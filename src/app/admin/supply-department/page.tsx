@@ -49,7 +49,13 @@ export default function SupplyDepartmentPage() {
                 if (sortConfig.key === 'balance') {
                     aValue = a.amount - a.amountPaid;
                     bValue = b.amount - b.amountPaid;
-                } else {
+                } else if (sortConfig.key === 'paymentStatus') {
+                    // Custom sort for paymentStatus
+                    const order = ['Paid', 'Incomplete', 'Not Paid'];
+                    aValue = order.indexOf(a.paymentStatus);
+                    bValue = order.indexOf(b.paymentStatus);
+                }
+                else {
                     aValue = a[sortConfig.key!];
                     bValue = b[sortConfig.key!];
                 }
