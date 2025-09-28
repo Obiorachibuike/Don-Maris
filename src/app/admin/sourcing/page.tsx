@@ -211,7 +211,7 @@ export default function SourcingPage() {
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle>Product Sourcing To-Do</CardTitle>
+                        <CardTitle>Sourcing Department</CardTitle>
                         <CardDescription>
                             A to-do list for sourcing and adding new products based on customer requests.
                         </CardDescription>
