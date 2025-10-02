@@ -3,6 +3,22 @@ import type { Product } from './types';
 
 export const dummyProducts: Product[] = [
   {
+    id: '1',
+    name: 'Microscope',
+    description: 'High-precision microscope for detailed repair work.',
+    longDescription: 'This professional-grade microscope is essential for any serious phone repair technician. With powerful magnification and clear optics, it allows you to see the smallest components with ease, making intricate soldering and board-level repairs possible. The adjustable stand and lighting ensure a comfortable and well-lit workspace.',
+    price: 299.99,
+    image: 'https://storage.googleapis.com/gemini-studio-assets/business-website/43a6d9b5-25c7-4560-8451-aa3b32087e59.png',
+    data_ai_hint: 'repair microscope',
+    brand: 'Pro-Tech',
+    type: 'Tools',
+    rating: 4.9,
+    reviews: [],
+    isFeatured: true,
+    dateAdded: '2023-11-28',
+    stock: 25,
+  },
+  {
     id: '3',
     name: 'iPhone 14 Pro Max Screen',
     description: 'Vibrant and responsive OLED replacement screen.',

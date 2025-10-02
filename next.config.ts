@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 import dotenv from 'dotenv';
 
@@ -16,6 +17,12 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'placehold.co',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
         port: '',
         pathname: '/**',
       },
