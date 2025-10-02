@@ -35,7 +35,7 @@ const navItems = [
     { href: '/admin/orders', label: 'Orders', icon: ShoppingBag, roles: ['admin', 'sales'] },
     { href: '/admin/products', label: 'Products', icon: Package, roles: ['admin', 'supplier'] },
     { href: '/admin/sourcing', label: 'Posting Department', icon: PackageSearch, roles: ['admin', 'supplier'] },
-    { href: '/admin/supply-department', label: 'Supply Department', icon: Truck, roles: ['admin', 'supplier'], disabled: true },
+    { href: '/admin/supply-department', label: 'Supply Department', icon: Truck, roles: ['admin', 'supplier'] },
     { href: '/admin/users', label: 'All Users', icon: Users, roles: ['admin'] },
     { href: '/admin/employees', label: 'Employees', icon: Briefcase, roles: ['admin'] },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart2, roles: ['admin', 'sales'] },
@@ -73,15 +73,14 @@ export default function AdminLayout({
                       <SidebarMenu>
                           {navItems.filter(item => userCanAccess(item.roles)).map(item => (
                                <SidebarMenuItem key={item.href}>
-                                  <Link href={item.href} passHref legacyBehavior>
+                                  <Link href={item.href} passHref>
                                       <SidebarMenuButton 
-                                        asChild={!item.disabled}
                                         isActive={pathname === item.href} 
                                         icon={<item.icon />}
                                         disabled={item.disabled}
                                         className={item.disabled ? 'cursor-not-allowed opacity-50' : ''}
                                       >
-                                          {item.disabled ? <a>{item.label}</a> : item.label}
+                                          {item.label}
                                       </SidebarMenuButton>
                                   </Link>
                                </SidebarMenuItem>
