@@ -96,7 +96,7 @@ export default function SupplyDepartmentPage() {
     );
 
     return (
-        <div className="w-[90vw] max-w-7xl mx-auto">
+        <div className="w-[95%] mx-auto">
             <Card>
                 <CardHeader>
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
