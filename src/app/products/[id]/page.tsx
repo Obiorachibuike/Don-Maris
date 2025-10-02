@@ -2,7 +2,7 @@
 'use client'
 
 import { getProductById } from '@/lib/data';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { StarRating } from '@/components/star-rating';
@@ -19,13 +19,9 @@ import type { Product } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatProductType } from '@/lib/display-utils';
 
-type ProductPageProps = {
-  params: {
-    id: string;
-  };
-};
-
-export default function ProductPage({ params }: ProductPageProps) {
+export default function ProductPage() {
+  const params = useParams();
+  const productId = params.id as string;
   const { addItem } = useCart();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
@@ -33,13 +29,13 @@ export default function ProductPage({ params }: ProductPageProps) {
 
   useEffect(() => {
     async function loadProduct() {
-      const fetchedProduct = await getProductById(params.id);
+      const fetchedProduct = await getProductById(productId);
       setProduct(fetchedProduct);
     }
-    if (params.id) {
+    if (productId) {
       loadProduct();
     }
-  }, [params]);
+  }, [productId]);
 
   if (product === undefined) {
     notFound();
