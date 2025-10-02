@@ -20,13 +20,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getAllUsers } from "@/lib/dummy-users";
 import Link from "next/link";
 
-export default function UsersPage() {
+export default function EmployeesPage() {
     
     const allUsers = getAllUsers();
+    const employees = allUsers.filter(user => user.role !== 'customer');
     
     const [searchTerm, setSearchTerm] = useState('');
 
-    const filteredUsers = allUsers.filter(user => 
+    const filteredEmployees = employees.filter(user => 
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.role.toLowerCase().includes(searchTerm.toLowerCase())
@@ -38,19 +39,19 @@ export default function UsersPage() {
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div>
-                            <CardTitle>Manage All Users</CardTitle>
-                            <CardDescription>View and manage all system users, including customers and employees.</CardDescription>
+                            <CardTitle>Manage Employees</CardTitle>
+                            <CardDescription>Add, edit, and manage employee accounts and their roles.</CardDescription>
                         </div>
                          <div className="flex items-center gap-4">
                             <Input 
-                                placeholder="Search users..." 
+                                placeholder="Search employees..." 
                                 className="w-full max-w-sm"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                             <Button>
                                 <PlusCircle className="mr-2 h-4 w-4" />
-                                Add User
+                                Add Employee
                             </Button>
                         </div>
                     </div>
@@ -59,14 +60,14 @@ export default function UsersPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>User</TableHead>
+                                <TableHead>Employee</TableHead>
                                 <TableHead>Role</TableHead>
                                 <TableHead>Date Joined</TableHead>
                                 <TableHead><span className="sr-only">Actions</span></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredUsers.map(user => (
+                            {filteredEmployees.map(user => (
                                 <TableRow key={user.id}>
                                     <TableCell className="font-medium">
                                         <Link href={`/admin/users/${user.id}`} className="flex items-center gap-3 group">
@@ -97,9 +98,9 @@ export default function UsersPage() {
                                                 <DropdownMenuItem asChild>
                                                     <Link href={`/admin/users/${user.id}`}>View Details</Link>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem>Edit User</DropdownMenuItem>
+                                                <DropdownMenuItem>Edit Employee</DropdownMenuItem>
                                                 <DropdownMenuItem>Change Role</DropdownMenuItem>
-                                                <DropdownMenuItem className="text-red-500">Deactivate User</DropdownMenuItem>
+                                                <DropdownMenuItem className="text-red-500">Deactivate Employee</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>
