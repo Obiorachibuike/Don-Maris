@@ -15,6 +15,7 @@ import { submitOrder } from '@/lib/data';
 import type { PaymentStatus, CartItem } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import axios from 'axios';
 import { useProductStore } from '@/store/product-store';
 
@@ -50,6 +51,7 @@ export default function PaymentPage() {
     const [shippingDetails, setShippingDetails] = useState<ShippingDetails | null>(null);
     const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null);
     const [isGeneratingAccount, setIsGeneratingAccount] = useState(false);
+    const [shouldSaveCard, setShouldSaveCard] = useState(true);
 
     useEffect(() => {
         const savedShipping = sessionStorage.getItem('don_maris_shipping');
@@ -57,6 +59,17 @@ export default function PaymentPage() {
             setShippingDetails(JSON.parse(savedShipping));
         } else {
             router.push('/checkout');
+        }
+
+        const savedCard = localStorage.getItem('don_maris_card_details');
+        if (savedCard) {
+            const cardDetails = JSON.parse(savedCard);
+            const form = document.getElementById('card-payment-form') as HTMLFormElement;
+            if (form) {
+                (form.elements.namedItem('card-number') as HTMLInputElement).value = cardDetails.number;
+                (form.elements.namedItem('expiry-date') as HTMLInputElement).value = cardDetails.expiry;
+                (form.elements.namedItem('cvc') as HTMLInputElement).value = cardDetails.cvc;
+            }
         }
     }, [router]);
 
@@ -91,6 +104,22 @@ export default function PaymentPage() {
         }
     };
     
+    const handleCardSubmit = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        if (shouldSaveCard) {
+            const cardDetails = {
+                number: formData.get('card-number'),
+                expiry: formData.get('expiry-date'),
+                cvc: formData.get('cvc'),
+            };
+            localStorage.setItem('don_maris_card_details', JSON.stringify(cardDetails));
+        } else {
+            localStorage.removeItem('don_maris_card_details');
+        }
+        handleSubmit(true);
+    };
+
     const handleSubmit = async (paymentMade: boolean) => {
         if (!shippingDetails) return;
 
@@ -160,24 +189,32 @@ export default function PaymentPage() {
                                         <CreditCard /> Pay with Card (Stripe)
                                     </AccordionTrigger>
                                     <AccordionContent className="pt-4">
-                                        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(true); }}>
+                                        <form id="card-payment-form" onSubmit={handleCardSubmit}>
                                             <div className="space-y-4">
                                                 <div className="space-y-2">
                                                     <Label htmlFor="card-number">Card Number</Label>
                                                     <div className="relative">
-                                                        <Input id="card-number" placeholder="0000 0000 0000 0000" required />
+                                                        <Input id="card-number" name="card-number" placeholder="0000 0000 0000 0000" required />
                                                         <CreditCard className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                                                     </div>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div className="space-y-2">
                                                         <Label htmlFor="expiry-date">Expiry Date</Label>
-                                                        <Input id="expiry-date" placeholder="MM / YY" required />
+                                                        <Input id="expiry-date" name="expiry-date" placeholder="MM / YY" required />
                                                     </div>
                                                     <div className="space-y-2">
                                                         <Label htmlFor="cvc">CVC</Label>
-                                                        <Input id="cvc" placeholder="123" required />
+                                                        <Input id="cvc" name="cvc" placeholder="123" required />
                                                     </div>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <Checkbox 
+                                                        id="save-card" 
+                                                        checked={shouldSaveCard}
+                                                        onCheckedChange={(checked) => setShouldSaveCard(Boolean(checked))}
+                                                    />
+                                                    <Label htmlFor="save-card" className="cursor-pointer">Save this card for future payments</Label>
                                                 </div>
                                                  <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
                                                     <Lock className="h-4 w-4" />

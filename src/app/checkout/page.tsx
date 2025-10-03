@@ -8,13 +8,32 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
-import { FormEvent } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function CheckoutPage() {
     const { items, total } = useCart();
     const router = useRouter();
+    const [shouldSaveInfo, setShouldSaveInfo] = useState(true);
+
+    useEffect(() => {
+        const savedDetails = localStorage.getItem('don_maris_shipping_details');
+        if (savedDetails) {
+            const details = JSON.parse(savedDetails);
+            const form = document.getElementById('checkout-form') as HTMLFormElement;
+            if (form) {
+                (form.elements.namedItem('name') as HTMLInputElement).value = `${details.firstName} ${details.lastName}`;
+                (form.elements.namedItem('email') as HTMLInputElement).value = details.email;
+                (form.elements.namedItem('phone') as HTMLInputElement).value = details.phone;
+                (form.elements.namedItem('address') as HTMLInputElement).value = details.address;
+                (form.elements.namedItem('city') as HTMLInputElement).value = details.city;
+                (form.elements.namedItem('state') as HTMLInputElement).value = details.state;
+                (form.elements.namedItem('zip') as HTMLInputElement).value = details.zip;
+            }
+        }
+    }, []);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -30,6 +49,12 @@ export default function CheckoutPage() {
             state: formData.get('state') as string,
             zip: formData.get('zip') as string,
         };
+
+        if (shouldSaveInfo) {
+            localStorage.setItem('don_maris_shipping_details', JSON.stringify(customerDetails));
+        } else {
+            localStorage.removeItem('don_maris_shipping_details');
+        }
 
         const orderDetails = {
             items,
@@ -57,7 +82,7 @@ export default function CheckoutPage() {
     return (
         <div className="container mx-auto px-4 py-12">
             <h1 className="text-4xl font-bold font-headline mb-8 text-center">Checkout - Step 1 of 2</h1>
-            <form onSubmit={handleSubmit}>
+            <form id="checkout-form" onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2">
                         <Card>
@@ -93,6 +118,16 @@ export default function CheckoutPage() {
                                     <div className="space-y-2">
                                         <Label htmlFor="zip">ZIP / Postal Code</Label>
                                         <Input id="zip" name="zip" placeholder="90210" required />
+                                    </div>
+                                    <div className="sm:col-span-2 flex items-center space-x-2 mt-4">
+                                        <Checkbox 
+                                            id="save-info" 
+                                            checked={shouldSaveInfo}
+                                            onCheckedChange={(checked) => setShouldSaveInfo(Boolean(checked))}
+                                        />
+                                        <Label htmlFor="save-info" className="cursor-pointer">
+                                            Save my information for a faster checkout
+                                        </Label>
                                     </div>
                                 </div>
                             </CardContent>
