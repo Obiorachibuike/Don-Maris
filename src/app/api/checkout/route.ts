@@ -2,14 +2,15 @@
 import { NextResponse, NextRequest } from "next/server";
 import Stripe from "stripe";
 import geoip from "geoip-lite";
-import axios from "axios";
-import { CartItem } from "@/lib/types";
+import type { CartItem } from "@/lib/types";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2024-06-20",
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const { items, email }: { items: CartItem[], email: string } = await req.json();
+    const { items, email, saveCard }: { items: CartItem[], email: string, saveCard: boolean } = await req.json();
 
     if (!items || !email) {
       return NextResponse.json({ error: "Missing items or email" }, { status: 400 });
@@ -20,80 +21,40 @@ export async function POST(req: NextRequest) {
     const geo = geoip.lookup(ip);
     const country = geo?.country || "NG"; // Default to Nigeria if IP lookup fails
 
-    // Map country → currency + gateway
-    let gateway: "stripe" | "paystack" = "stripe";
-    let currency: string = "usd";
-
+    let currency: string;
     if (country === "NG") {
-      gateway = "paystack";
-      currency = "NGN";
+      currency = "ngn";
     } else if (country === "BJ") {
-      gateway = "paystack";
-      currency = "XOF";
-    } else if (country === "GH") {
-      gateway = "paystack";
-      currency = "GHS";
+      currency = "xof";
     } else {
-      gateway = "stripe";
       currency = "usd";
     }
+    
+    const totalAmount = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
-    // -------- If Paystack -------- //
-    if (gateway === "paystack") {
-      const totalAmount = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    let customer: Stripe.Customer;
+    const existingCustomers = await stripe.customers.list({ email: email, limit: 1 });
 
-      const paystackRes = await axios.post(
-        "https://api.paystack.co/transaction/initialize",
-        {
-          email,
-          amount: Math.round(totalAmount * 100), // kobo or equivalent lowest denomination
-          currency,
-          callback_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002'}/invoice`,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      return NextResponse.json({
-        url: paystackRes.data.data.authorization_url,
-        gateway: "paystack",
-        currency,
-        country,
-      });
+    if (existingCustomers.data.length > 0) {
+        customer = existingCustomers.data[0];
+    } else {
+        customer = await stripe.customers.create({ email: email });
     }
 
-    // -------- If Stripe -------- //
-    const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((item) => ({
-      price_data: {
+    const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(totalAmount * 100), // in cents/kobo
         currency: currency,
-        product_data: {
-          name: item.product.name,
-          images: item.product.image ? [item.product.image] : [],
-        },
-        unit_amount: Math.round(item.product.price * 100), // in cents
-      },
-      quantity: item.quantity,
-    }));
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      mode: "payment",
-      line_items,
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002'}/invoice?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002'}/payment`,
-      customer_email: email,
+        customer: customer.id,
+        setup_future_usage: saveCard ? "off_session" : undefined,
+        automatic_payment_methods: { enabled: true },
     });
 
-    return NextResponse.json({
-      url: session.url,
-      gateway: "stripe",
-      currency,
-      country,
+    return NextResponse.json({ 
+        clientSecret: paymentIntent.client_secret, 
+        currency: currency,
+        amount: totalAmount,
     });
+
   } catch (error: any) {
     console.error("Checkout error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
