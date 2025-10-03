@@ -1,6 +1,13 @@
 
-
 export type ProductType = 'Power Flex' | 'Charging Flex' | 'Screen' | 'Backglass' | 'Glass' | 'Tools';
+
+export type Review = {
+  id: string;
+  author: string;
+  rating: number;
+  comment: string;
+  date: string;
+};
 
 export type Product = {
   id: string;
@@ -17,14 +24,7 @@ export type Product = {
   isFeatured?: boolean;
   dateAdded: string;
   stock: number;
-};
-
-export type Review = {
-  id: string;
-  author: string;
-  rating: number;
-  comment: string;
-  date: string;
+  totalSales: number; // New field to track sales count
 };
 
 export type CartItem = {
@@ -33,28 +33,29 @@ export type CartItem = {
   quantity: number;
 };
 
-export type PaymentStatus = 'paid' | 'unpaid';
-
-// New types for Orders
-export interface OrderItem {
+export type OrderItem = {
   productId: string;
   quantity: number;
-}
+  priceAtPurchase: number;
+};
+
+export type PaymentStatus = 'paid' | 'unpaid';
+export type OrderPaymentStatus = 'Paid' | 'Not Paid' | 'Incomplete';
+export type DeliveryMethod = 'Waybill' | 'Come Market';
 
 export interface Customer {
   id: string;
   name: string;
   email: string;
   avatar: string;
+  lifetimeValue: number;
+  lastOrderDate?: string;
 }
 
 export interface User extends Customer {
     role: 'admin' | 'sales' | 'accountant' | 'supplier' | 'customer';
     dateJoined: string;
 }
-
-export type DeliveryMethod = 'Waybill' | 'Come Market';
-export type OrderPaymentStatus = 'Paid' | 'Not Paid' | 'Incomplete';
 
 export interface Order {
   id: string;
