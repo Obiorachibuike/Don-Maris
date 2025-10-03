@@ -7,11 +7,14 @@ import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, CheckCircle, Smartphone, Truck } from 'lucide-react';
+import { ArrowRight, CheckCircle, Smartphone, Truck, Award } from 'lucide-react';
 import { AnimatedSection } from '@/components/animated-section';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay"
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { StarRating } from '@/components/star-rating';
 
 export default function Home() {
   const { featuredProducts, newArrivals, bestSellers, bestRated, trending, isLoading, fetchProducts } = useProductStore();
@@ -23,6 +26,27 @@ export default function Home() {
   const plugin = useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true })
   )
+
+  const testimonials = [
+    {
+      name: "Sarah J.",
+      avatar: "https://placehold.co/100x100.png",
+      rating: 5,
+      quote: "The quality of the accessories from Don Maris is unmatched. My phone case is not only stylish but has survived several drops without a scratch!"
+    },
+    {
+      name: "Michael B.",
+      avatar: "https://placehold.co/100x100.png",
+      rating: 5,
+      quote: "Finally, a one-stop shop for everything I need for my phone. The AI recommender is a genius feature that helped me find the perfect charger."
+    },
+    {
+      name: "Emily K.",
+      avatar: "https://placehold.co/100x100.png",
+      rating: 5,
+      quote: "Fast shipping and fantastic customer service. The team was so helpful when I had a question about a product. Highly recommend!"
+    }
+  ];
 
   const ProductCarouselSkeleton = () => (
       <div className="flex space-x-4">
@@ -270,6 +294,48 @@ export default function Home() {
                       <p className="text-muted-foreground">Our knowledgeable team is here to help you find the perfect part for your repair or upgrade.</p>
                   </div>
               </div>
+          </div>
+        </section>
+      </AnimatedSection>
+
+       {/* Testimonials Section */}
+      <AnimatedSection>
+        <section className="py-20 bg-muted/50">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-12 font-headline">What Our Customers Say</h2>
+            <Carousel
+                opts={{ align: "start", loop: true }}
+                plugins={[plugin.current]}
+                onMouseEnter={plugin.current.stop}
+                onMouseLeave={plugin.current.reset}
+                className="w-full max-w-4xl mx-auto"
+            >
+                <CarouselContent>
+                    {testimonials.map((testimonial, index) => (
+                        <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                            <div className="p-4">
+                                <Card className="flex flex-col h-full">
+                                    <CardContent className="pt-6 flex-grow">
+                                        <p className="text-foreground/80 mb-4 italic">"{testimonial.quote}"</p>
+                                    </CardContent>
+                                    <CardHeader className="flex-row items-center gap-4 mt-auto pt-0">
+                                        <Avatar>
+                                        <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
+                                        <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                        <CardTitle className="text-base">{testimonial.name}</CardTitle>
+                                        <StarRating rating={testimonial.rating} />
+                                        </div>
+                                    </CardHeader>
+                                </Card>
+                            </div>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+            </Carousel>
           </div>
         </section>
       </AnimatedSection>

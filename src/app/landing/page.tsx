@@ -18,27 +18,6 @@ export default function LandingPage() {
         Autoplay({ delay: 5000, stopOnInteraction: true })
     )
 
-  const testimonials = [
-    {
-      name: "Sarah J.",
-      avatar: "https://placehold.co/100x100.png",
-      rating: 5,
-      quote: "The quality of the accessories from Don Maris is unmatched. My phone case is not only stylish but has survived several drops without a scratch!"
-    },
-    {
-      name: "Michael B.",
-      avatar: "https://placehold.co/100x100.png",
-      rating: 5,
-      quote: "Finally, a one-stop shop for everything I need for my phone. The AI recommender is a genius feature that helped me find the perfect charger."
-    },
-    {
-      name: "Emily K.",
-      avatar: "https://placehold.co/100x100.png",
-      rating: 5,
-      quote: "Fast shipping and fantastic customer service. The team was so helpful when I had a question about a product. Highly recommend!"
-    }
-  ];
-
   const teamMembers = [
     {
       name: "Alex Maris",
@@ -73,7 +52,7 @@ export default function LandingPage() {
             alt="Stylish phone accessories on a modern background"
             fill
             className="object-cover"
-            data-ai-hint="modern accessories"
+            data-ai_hint="modern accessories"
           />
           <div className="absolute inset-0 bg-black/50" />
           <div className="relative container mx-auto px-4 z-10">
@@ -125,48 +104,6 @@ export default function LandingPage() {
                 </CardContent>
               </Card>
             </div>
-          </div>
-        </section>
-      </AnimatedSection>
-
-      {/* Testimonials Section */}
-      <AnimatedSection>
-        <section className="py-20 bg-muted/50">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12 font-headline">What Our Customers Say</h2>
-            <Carousel
-                opts={{ align: "start", loop: true }}
-                plugins={[plugin.current]}
-                onMouseEnter={plugin.current.stop}
-                onMouseLeave={plugin.current.reset}
-                className="w-full max-w-4xl mx-auto"
-            >
-                <CarouselContent>
-                    {testimonials.map((testimonial, index) => (
-                        <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-                            <div className="p-4">
-                                <Card className="flex flex-col h-full">
-                                    <CardContent className="pt-6 flex-grow">
-                                        <p className="text-foreground/80 mb-4 italic">"{testimonial.quote}"</p>
-                                    </CardContent>
-                                    <CardHeader className="flex-row items-center gap-4 mt-auto pt-0">
-                                        <Avatar>
-                                        <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
-                                        <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                        <CardTitle className="text-base">{testimonial.name}</CardTitle>
-                                        <StarRating rating={testimonial.rating} />
-                                        </div>
-                                    </CardHeader>
-                                </Card>
-                            </div>
-                        </CarouselItem>
-                    ))}
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
-            </Carousel>
           </div>
         </section>
       </AnimatedSection>
