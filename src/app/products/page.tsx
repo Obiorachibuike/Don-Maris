@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Product } from '@/lib/types';
 import { useProductStore } from '@/store/product-store';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSearchParams } from 'next/navigation';
 import { ProductsPageWrapper } from './page-wrapper';
 
+interface FilterState {
+  searchQuery: string;
+  selectedTypes: string[];
+  selectedBrands: string[];
+  priceRange: [number, number];
+  sortOption: string;
+  timeFilter: string;
+  isFeatured: boolean;
+}
+
 function ProductsPageComponent() {
   const { products, isLoading, fetchProducts } = useProductStore();
   const searchParams = useSearchParams();
@@ -32,69 +42,77 @@ function ProductsPageComponent() {
   const types = useMemo(() => [...new Set(products.map((p) => p.type))].sort(), [products]);
   const maxPrice = useMemo(() => products.length > 0 ? Math.ceil(Math.max(...products.map(p => p.price))) : 100, [products]);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState([0, maxPrice]);
-  const [sortOption, setSortOption] = useState('newest');
-  const [timeFilter, setTimeFilter] = useState('all');
-  const [isFeatured, setIsFeatured] = useState(false);
+  const initialFilterState: FilterState = useMemo(() => ({
+    searchQuery: '',
+    selectedTypes: [],
+    selectedBrands: [],
+    priceRange: [0, maxPrice],
+    sortOption: 'newest',
+    timeFilter: 'all',
+    isFeatured: false,
+  }), [maxPrice]);
+  
+  const [stagedFilters, setStagedFilters] = useState<FilterState>(initialFilterState);
+  const [appliedFilters, setAppliedFilters] = useState<FilterState>(initialFilterState);
 
-  useEffect(() => {
-      setPriceRange([0, maxPrice]);
-  }, [maxPrice]);
-    
   useEffect(() => {
     const sortParam = searchParams.get('sort');
     const featuredParam = searchParams.get('featured');
+    
+    const newFilters = {
+      ...initialFilterState,
+      sortOption: sortParam || initialFilterState.sortOption,
+      isFeatured: featuredParam === 'true',
+    };
 
-    if (sortParam) {
-        setSortOption(sortParam);
-    }
-    if(featuredParam) {
-        setIsFeatured(featuredParam === 'true');
-    }
+    setStagedFilters(newFilters);
+    setAppliedFilters(newFilters);
 
-  }, [searchParams]);
-
+  }, [searchParams, initialFilterState]);
+  
+  const handleFilterChange = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
+    setStagedFilters(prev => ({ ...prev, [key]: value }));
+  };
+  
   const handleTypeChange = (type: string) => {
-    setSelectedTypes(prev =>
-      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
-    );
+    const newSelectedTypes = stagedFilters.selectedTypes.includes(type)
+      ? stagedFilters.selectedTypes.filter(t => t !== type)
+      : [...stagedFilters.selectedTypes, type];
+    handleFilterChange('selectedTypes', newSelectedTypes);
   };
 
   const handleBrandChange = (brand: string) => {
-    setSelectedBrands(prev =>
-      prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
-    );
+    const newSelectedBrands = stagedFilters.selectedBrands.includes(brand)
+      ? stagedFilters.selectedBrands.filter(b => b !== brand)
+      : [...stagedFilters.selectedBrands, brand];
+    handleFilterChange('selectedBrands', newSelectedBrands);
   };
-
+  
+  const applyFilters = () => {
+    setAppliedFilters(stagedFilters);
+  };
+  
   const clearFilters = () => {
-    setSearchQuery('');
-    setSelectedTypes([]);
-    setSelectedBrands([]);
-    setPriceRange([0, maxPrice]);
-    setSortOption('newest');
-    setTimeFilter('all');
-    setIsFeatured(false);
+    setStagedFilters(initialFilterState);
+    setAppliedFilters(initialFilterState);
   };
 
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = products.filter(product => {
-      const searchMatch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || product.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const typeMatch = selectedTypes.length === 0 || selectedTypes.includes(product.type);
-      const brandMatch = selectedBrands.length === 0 || selectedBrands.includes(product.brand);
-      const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
-      const featuredMatch = !isFeatured || product.isFeatured;
+      const searchMatch = product.name.toLowerCase().includes(appliedFilters.searchQuery.toLowerCase()) || product.description.toLowerCase().includes(appliedFilters.searchQuery.toLowerCase());
+      const typeMatch = appliedFilters.selectedTypes.length === 0 || appliedFilters.selectedTypes.includes(product.type);
+      const brandMatch = appliedFilters.selectedBrands.length === 0 || appliedFilters.selectedBrands.includes(product.brand);
+      const priceMatch = product.price >= appliedFilters.priceRange[0] && product.price <= appliedFilters.priceRange[1];
+      const featuredMatch = !appliedFilters.isFeatured || product.isFeatured;
       
       const timeMatch = (() => {
-        if (timeFilter === 'all') return true;
+        if (appliedFilters.timeFilter === 'all') return true;
         const productDate = new Date(product.dateAdded);
         const now = new Date();
         let days = 0;
-        if (timeFilter === 'last-week') days = 7;
-        if (timeFilter === 'last-month') days = 30;
-        if (timeFilter === 'last-year') days = 365;
+        if (appliedFilters.timeFilter === 'last-week') days = 7;
+        if (appliedFilters.timeFilter === 'last-month') days = 30;
+        if (appliedFilters.timeFilter === 'last-year') days = 365;
         
         const filterDate = new Date();
         filterDate.setDate(now.getDate() - days);
@@ -105,7 +123,7 @@ function ProductsPageComponent() {
       return searchMatch && typeMatch && brandMatch && priceMatch && timeMatch && featuredMatch;
     });
 
-    switch (sortOption) {
+    switch (appliedFilters.sortOption) {
       case 'newest':
         filtered.sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime());
         break;
@@ -121,14 +139,14 @@ function ProductsPageComponent() {
     }
 
     return filtered;
-  }, [products, searchQuery, selectedTypes, selectedBrands, priceRange, sortOption, timeFilter, isFeatured]);
+  }, [products, appliedFilters]);
 
   const FilterControls = () => (
     <div className="flex flex-col gap-6">
        <div>
         <h3 className="text-lg font-semibold mb-3 font-headline">Featured</h3>
         <div className="flex items-center space-x-2">
-            <Checkbox id="filter-featured" checked={isFeatured} onCheckedChange={(checked) => setIsFeatured(!!checked)} />
+            <Checkbox id="filter-featured" checked={stagedFilters.isFeatured} onCheckedChange={(checked) => handleFilterChange('isFeatured', !!checked)} />
             <Label htmlFor="filter-featured" className="font-normal cursor-pointer">Only Featured Products</Label>
         </div>
       </div>
@@ -138,7 +156,7 @@ function ProductsPageComponent() {
           <div className="space-y-2 pr-4">
             {types.map(type => (
               <div key={type} className="flex items-center space-x-2">
-                <Checkbox id={`filter-${type}`} checked={selectedTypes.includes(type)} onCheckedChange={() => handleTypeChange(type)} />
+                <Checkbox id={`filter-${type}`} checked={stagedFilters.selectedTypes.includes(type)} onCheckedChange={() => handleTypeChange(type)} />
                 <Label htmlFor={`filter-${type}`} className="font-normal cursor-pointer">{type}</Label>
               </div>
             ))}
@@ -151,7 +169,7 @@ function ProductsPageComponent() {
           <div className="space-y-2 pr-4">
             {brands.map(brand => (
               <div key={brand} className="flex items-center space-x-2">
-                <Checkbox id={`filter-${brand}`} checked={selectedBrands.includes(brand)} onCheckedChange={() => handleBrandChange(brand)} />
+                <Checkbox id={`filter-${brand}`} checked={stagedFilters.selectedBrands.includes(brand)} onCheckedChange={() => handleBrandChange(brand)} />
                 <Label htmlFor={`filter-${brand}`} className="font-normal cursor-pointer">{brand}</Label>
               </div>
             ))}
@@ -164,17 +182,17 @@ function ProductsPageComponent() {
           min={0}
           max={maxPrice}
           step={1}
-          value={priceRange}
-          onValueChange={(value) => setPriceRange(value)}
+          value={stagedFilters.priceRange}
+          onValueChange={(value) => handleFilterChange('priceRange', value as [number, number])}
         />
         <div className="flex justify-between text-sm text-muted-foreground mt-2">
-          <span>${priceRange[0]}</span>
-          <span>${priceRange[1]}</span>
+          <span>${stagedFilters.priceRange[0]}</span>
+          <span>${stagedFilters.priceRange[1]}</span>
         </div>
       </div>
       <div>
         <h3 className="text-lg font-semibold mb-3 font-headline">Date Added</h3>
-        <Select value={timeFilter} onValueChange={setTimeFilter}>
+        <Select value={stagedFilters.timeFilter} onValueChange={(value) => handleFilterChange('timeFilter', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Filter by date" />
           </SelectTrigger>
@@ -186,9 +204,12 @@ function ProductsPageComponent() {
           </SelectContent>
         </Select>
       </div>
-       <Button onClick={clearFilters} variant="outline">
-        <X className="mr-2 h-4 w-4" /> Clear Filters
-      </Button>
+      <div className="flex flex-col gap-2">
+        <Button onClick={applyFilters}>Apply Filters</Button>
+        <Button onClick={clearFilters} variant="outline">
+            <X className="mr-2 h-4 w-4" /> Clear Filters
+        </Button>
+      </div>
     </div>
   );
   
@@ -236,12 +257,12 @@ function ProductsPageComponent() {
               <Input
                   type="search"
                   placeholder="Search for accessories..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
+                  value={stagedFilters.searchQuery}
+                  onChange={e => handleFilterChange('searchQuery', e.target.value)}
                   className="w-full md:w-1/2"
                 />
                 <div className="flex items-center gap-4 w-full md:w-auto">
-                  <Select value={sortOption} onValueChange={setSortOption}>
+                  <Select value={stagedFilters.sortOption} onValueChange={(value) => handleFilterChange('sortOption', value)}>
                     <SelectTrigger className="w-full md:w-[180px]">
                       <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
