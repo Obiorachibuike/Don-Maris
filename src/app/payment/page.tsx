@@ -8,14 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { CreditCard, Landmark, Lock, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { submitOrder } from '@/lib/data';
 import type { PaymentStatus, CartItem } from '@/lib/types';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import axios from 'axios';
 import { useProductStore } from '@/store/product-store';
 
@@ -37,21 +33,13 @@ interface ShippingDetails {
     customer: CustomerDetails;
 }
 
-interface VirtualAccount {
-    account_number: string;
-    bank_name: string;
-    account_name: string;
-}
-
 export default function PaymentPage() {
     const { items, total, clearCart } = useCart();
     const { decreaseStock } = useProductStore();
     const { toast } = useToast();
     const router = useRouter();
     const [shippingDetails, setShippingDetails] = useState<ShippingDetails | null>(null);
-    const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null);
-    const [isGeneratingAccount, setIsGeneratingAccount] = useState(false);
-    const [shouldSaveCard, setShouldSaveCard] = useState(true);
+    const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
     useEffect(() => {
         const savedShipping = sessionStorage.getItem('don_maris_shipping');
@@ -60,79 +48,67 @@ export default function PaymentPage() {
         } else {
             router.push('/checkout');
         }
-
-        const savedCard = localStorage.getItem('don_maris_card_details');
-        if (savedCard) {
-            const cardDetails = JSON.parse(savedCard);
-            const form = document.getElementById('card-payment-form') as HTMLFormElement;
-            if (form) {
-                (form.elements.namedItem('card-number') as HTMLInputElement).value = cardDetails.number;
-                (form.elements.namedItem('expiry-date') as HTMLInputElement).value = cardDetails.expiry;
-                (form.elements.namedItem('cvc') as HTMLInputElement).value = cardDetails.cvc;
-            }
-        }
     }, [router]);
 
-    const handleGenerateVirtualAccount = async () => {
-        if (!shippingDetails) return;
-        setIsGeneratingAccount(true);
-        try {
-            const response = await axios.post('/api/create-virtual-account', {
-                email: shippingDetails.customer.email,
-                first_name: shippingDetails.customer.firstName,
-                last_name: shippingDetails.customer.lastName,
-                phone: shippingDetails.customer.phone,
+    const handleCheckout = async () => {
+        if (!shippingDetails) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Shipping details are missing.',
             });
-            if (response.data.success) {
-                setVirtualAccount(response.data.data);
-                toast({
-                    title: 'Virtual Account Created',
-                    description: 'Please use the details below to complete your payment.',
-                });
+            return;
+        }
+
+        setIsProcessingPayment(true);
+
+        // Store order details temporarily before redirecting to payment
+        const orderDetails = {
+            ...shippingDetails,
+            date: new Date().toISOString(),
+            paymentStatus: 'unpaid' as PaymentStatus, // Initially unpaid
+        };
+        sessionStorage.setItem('don_maris_pending_order', JSON.stringify(orderDetails));
+
+        try {
+            const response = await axios.post('/api/checkout', {
+                items: shippingDetails.items,
+                email: shippingDetails.customer.email,
+            });
+
+            const data = response.data;
+            if (data.url) {
+                // Before redirecting, save the order as pending
+                await savePendingOrder();
+                // Redirect to the payment gateway
+                window.location.href = data.url;
             } else {
-                throw new Error(response.data.error?.message || 'Failed to create virtual account.');
+                throw new Error(data.error || 'Could not initiate payment.');
             }
         } catch (error: any) {
             console.error(error);
             toast({
                 variant: 'destructive',
-                title: 'Error',
-                description: error.message || 'Could not generate a virtual account. Please try again.',
+                title: 'Payment Error',
+                description: error.response?.data?.error || error.message || 'Could not start the payment process. Please try again.',
             });
-        } finally {
-            setIsGeneratingAccount(false);
+            setIsProcessingPayment(false);
         }
     };
     
-    const handleCardSubmit = (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        if (shouldSaveCard) {
-            const cardDetails = {
-                number: formData.get('card-number'),
-                expiry: formData.get('expiry-date'),
-                cvc: formData.get('cvc'),
-            };
-            localStorage.setItem('don_maris_card_details', JSON.stringify(cardDetails));
-        } else {
-            localStorage.removeItem('don_maris_card_details');
-        }
-        handleSubmit(true);
-    };
-
-    const handleSubmit = async (paymentMade: boolean) => {
+    // This function will be called when the user returns from the payment gateway
+    const savePendingOrder = async () => {
         if (!shippingDetails) return;
 
-        const orderDetails = {
+         const orderDetails = {
             ...shippingDetails,
             date: new Date().toISOString(),
-            paymentStatus: paymentMade ? 'paid' : 'unpaid' as PaymentStatus,
+            paymentStatus: 'paid' as PaymentStatus, // Assume paid on successful return
         };
         
         const result = await submitOrder(orderDetails);
 
         if (result.status === 'success' || result.id) {
-            // Deduct stock for each item in the cart
             shippingDetails.items.forEach(item => {
                 decreaseStock(item.product.id, item.quantity);
             });
@@ -155,12 +131,11 @@ export default function PaymentPage() {
                 description: "Thank you for your purchase. We've received your order.",
             });
 
-            router.push('/invoice');
         } else {
              toast({
                 variant: 'destructive',
                 title: "Order Failed",
-                description: "There was a problem placing your order. Please try again.",
+                description: "There was a problem saving your order after payment. Please contact support.",
             });
         }
     };
@@ -168,96 +143,44 @@ export default function PaymentPage() {
     if (!shippingDetails) {
         return (
              <div className="container mx-auto px-4 py-16 text-center">
-                <p>Loading details...</p>
+                <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+                <p className="mt-2">Loading details...</p>
             </div>
         );
     }
     
     return (
         <div className="container mx-auto px-4 py-12">
-            <h1 className="text-4xl font-bold font-headline mb-8 text-center">Payment - Step 2 of 2</h1>
+            <h1 className="text-4xl font-bold font-headline mb-8 text-center">Payment - Final Step</h1>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="font-headline text-2xl">Payment Options</CardTitle>
+                            <CardTitle className="font-headline text-2xl">Confirm and Pay</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <Accordion type="single" defaultValue="card" collapsible>
-                                <AccordionItem value="card">
-                                    <AccordionTrigger className="text-lg font-semibold flex items-center gap-2">
-                                        <CreditCard /> Pay with Card (Stripe)
-                                    </AccordionTrigger>
-                                    <AccordionContent className="pt-4">
-                                        <form id="card-payment-form" onSubmit={handleCardSubmit}>
-                                            <div className="space-y-4">
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="card-number">Card Number</Label>
-                                                    <div className="relative">
-                                                        <Input id="card-number" name="card-number" placeholder="0000 0000 0000 0000" required />
-                                                        <CreditCard className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="expiry-date">Expiry Date</Label>
-                                                        <Input id="expiry-date" name="expiry-date" placeholder="MM / YY" required />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="cvc">CVC</Label>
-                                                        <Input id="cvc" name="cvc" placeholder="123" required />
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <Checkbox 
-                                                        id="save-card" 
-                                                        checked={shouldSaveCard}
-                                                        onCheckedChange={(checked) => setShouldSaveCard(Boolean(checked))}
-                                                    />
-                                                    <Label htmlFor="save-card" className="cursor-pointer">Save this card for future payments</Label>
-                                                </div>
-                                                 <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
-                                                    <Lock className="h-4 w-4" />
-                                                    <span>Your payment information is secure with Stripe.</span>
-                                                </div>
-                                                <Button type="submit" className="w-full">Pay ${total.toFixed(2)}</Button>
-                                            </div>
-                                        </form>
-                                    </AccordionContent>
-                                </AccordionItem>
-                                 <AccordionItem value="transfer">
-                                    <AccordionTrigger className="text-lg font-semibold flex items-center gap-2">
-                                        <Landmark /> Bank Transfer (Paystack)
-                                    </AccordionTrigger>
-                                    <AccordionContent className="pt-4 space-y-4">
-                                       <p className="text-muted-foreground">To complete your purchase, generate a dedicated virtual account number via Paystack and make the transfer.</p>
-                                        {virtualAccount ? (
-                                             <div className="p-4 bg-muted rounded-lg">
-                                                <p><span className="font-semibold">Bank Name:</span> {virtualAccount.bank_name}</p>
-                                                <p><span className="font-semibold">Account Number:</span> {virtualAccount.account_number}</p>
-                                                <p><span className="font-semibold">Account Name:</span> {virtualAccount.account_name}</p>
-                                                <p><span className="font-semibold">Amount:</span> ${total.toFixed(2)}</p>
-                                             </div>
-                                        ) : (
-                                            <Button onClick={handleGenerateVirtualAccount} disabled={isGeneratingAccount} className="w-full">
-                                                {isGeneratingAccount ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                                Generate Virtual Account
-                                            </Button>
-                                        )}
-                                       
-                                       <p className="text-sm text-muted-foreground">After making the transfer, click the button below to confirm your order.</p>
-                                       <Button onClick={() => handleSubmit(true)} className="w-full" disabled={!virtualAccount}>I've made the transfer</Button>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            </Accordion>
+                        <CardContent className="space-y-6">
+                            <p className="text-muted-foreground">
+                                You are about to complete your purchase. Clicking the button below will redirect you to a secure payment gateway (Stripe or Paystack) based on your location.
+                            </p>
+                            <p className="text-muted-foreground">
+                                Please review your order summary on the right one last time.
+                            </p>
+                            <Button 
+                                onClick={handleCheckout} 
+                                disabled={isProcessingPayment} 
+                                className="w-full"
+                                size="lg"
+                            >
+                                {isProcessingPayment ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : null}
+                                {isProcessingPayment ? 'Redirecting...' : `Proceed to Payment - $${total.toFixed(2)}`}
+                            </Button>
+                            <p className="text-xs text-muted-foreground text-center">
+                                You will be redirected to our secure payment partner to complete your purchase.
+                            </p>
                         </CardContent>
                     </Card>
-                    <div className="mt-6 text-center">
-                        <p className="text-muted-foreground mb-2">Or, place your order now and pay later.</p>
-                        <Button onClick={() => handleSubmit(false)} variant="secondary" size="lg" className="w-full">
-                            Place Order
-                        </Button>
-                    </div>
                 </div>
 
                 <div className="lg:col-span-1">
