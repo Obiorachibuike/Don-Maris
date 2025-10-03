@@ -1,3 +1,6 @@
+
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/star-rating";
@@ -6,8 +9,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Award, Lightbulb, Users } from "lucide-react";
 import { AnimatedSection } from "@/components/animated-section";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
+import React from "react";
 
 export default function LandingPage() {
+    const plugin = React.useRef(
+        Autoplay({ delay: 5000, stopOnInteraction: true })
+    )
+
   const testimonials = [
     {
       name: "Sarah J.",
@@ -124,25 +134,39 @@ export default function LandingPage() {
         <section className="py-20 bg-muted/50">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12 font-headline">What Our Customers Say</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {testimonials.map((testimonial, index) => (
-                <Card key={index} className="flex flex-col">
-                  <CardContent className="pt-6">
-                    <p className="text-foreground/80 mb-4 italic">"{testimonial.quote}"</p>
-                  </CardContent>
-                  <CardHeader className="flex-row items-center gap-4 mt-auto pt-0">
-                    <Avatar>
-                      <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
-                      <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <CardTitle className="text-base">{testimonial.name}</CardTitle>
-                      <StarRating rating={testimonial.rating} />
-                    </div>
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
+            <Carousel
+                opts={{ align: "start", loop: true }}
+                plugins={[plugin.current]}
+                onMouseEnter={plugin.current.stop}
+                onMouseLeave={plugin.current.reset}
+                className="w-full max-w-4xl mx-auto"
+            >
+                <CarouselContent>
+                    {testimonials.map((testimonial, index) => (
+                        <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                            <div className="p-4">
+                                <Card className="flex flex-col h-full">
+                                    <CardContent className="pt-6 flex-grow">
+                                        <p className="text-foreground/80 mb-4 italic">"{testimonial.quote}"</p>
+                                    </CardContent>
+                                    <CardHeader className="flex-row items-center gap-4 mt-auto pt-0">
+                                        <Avatar>
+                                        <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
+                                        <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                        <CardTitle className="text-base">{testimonial.name}</CardTitle>
+                                        <StarRating rating={testimonial.rating} />
+                                        </div>
+                                    </CardHeader>
+                                </Card>
+                            </div>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+            </Carousel>
           </div>
         </section>
       </AnimatedSection>
