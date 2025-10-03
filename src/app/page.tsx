@@ -14,7 +14,7 @@ import Autoplay from "embla-carousel-autoplay"
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
-  const { featuredProducts, newArrivals, bestSellers, isLoading, fetchProducts } = useProductStore();
+  const { featuredProducts, newArrivals, bestSellers, bestRated, trending, isLoading, fetchProducts } = useProductStore();
   
   useEffect(() => {
     fetchProducts();
@@ -107,8 +107,78 @@ export default function Home() {
           </div>
         </section>
       </AnimatedSection>
+      
+        {/* Trending Section */}
+        <AnimatedSection>
+            <section className="py-16 bg-card">
+            <div className="container mx-auto px-4">
+                <div className="flex justify-between items-center mb-10">
+                    <h2 className="text-3xl font-bold font-headline">Trending Products</h2>
+                    <Button asChild variant="link">
+                        <Link href="/products?sort=rating">See All <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                    </Button>
+                </div>
+                {isLoading ? <ProductCarouselSkeleton /> : (
+                    <Carousel
+                        opts={{ align: "start", loop: true }}
+                        plugins={[plugin.current]}
+                        onMouseEnter={plugin.current.stop}
+                        onMouseLeave={plugin.current.reset}
+                        className="w-full"
+                    >
+                        <CarouselContent>
+                            {trending.map((product) => (
+                                <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/4">
+                                    <div className="p-1">
+                                        <ProductCard product={product} />
+                                    </div>
+                                </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="hidden md:flex" />
+                        <CarouselNext className="hidden md:flex" />
+                    </Carousel>
+                )}
+            </div>
+            </section>
+        </AnimatedSection>
 
-        {/* Best Sellers Section */}
+      {/* Best Rated Section */}
+      <AnimatedSection>
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+             <div className="flex justify-between items-center mb-10">
+                <h2 className="text-3xl font-bold font-headline">Best Rated</h2>
+                 <Button asChild variant="link">
+                    <Link href="/products?sort=rating">See All <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                </Button>
+            </div>
+             {isLoading ? <ProductCarouselSkeleton /> : (
+                <Carousel 
+                    opts={{ align: "start", loop: true, }}
+                    plugins={[plugin.current]}
+                    onMouseEnter={plugin.current.stop}
+                    onMouseLeave={plugin.current.reset}
+                    className="w-full"
+                >
+                    <CarouselContent>
+                        {bestRated.map((product) => (
+                        <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/4">
+                            <div className="p-1">
+                            <ProductCard product={product} />
+                            </div>
+                        </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="hidden md:flex" />
+                    <CarouselNext className="hidden md:flex"/>
+                </Carousel>
+             )}
+          </div>
+        </section>
+      </AnimatedSection>
+      
+      {/* Best Sellers Section */}
         <AnimatedSection>
             <section className="py-16 bg-card">
             <div className="container mx-auto px-4">

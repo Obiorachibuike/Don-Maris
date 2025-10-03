@@ -10,6 +10,8 @@ interface ProductState {
   featuredProducts: Product[];
   newArrivals: Product[];
   bestSellers: Product[];
+  bestRated: Product[];
+  trending: Product[];
   isLoading: boolean;
   error: string | null;
   fetchProducts: () => Promise<void>;
@@ -29,12 +31,21 @@ const computeDerivedProducts = (products: Product[]) => {
     return a.id.localeCompare(b.id);
   }).slice(0, 8);
 
-  const bestSellers = [...products].sort((a, b) => {
+  const bestRated = [...products].sort((a, b) => {
     if (b.rating !== a.rating) return b.rating - a.rating;
     return a.id.localeCompare(b.id);
   }).slice(0, 8);
+  
+  // Simulate best sellers by sorting by stock in descending order (assuming higher stock means it's a popular item that's restocked often)
+  const bestSellers = [...products].sort((a, b) => {
+    if (b.stock !== a.stock) return b.stock - a.stock;
+    return a.id.localeCompare(b.id);
+  }).slice(0, 8);
 
-  return { featured, newArrivals, bestSellers };
+  // Simulate trending products for now, e.g., by taking some from best sellers and new arrivals
+  const trending = [...bestSellers.slice(0, 4), ...newArrivals.slice(0, 4)];
+
+  return { featured, newArrivals, bestRated, bestSellers, trending };
 };
 
 export const useProductStore = create<ProductState>((set, get) => ({
@@ -42,6 +53,8 @@ export const useProductStore = create<ProductState>((set, get) => ({
   featuredProducts: [],
   newArrivals: [],
   bestSellers: [],
+  bestRated: [],
+  trending: [],
   isLoading: true,
   error: null,
   fetchProducts: async () => {
@@ -53,12 +66,14 @@ export const useProductStore = create<ProductState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const products = await getProducts();
-      const { featured, newArrivals, bestSellers } = computeDerivedProducts(products);
+      const { featured, newArrivals, bestRated, bestSellers, trending } = computeDerivedProducts(products);
       set({ 
         products, 
         featuredProducts: featured,
         newArrivals,
+        bestRated,
         bestSellers,
+        trending,
         isLoading: false 
       });
     } catch (error) {
