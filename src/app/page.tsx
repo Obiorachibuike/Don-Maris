@@ -110,7 +110,7 @@ export default function Home() {
 
         {/* Best Sellers Section */}
         <AnimatedSection>
-            <section className="py-16">
+            <section className="py-16 bg-card">
             <div className="container mx-auto px-4">
                 <div className="flex justify-between items-center mb-10">
                     <h2 className="text-3xl font-bold font-headline">Best Sellers</h2>
