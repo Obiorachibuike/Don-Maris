@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Banknote, CreditCard, Copy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { submitOrder } from '@/lib/data';
 import type { PaymentStatus, CartItem } from '@/lib/types';
@@ -23,6 +23,7 @@ import {
 import { loadStripe, StripeElementsOptions } from "@stripe/stripe-js";
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -43,8 +44,15 @@ interface ShippingDetails {
     customer: CustomerDetails;
 }
 
+interface VirtualAccount {
+    account_name: string;
+    account_number: string;
+    bank: {
+        name: string;
+    };
+}
+
 function CheckoutForm({ shippingDetails }: { shippingDetails: ShippingDetails }) {
-    const { items, total, clearCart } = useCart();
     const { decreaseStock } = useProductStore();
     const { toast } = useToast();
     const stripe = useStripe();
@@ -83,7 +91,6 @@ function CheckoutForm({ shippingDetails }: { shippingDetails: ShippingDetails })
             toast({ variant: 'destructive', title: "Order Failed", description: "Could not save your order. Please contact support." });
         }
 
-
         setIsLoading(false);
     };
 
@@ -114,31 +121,74 @@ export default function PaymentPage() {
     const [shippingDetails, setShippingDetails] = useState<ShippingDetails | null>(null);
     const [clientSecret, setClientSecret] = useState<string | null>(null);
     const [options, setOptions] = useState<StripeElementsOptions | null>(null);
+    const [paymentMethod, setPaymentMethod] = useState<'card' | 'transfer' | null>(null);
+    const [isTransferLoading, setIsTransferLoading] = useState(false);
+    const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null);
+    const { toast } = useToast();
     
     useEffect(() => {
         const savedShipping = sessionStorage.getItem('don_maris_shipping');
         if (savedShipping) {
             const details = JSON.parse(savedShipping);
             setShippingDetails(details);
-            // Create PaymentIntent as soon as the page loads
-            axios.post('/api/checkout', {
-                items: details.items,
-                email: details.customer.email,
-                saveCard: true, // This can be controlled by a checkbox later
-            }).then(res => {
-                setClientSecret(res.data.clientSecret);
-                setOptions({
-                    clientSecret: res.data.clientSecret,
-                    appearance: { theme: 'stripe' },
-                });
-            }).catch(err => {
-                console.error("Error creating payment intent", err);
-                // Handle error appropriately
-            });
         } else {
             router.push('/checkout');
         }
     }, [router]);
+
+    const handleCardCheckout = async () => {
+        setPaymentMethod('card');
+        try {
+            const res = await axios.post('/api/checkout', {
+                items: shippingDetails!.items,
+                email: shippingDetails!.customer.email,
+                saveCard: true,
+            });
+            setClientSecret(res.data.clientSecret);
+            setOptions({
+                clientSecret: res.data.clientSecret,
+                appearance: { theme: 'stripe' },
+            });
+        } catch (err) {
+            console.error("Error creating payment intent", err);
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Could not initialize card payment. Please try again.'
+            });
+            setPaymentMethod(null);
+        }
+    };
+    
+    const handleBankTransferCheckout = async () => {
+        setIsTransferLoading(true);
+        try {
+            const response = await axios.post('/api/create-virtual-account', {
+                email: shippingDetails!.customer.email,
+                first_name: shippingDetails!.customer.firstName,
+                last_name: shippingDetails!.customer.lastName,
+                phone: shippingDetails!.customer.phone,
+            });
+            setVirtualAccount(response.data.virtualAccount);
+            setPaymentMethod('transfer');
+        } catch (error: any) {
+            console.error('Error creating virtual account', error);
+            const errorMessage = error.response?.data?.error || 'Could not create a bank account for transfer. Please try again.';
+            toast({
+                variant: 'destructive',
+                title: 'Bank Transfer Failed',
+                description: errorMessage,
+            });
+        }
+        setIsTransferLoading(false);
+    };
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({
+            title: 'Copied to clipboard!',
+        });
+    }
 
     if (!shippingDetails) {
         return (
@@ -159,15 +209,73 @@ export default function PaymentPage() {
                             <CardTitle className="font-headline text-2xl">Payment Details</CardTitle>
                         </CardHeader>
                         <CardContent>
-                             {clientSecret && options ? (
-                                <Elements options={options} stripe={stripePromise}>
-                                    <CheckoutForm shippingDetails={shippingDetails} />
-                                </Elements>
-                            ) : (
-                                <div className='flex justify-center items-center h-40'>
-                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                             {!paymentMethod ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <Button variant="outline" size="lg" className="h-20 text-lg" onClick={handleCardCheckout}>
+                                        <CreditCard className="mr-4 h-6 w-6"/>
+                                        Pay with Card
+                                    </Button>
+                                     <Button variant="outline" size="lg" className="h-20 text-lg" onClick={handleBankTransferCheckout} disabled={isTransferLoading}>
+                                        {isTransferLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Banknote className="mr-4 h-6 w-6"/>}
+                                        Pay with Bank Transfer
+                                    </Button>
                                 </div>
-                            )}
+                             ) : paymentMethod === 'card' ? (
+                                 clientSecret && options ? (
+                                    <Elements options={options} stripe={stripePromise}>
+                                        <CheckoutForm shippingDetails={shippingDetails} />
+                                    </Elements>
+                                ) : (
+                                    <div className='flex justify-center items-center h-40'>
+                                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                    </div>
+                                )
+                             ) : (
+                                 virtualAccount && (
+                                     <Alert>
+                                        <Banknote className="h-4 w-4" />
+                                        <AlertTitle>Your Bank Transfer Details</AlertTitle>
+                                        <AlertDescription>
+                                            <p>Please transfer the total amount to the account below. Your order will be processed upon confirmation.</p>
+                                            <div className="space-y-2 mt-4 bg-muted p-4 rounded-md">
+                                                <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Bank Name</p>
+                                                        <p className="font-semibold">{virtualAccount.bank.name}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                     <div>
+                                                        <p className="text-xs text-muted-foreground">Account Number</p>
+                                                        <p className="font-semibold text-lg">{virtualAccount.account_number}</p>
+                                                    </div>
+                                                     <Button variant="ghost" size="icon" onClick={() => copyToClipboard(virtualAccount.account_number)}>
+                                                        <Copy className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                                 <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Account Name</p>
+                                                        <p className="font-semibold">{virtualAccount.account_name}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Amount</p>
+                                                        <p className="font-semibold text-lg">${total.toFixed(2)}</p>
+                                                    </div>
+                                                    <Button variant="ghost" size="icon" onClick={() => copyToClipboard(total.toFixed(2))}>
+                                                        <Copy className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                            <Button className="w-full mt-4" asChild>
+                                                <a href="/products">Continue Shopping</a>
+                                            </Button>
+                                        </AlertDescription>
+                                     </Alert>
+                                 )
+                             )}
                         </CardContent>
                      </Card>
                 </div>
@@ -202,4 +310,3 @@ export default function PaymentPage() {
         </div>
     );
 }
-
