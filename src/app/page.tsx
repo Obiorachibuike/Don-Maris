@@ -15,7 +15,7 @@ import Autoplay from "embla-carousel-autoplay"
 export default function Home() {
   const allProducts = getProductsSync();
   const featuredProducts = allProducts.filter(p => p.isFeatured);
-  const newArrivals = allProducts.sort((a, b) => {
+  const newArrivals = [...allProducts].sort((a, b) => {
     const dateA = new Date(b.dateAdded).getTime();
     const dateB = new Date(a.dateAdded).getTime();
     if (dateA !== dateB) {
@@ -23,7 +23,7 @@ export default function Home() {
     }
     return a.id.localeCompare(b.id);
   }).slice(0, 8);
-  const bestSellers = allProducts.sort((a, b) => {
+  const bestSellers = [...allProducts].sort((a, b) => {
     if (b.rating !== a.rating) {
       return b.rating - a.rating;
     }
