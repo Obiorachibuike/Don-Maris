@@ -29,7 +29,7 @@ export function Header() {
     { href: '/admin', label: 'Admin', icon: LayoutDashboard },
   ];
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = items.length;
 
   const NavLink = ({ href, label, icon: Icon, isMobile = false }: { href: string, label: string, icon: React.ElementType, isMobile?: boolean }) => {
     const isActive = (href === '/' && pathname === '/') || (href !== '/' && pathname.startsWith(href) && href.length > 1);
