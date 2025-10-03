@@ -33,6 +33,7 @@ interface FilterState {
 function ProductsPageComponent() {
   const { products, isLoading, fetchProducts } = useProductStore();
   const searchParams = useSearchParams();
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -90,11 +91,13 @@ function ProductsPageComponent() {
   
   const applyFilters = () => {
     setAppliedFilters(stagedFilters);
+    setIsSheetOpen(false);
   };
   
   const clearFilters = () => {
     setStagedFilters(initialFilterState);
     setAppliedFilters(initialFilterState);
+    setIsSheetOpen(false);
   };
 
   const filteredAndSortedProducts = useMemo(() => {
@@ -258,11 +261,20 @@ function ProductsPageComponent() {
                   type="search"
                   placeholder="Search for accessories..."
                   value={stagedFilters.searchQuery}
-                  onChange={e => handleFilterChange('searchQuery', e.target.value)}
+                  onChange={e => {
+                    handleFilterChange('searchQuery', e.target.value);
+                    applyFilters();
+                  }}
+                  onBlur={applyFilters}
+                  onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
                   className="w-full md:w-1/2"
                 />
                 <div className="flex items-center gap-4 w-full md:w-auto">
-                  <Select value={stagedFilters.sortOption} onValueChange={(value) => handleFilterChange('sortOption', value)}>
+                  <Select value={appliedFilters.sortOption} onValueChange={(value) => {
+                      handleFilterChange('sortOption', value);
+                      // Apply sort immediately
+                      setAppliedFilters(prev => ({...prev, sortOption: value}));
+                  }}>
                     <SelectTrigger className="w-full md:w-[180px]">
                       <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
@@ -274,7 +286,7 @@ function ProductsPageComponent() {
                     </SelectContent>
                   </Select>
                   <div className="lg:hidden">
-                    <Sheet>
+                    <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                       <SheetTrigger asChild>
                         <Button variant="outline" size="icon">
                           <Filter className="h-4 w-4" />
