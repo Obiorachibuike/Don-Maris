@@ -108,44 +108,79 @@ export default function Home() {
         </section>
       </AnimatedSection>
       
-        {/* Trending Section */}
-        <AnimatedSection>
-            <section className="py-16 bg-card">
-            <div className="container mx-auto px-4">
-                <div className="flex justify-between items-center mb-10">
-                    <h2 className="text-3xl font-bold font-headline">Trending Products</h2>
-                    <Button asChild variant="link">
-                        <Link href="/products?sort=rating">See All <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                    </Button>
-                </div>
-                {isLoading ? <ProductCarouselSkeleton /> : (
-                    <Carousel
-                        opts={{ align: "start", loop: true }}
-                        plugins={[plugin.current]}
-                        onMouseEnter={plugin.current.stop}
-                        onMouseLeave={plugin.current.reset}
-                        className="w-full"
-                    >
-                        <CarouselContent>
-                            {trending.map((product) => (
-                                <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/4">
-                                    <div className="p-1">
-                                        <ProductCard product={product} />
-                                    </div>
-                                </CarouselItem>
-                            ))}
-                        </CarouselContent>
-                        <CarouselPrevious className="hidden md:flex" />
-                        <CarouselNext className="hidden md:flex" />
-                    </Carousel>
-                )}
+      {/* New Arrivals Section */}
+      <AnimatedSection>
+        <section className="py-16 bg-card">
+          <div className="container mx-auto px-4">
+             <div className="flex justify-between items-center mb-10">
+                <h2 className="text-3xl font-bold font-headline">New Arrivals</h2>
+                 <Button asChild variant="link">
+                    <Link href="/products?sort=newest">See All <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                </Button>
             </div>
-            </section>
-        </AnimatedSection>
+             {isLoading ? <ProductCarouselSkeleton /> : (
+                <Carousel 
+                    opts={{ align: "start", loop: true, }}
+                    plugins={[plugin.current]}
+                    onMouseEnter={plugin.current.stop}
+                    onMouseLeave={plugin.current.reset}
+                    className="w-full"
+                >
+                    <CarouselContent>
+                        {newArrivals.map((product) => (
+                        <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/4">
+                            <div className="p-1">
+                            <ProductCard product={product} />
+                            </div>
+                        </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="hidden md:flex" />
+                    <CarouselNext className="hidden md:flex"/>
+                </Carousel>
+             )}
+          </div>
+        </section>
+      </AnimatedSection>
+
+      {/* Trending Section */}
+      <AnimatedSection>
+          <section className="py-16">
+          <div className="container mx-auto px-4">
+              <div className="flex justify-between items-center mb-10">
+                  <h2 className="text-3xl font-bold font-headline">Trending Products</h2>
+                  <Button asChild variant="link">
+                      <Link href="/products?sort=rating">See All <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                  </Button>
+              </div>
+              {isLoading ? <ProductCarouselSkeleton /> : (
+                  <Carousel
+                      opts={{ align: "start", loop: true }}
+                      plugins={[plugin.current]}
+                      onMouseEnter={plugin.current.stop}
+                      onMouseLeave={plugin.current.reset}
+                      className="w-full"
+                  >
+                      <CarouselContent>
+                          {trending.map((product) => (
+                              <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/4">
+                                  <div className="p-1">
+                                      <ProductCard product={product} />
+                                  </div>
+                              </CarouselItem>
+                          ))}
+                      </CarouselContent>
+                      <CarouselPrevious className="hidden md:flex" />
+                      <CarouselNext className="hidden md:flex" />
+                  </Carousel>
+              )}
+          </div>
+          </section>
+      </AnimatedSection>
 
       {/* Best Rated Section */}
       <AnimatedSection>
-        <section className="py-16">
+        <section className="py-16 bg-card">
           <div className="container mx-auto px-4">
              <div className="flex justify-between items-center mb-10">
                 <h2 className="text-3xl font-bold font-headline">Best Rated</h2>
@@ -180,7 +215,7 @@ export default function Home() {
       
       {/* Best Sellers Section */}
         <AnimatedSection>
-            <section className="py-16 bg-card">
+            <section className="py-16">
             <div className="container mx-auto px-4">
                 <div className="flex justify-between items-center mb-10">
                     <h2 className="text-3xl font-bold font-headline">Best Sellers</h2>
@@ -213,41 +248,6 @@ export default function Home() {
             </section>
         </AnimatedSection>
 
-      {/* New Arrivals Section */}
-      <AnimatedSection>
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-             <div className="flex justify-between items-center mb-10">
-                <h2 className="text-3xl font-bold font-headline">New Arrivals</h2>
-                 <Button asChild variant="link">
-                    <Link href="/products?sort=newest">See All <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                </Button>
-            </div>
-             {isLoading ? <ProductCarouselSkeleton /> : (
-                <Carousel 
-                    opts={{ align: "start", loop: true, }}
-                    plugins={[plugin.current]}
-                    onMouseEnter={plugin.current.stop}
-                    onMouseLeave={plugin.current.reset}
-                    className="w-full"
-                >
-                    <CarouselContent>
-                        {newArrivals.map((product) => (
-                        <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/4">
-                            <div className="p-1">
-                            <ProductCard product={product} />
-                            </div>
-                        </CarouselItem>
-                        ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="hidden md:flex" />
-                    <CarouselNext className="hidden md:flex"/>
-                </Carousel>
-             )}
-          </div>
-        </section>
-      </AnimatedSection>
-      
       {/* Why Choose Us Section */}
       <AnimatedSection>
         <section className="bg-card py-16">
