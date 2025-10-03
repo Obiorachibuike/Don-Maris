@@ -12,7 +12,8 @@ const API_BASE_URL = '/api';
  */
 export async function getProducts(): Promise<Product[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/products`);
+    // We use a timestamp to prevent caching of the API route.
+    const response = await fetch(`${API_BASE_URL}/products?t=${new Date().getTime()}`);
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
@@ -29,18 +30,30 @@ export async function getProducts(): Promise<Product[]> {
  * Fetches all products from the server with a fallback to local data.
  */
 export function getProductsSync(): Product[] {
-  // For this demo, we'll just return the local data.
-  // In a real app, you would fetch from the API.
+  // This function is kept for components that are not yet async.
   return dummyProducts;
 }
 
 /**
  * Fetches a single product by its ID from the server with a fallback to local data.
  */
-export function getProductById(id: string): Product | undefined {
+export async function getProductById(id: string): Promise<Product | undefined> {
   // For this demo, we'll just return from local data.
   // In a real app, you would fetch from the API.
-  return dummyProducts.find(p => p.id === id);
+  try {
+    const response = await fetch(`${API_BASE_URL}/products/${id}`);
+    if (!response.ok) {
+        if(response.status === 404) {
+            return undefined;
+        }
+      throw new Error('Network response was not ok');
+    }
+    const product: Product = await response.json();
+    return product;
+  } catch (error) {
+    console.error(`Failed to fetch product ${id} from API, falling back to dummy data.`, error);
+    return dummyProducts.find(p => p.id === id);
+  }
 }
 
 /**
