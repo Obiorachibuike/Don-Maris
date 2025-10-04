@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,11 +47,18 @@ export default function LoginPage() {
         router.push('/');
         router.refresh(); // Refresh to update session state in header
       }
-    } catch (error: any) {
+    } catch (error) {
+        let errorMessage = 'An unexpected error occurred.';
+        if (axios.isAxiosError(error)) {
+            const serverError = error as AxiosError<{ error: string }>;
+            if (serverError.response && serverError.response.data && serverError.response.data.error) {
+                errorMessage = serverError.response.data.error;
+            }
+        }
       toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: error.response?.data?.error || 'An unexpected error occurred.',
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
