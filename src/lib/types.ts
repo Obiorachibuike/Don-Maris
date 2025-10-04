@@ -24,7 +24,6 @@ export type Product = {
   isFeatured?: boolean;
   dateAdded: string;
   stock: number;
-  totalSales: number; // New field to track sales count
 };
 
 export type CartItem = {
@@ -36,7 +35,6 @@ export type CartItem = {
 export type OrderItem = {
   productId: string;
   quantity: number;
-  priceAtPurchase: number;
 };
 
 export type PaymentStatus = 'paid' | 'unpaid';
@@ -48,13 +46,12 @@ export interface Customer {
   name: string;
   email: string;
   avatar: string;
-  lifetimeValue: number;
-  lastOrderDate?: string;
 }
 
 export interface User extends Customer {
     role: 'admin' | 'sales' | 'accountant' | 'supplier' | 'customer';
     dateJoined: string;
+    ledgerBalance?: number;
 }
 
 export interface Order {

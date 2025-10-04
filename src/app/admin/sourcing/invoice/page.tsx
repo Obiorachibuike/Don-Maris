@@ -139,7 +139,7 @@ export default function SourcingInvoicePage() {
                             </div>
                              <div className="flex justify-between">
                                 <span className="text-muted-foreground">Previous Balance</span>
-                                <span className="font-medium">${previousBalance.toFixed(2)}</span>
+                                <span className="font-medium text-destructive">${previousBalance.toFixed(2)}</span>
                             </div>
                             <Separator />
                             <div className="flex justify-between font-bold text-lg">
@@ -166,5 +166,3 @@ export default function SourcingInvoicePage() {
         </div>
     );
 }
-
-    

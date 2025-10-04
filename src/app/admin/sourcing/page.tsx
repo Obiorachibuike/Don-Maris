@@ -78,8 +78,8 @@ export default function SourcingPage() {
         setCustomerEmail(customer.email);
 
         const userOrders = getOrdersByUserId(customer.id);
-        const unpaidOrders = userOrders.filter(o => o.status === 'Processing' || o.status === 'Pending');
-        const balance = unpaidOrders.reduce((acc, order) => acc + order.amount, 0);
+        const unpaidOrders = userOrders.filter(o => o.paymentStatus !== 'Paid');
+        const balance = unpaidOrders.reduce((acc, order) => acc + (order.amount - order.amountPaid), 0);
         setPreviousBalance(balance);
 
         if (userOrders.length > 0 && userOrders[0].shippingAddress) {
@@ -496,7 +496,7 @@ export default function SourcingPage() {
                         </div>
                          <div className="flex justify-between">
                             <span className="text-muted-foreground">Previous Balance:</span>
-                            <span>₦{previousBalance.toLocaleString()}</span>
+                            <span className="font-medium text-destructive">₦{previousBalance.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between text-lg font-bold">
                             <span>Total Amount:</span>
@@ -522,5 +522,3 @@ export default function SourcingPage() {
         </form>
     );
 }
-
-    

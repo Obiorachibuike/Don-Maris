@@ -120,13 +120,13 @@ export function updateOrder(orderId: string, updatedItems: { productId: string, 
         return undefined;
     }
     
-    const updatedOrder = {
+    const updatedOrderData = {
         ...dummyOrders[orderIndex],
         items: updatedItems,
         amount: updatedAmount,
     };
 
-    dummyOrders[orderIndex] = updatedOrder;
+    dummyOrders[orderIndex] = updatedOrderData;
 
-    return updatedOrder;
+    return updatedOrderData;
 }

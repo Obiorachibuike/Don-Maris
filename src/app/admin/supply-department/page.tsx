@@ -153,9 +153,9 @@ export default function SupplyDepartmentPage() {
                                                 {order.paymentStatus}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-right">${order.amount.toFixed(2)}</TableCell>
-                                        <TableCell className="text-right">${order.amountPaid.toFixed(2)}</TableCell>
-                                        <TableCell className="text-right font-medium text-destructive">${balance.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right">₦{order.amount.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right">₦{order.amountPaid.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right font-medium text-destructive">₦{balance.toLocaleString()}</TableCell>
                                     </TableRow>
                                     )
                                 })}
