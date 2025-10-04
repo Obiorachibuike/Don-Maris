@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { AnimatedSection } from '@/components/animated-section';
 
 const formSchema = z.object({
@@ -29,6 +29,8 @@ function ResetPasswordContent() {
   const token = searchParams.get('token');
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -79,9 +81,16 @@ function ResetPasswordContent() {
                         render={({ field }) => (
                         <FormItem>
                             <FormLabel>New Password</FormLabel>
-                            <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} />
-                            </FormControl>
+                             <div className="relative">
+                                <FormControl>
+                                <Input type={showPassword ? 'text' : 'password'} placeholder="••••••••" {...field} />
+                                </FormControl>
+                                <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5">
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-muted-foreground">
+                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
+                                </div>
+                            </div>
                             <FormMessage />
                         </FormItem>
                         )}
@@ -92,9 +101,16 @@ function ResetPasswordContent() {
                         render={({ field }) => (
                         <FormItem>
                             <FormLabel>Confirm New Password</FormLabel>
-                            <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} />
-                            </FormControl>
+                             <div className="relative">
+                                <FormControl>
+                                <Input type={showConfirmPassword ? 'text' : 'password'} placeholder="••••••••" {...field} />
+                                </FormControl>
+                                <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5">
+                                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="text-muted-foreground">
+                                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
+                                </div>
+                            </div>
                             <FormMessage />
                         </FormItem>
                         )}
