@@ -2,13 +2,19 @@
 'use client';
 
 import Link from 'next/link';
-import { Smartphone, Sparkles, Home, ShoppingCart, Package, Info, Mail, Menu, LayoutDashboard } from 'lucide-react';
+import { Smartphone, Sparkles, Home, ShoppingCart, Package, Info, Mail, Menu, LayoutDashboard, Wallet } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/hooks/use-cart';
 import { useEffect, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
+
+// In a real app, this would come from an authentication context
+const mockCustomer = {
+    isLoggedIn: true,
+    ledgerBalance: 25.50
+};
 
 export function Header() {
   const pathname = usePathname();
@@ -68,7 +74,16 @@ export function Header() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            {isClient && mockCustomer.isLoggedIn && mockCustomer.ledgerBalance > 0 && (
+                <div className="flex items-center gap-2 bg-destructive/10 border border-destructive/20 px-3 py-1.5 rounded-md">
+                    <Wallet className="h-5 w-5 text-destructive" />
+                    <div className="flex flex-col items-end">
+                        <span className="text-xs text-destructive font-medium -mb-1">Balance</span>
+                        <span className="font-bold text-destructive">${mockCustomer.ledgerBalance.toFixed(2)}</span>
+                    </div>
+                </div>
+            )}
             <Button variant="ghost" size="icon" asChild>
               <Link href="/cart">
                 <ShoppingCart className="h-5 w-5" />
