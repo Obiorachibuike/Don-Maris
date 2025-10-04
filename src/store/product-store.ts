@@ -43,7 +43,7 @@ const computeDerivedProducts = (products: Product[]) => {
   }).slice(0, 8);
 
   // Simulate trending products for now, e.g., by taking some from best sellers and new arrivals
-  const trending = [...bestSellers.slice(0, 4), ...newArrivals.slice(0, 4)];
+  const trending = [...bestSellers.slice(0, 4), ...newArrivals.slice(0, 4)].filter((p, i, a) => a.findIndex(p2 => p2.id === p.id) === i).slice(0, 8);
 
   return { featured, newArrivals, bestRated, bestSellers, trending };
 };
@@ -172,3 +172,5 @@ export const useProductStore = create<ProductState>((set, get) => ({
     })
   }
 }));
+
+    
