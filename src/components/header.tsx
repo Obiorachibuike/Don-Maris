@@ -83,7 +83,7 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-4">
-            {isClient && user && user.ledgerBalance && user.ledgerBalance > 0 && (
+            {isClient && user && user.role === 'customer' && user.ledgerBalance && user.ledgerBalance > 0 && (
                 <div className="flex items-center gap-2 bg-destructive/10 border border-destructive/20 px-3 py-1.5 rounded-md">
                     <Wallet className="h-5 w-5 text-destructive" />
                     <div className="flex flex-col items-end">
@@ -111,7 +111,7 @@ export function Header() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                         <Avatar>
-                          <AvatarImage src={user.avatar} alt={user.name} />
+                          <AvatarImage src={(user as any).avatar || 'https://placehold.co/100x100.png'} alt={user.name} />
                           <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                       </Button>

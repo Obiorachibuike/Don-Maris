@@ -15,20 +15,15 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
-import { Home, ShoppingBag, Package, Users, BarChart2, Settings, UserCircle, LifeBuoy, LayoutDashboard, PackageSearch, Truck, Briefcase, LayoutGrid } from 'lucide-react';
+import { Home, ShoppingBag, Package, Users, BarChart2, Settings, UserCircle, LifeBuoy, LayoutDashboard, PackageSearch, Truck, Briefcase, LayoutGrid, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-
-// Mock user data - in a real app, this would come from an auth context
-const user = {
-    name: 'Admin User',
-    role: 'admin', // available roles: 'admin', 'sales', 'accountant', 'supplier'
-    avatar: 'https://placehold.co/100x100.png',
-    ledgerBalance: 125.50
-};
+import { useSession } from '@/contexts/SessionProvider';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'sales', 'accountant', 'supplier'] },
@@ -49,6 +44,23 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isLoading, logout } = useSession();
+
+  useEffect(() => {
+    if (!isLoading && user?.role !== 'admin') {
+      // Redirect non-admin users away from admin pages
+      router.push('/');
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading || !user || user.role !== 'admin') {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <p>Loading or unauthorized...</p>
+        </div>
+    )
+  }
 
   const userCanAccess = (itemRoles: string[]) => {
       return itemRoles.includes(user.role);
@@ -61,13 +73,13 @@ export default function AdminLayout({
                   <SidebarHeader>
                      <div className="flex items-center gap-2">
                         <Avatar className="h-10 w-10">
-                            <AvatarImage src={user.avatar} alt={user.name} />
+                            <AvatarImage src={(user as any).avatar} alt={user.name} />
                             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
                             <span className="font-semibold text-lg">{user.name}</span>
                             <span className="text-xs text-muted-foreground capitalize">{user.role}</span>
-                             {user.ledgerBalance !== undefined && user.ledgerBalance > 0 && (
+                             {user.role === 'customer' && user.ledgerBalance !== undefined && user.ledgerBalance > 0 && (
                                 <span className="text-xs text-destructive font-semibold">
                                     Balance: ${user.ledgerBalance.toFixed(2)}
                                 </span>
@@ -107,7 +119,7 @@ export default function AdminLayout({
                                 <DropdownMenuItem>Profile</DropdownMenuItem>
                                 <DropdownMenuItem>Help</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem>Logout</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => logout()}>Logout</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                   </SidebarFooter>
