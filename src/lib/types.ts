@@ -24,6 +24,7 @@ export type Product = {
   isFeatured?: boolean;
   dateAdded: string;
   stock: number;
+  totalSales?: number;
 };
 
 export type CartItem = {
@@ -46,12 +47,13 @@ export interface Customer {
   name: string;
   email: string;
   avatar: string;
+  lifetimeValue?: number;
 }
 
 export interface User extends Customer {
     role: 'admin' | 'sales' | 'accountant' | 'supplier' | 'customer';
     dateJoined: string;
-    ledgerBalance?: number;
+    ledgerBalance?: number; // moved here, optional
 }
 
 export interface Order {
