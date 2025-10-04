@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { sendEmail } from "@/lib/mailer";
 
+const DEVELOPER_EMAIL = 'obiorachibuike22@gmail.com';
+
 export async function POST(request: NextRequest) {
     await dbConnect();
     try {
@@ -19,10 +21,13 @@ export async function POST(request: NextRequest) {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        const role = email === DEVELOPER_EMAIL ? 'admin' : 'customer';
+
         const newUser = new User({
             name,
             email,
             password: hashedPassword,
+            role,
         });
 
         const savedUser = await newUser.save();
@@ -33,7 +38,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             message: "User registered successfully. Please verify your email.",
             success: true,
-            user: { id: savedUser._id, name: savedUser.name, email: savedUser.email }
+            user: { id: savedUser._id, name: savedUser.name, email: savedUser.email, role: savedUser.role }
         }, { status: 201 });
 
     } catch (error: any) {
