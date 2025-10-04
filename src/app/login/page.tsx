@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -52,7 +51,10 @@ export default function LoginPage() {
       }
     } catch (error) {
         const axiosError = error as AxiosError<{ error: string }>;
-        const errorMessage = axiosError.response?.data?.error || 'An unexpected error occurred. Please try again.';
+        let errorMessage = axiosError.response?.data?.error || 'An unexpected error occurred. Please try again.';
+        if (typeof errorMessage !== 'string') {
+            errorMessage = JSON.stringify(errorMessage);
+        }
         toast({
             variant: 'destructive',
             title: 'Login Failed',
