@@ -2,23 +2,28 @@
 'use client';
 
 import Link from 'next/link';
-import { Smartphone, Sparkles, Home, ShoppingCart, Package, Info, Mail, Menu, LayoutDashboard, Wallet } from 'lucide-react';
+import { Smartphone, Sparkles, Home, ShoppingCart, Package, Info, Mail, Menu, LayoutDashboard, Wallet, LogIn, UserPlus, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/hooks/use-cart';
 import { useEffect, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
-
-// In a real app, this would come from an authentication context
-const mockCustomer = {
-    isLoggedIn: true,
-    ledgerBalance: 25.50
-};
+import { useSession } from '@/contexts/SessionProvider';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export function Header() {
   const pathname = usePathname();
   const { items } = useCart();
+  const { user, isLoading, logout } = useSession();
   const [isClient, setIsClient] = useState(false);
   const [isSheetOpen, setSheetOpen] = useState(false);
 
@@ -32,8 +37,11 @@ export function Header() {
     { href: '/recommendations', label: 'AI Recommender', icon: Sparkles },
     { href: '/about', label: 'About', icon: Info },
     { href: '/contact', label: 'Contact', icon: Mail },
-    { href: '/admin', label: 'Admin', icon: LayoutDashboard },
   ];
+  
+  if (user?.role === 'admin') {
+      navLinks.push({ href: '/admin', label: 'Admin', icon: LayoutDashboard });
+  }
 
   const totalItems = items.length;
 
@@ -74,13 +82,13 @@ export function Header() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-4">
-            {isClient && mockCustomer.isLoggedIn && mockCustomer.ledgerBalance > 0 && (
+          <div className="flex items-center gap-2 sm:gap-4">
+            {isClient && user && user.ledgerBalance && user.ledgerBalance > 0 && (
                 <div className="flex items-center gap-2 bg-destructive/10 border border-destructive/20 px-3 py-1.5 rounded-md">
                     <Wallet className="h-5 w-5 text-destructive" />
                     <div className="flex flex-col items-end">
                         <span className="text-xs text-destructive font-medium -mb-1">Balance</span>
-                        <span className="font-bold text-destructive">${mockCustomer.ledgerBalance.toFixed(2)}</span>
+                        <span className="font-bold text-destructive">${user.ledgerBalance.toFixed(2)}</span>
                     </div>
                 </div>
             )}
@@ -96,6 +104,45 @@ export function Header() {
               </Link>
             </Button>
             
+            {isClient && !isLoading && (
+              <>
+                {user ? (
+                   <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                        <Avatar>
+                          <AvatarImage src={user.avatar} alt={user.name} />
+                          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="end" forceMount>
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">{user.name}</p>
+                          <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => logout()}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <div className="hidden md:flex items-center gap-2">
+                    <Button asChild variant="ghost">
+                        <Link href="/login"><LogIn className="mr-2"/> Login</Link>
+                    </Button>
+                     <Button asChild>
+                        <Link href="/signup"><UserPlus className="mr-2"/> Sign Up</Link>
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+
             <div className="md:hidden">
               <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
@@ -112,6 +159,22 @@ export function Header() {
                      {navLinks.map((link) => (
                        <NavLink key={link.href} {...link} isMobile />
                      ))}
+                      <div className="md:hidden pt-4 border-t">
+                      {user ? (
+                           <Button onClick={() => { logout(); setSheetOpen(false);}} className="w-full justify-start text-lg" variant="ghost">
+                              <LogOut className="mr-4"/> Logout
+                           </Button>
+                        ) : (
+                          <>
+                           <Button asChild variant="ghost" className="w-full justify-start text-lg">
+                              <Link href="/login" onClick={() => setSheetOpen(false)}><LogIn className="mr-4"/> Login</Link>
+                           </Button>
+                           <Button asChild className="w-full justify-start text-lg mt-2">
+                              <Link href="/signup" onClick={() => setSheetOpen(false)}><UserPlus className="mr-4"/> Sign Up</Link>
+                           </Button>
+                          </>
+                        )}
+                    </div>
                   </nav>
                 </SheetContent>
               </Sheet>

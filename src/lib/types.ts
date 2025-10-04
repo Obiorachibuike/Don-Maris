@@ -50,10 +50,22 @@ export interface Customer {
   lifetimeValue?: number;
 }
 
-export interface User extends Customer {
-    role: 'admin' | 'sales' | 'accountant' | 'supplier' | 'customer';
-    dateJoined: string;
-    ledgerBalance?: number; // moved here, optional
+export interface User {
+  _id: string;
+  id: string;
+  name: string;
+  email: string;
+  password?: string;
+  role: 'admin' | 'sales' | 'accountant' | 'supplier' | 'customer';
+  dateJoined: string;
+  avatar: string;
+  ledgerBalance?: number;
+  lifetimeValue?: number;
+  isVerified?: boolean;
+  forgotPasswordToken?: string;
+  forgotPasswordTokenExpiry?: Date;
+  verifyToken?: string;
+  verifyTokenExpiry?: Date;
 }
 
 export interface Order {
