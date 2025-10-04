@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { AnimatedSection } from '@/components/animated-section';
+import { useSession } from '@/contexts/SessionProvider';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address.'),
@@ -26,6 +27,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { refetchUser } = useSession();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,8 +46,9 @@ export default function LoginPage() {
           title: 'Login Successful',
           description: 'Welcome back!',
         });
+        await refetchUser(); // Manually refetch user data
         router.push('/');
-        router.refresh(); // Refresh to update session state in header
+        router.refresh(); // Refresh to update server components if needed
       }
     } catch (error) {
         let errorMessage = 'An unexpected error occurred.';

@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import axios from 'axios';
 import { usePathname } from 'next/navigation';
 
@@ -17,6 +17,7 @@ interface SessionContextType {
   user: User | null;
   isLoading: boolean;
   logout: () => Promise<void>;
+  refetchUser: () => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -26,9 +27,9 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
+    // No need to set loading to true here on every fetch, only on initial load.
     try {
-      setIsLoading(true);
       const res = await axios.get('/api/auth/me');
       setUser(res.data.data);
     } catch (error) {
@@ -36,11 +37,11 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchUser();
-  }, [pathname]);
+  }, [fetchUser, pathname]);
 
   const logout = async () => {
     try {
@@ -52,7 +53,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <SessionContext.Provider value={{ user, isLoading, logout }}>
+    <SessionContext.Provider value={{ user, isLoading, logout, refetchUser: fetchUser }}>
       {children}
     </SessionContext.Provider>
   );
