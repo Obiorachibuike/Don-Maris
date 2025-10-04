@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
         await dbConnect();
     } catch (dbError) {
         console.error("Database connection failed:", dbError);
-        return NextResponse.json({ error: "Could not connect to the database. Please try again later." }, { status: 500 });
+        return NextResponse.json({ error: dbError }, { status: 500 });
     }
 
     try {
