@@ -6,18 +6,24 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 export async function POST(request: NextRequest) {
-    await dbConnect();
+    try {
+        await dbConnect();
+    } catch (dbError) {
+        console.error("Database connection failed:", dbError);
+        return NextResponse.json({ error: "Could not connect to the database. Please try again later." }, { status: 500 });
+    }
+
     try {
         const { email, password } = await request.json();
         
         const user = await User.findOne({ email });
         if (!user) {
-            return NextResponse.json({ error: "Invalid credentials" }, { status: 400 });
+            return NextResponse.json({ error: "No user found with that email address." }, { status: 404 });
         }
         
         const isPasswordCorrect = await bcrypt.compare(password, user.password);
         if (!isPasswordCorrect) {
-            return NextResponse.json({ error: "Invalid credentials" }, { status: 400 });
+            return NextResponse.json({ error: "Invalid credentials provided." }, { status: 400 });
         }
 
         if (!user.isVerified) {
@@ -47,7 +53,7 @@ export async function POST(request: NextRequest) {
         return response;
 
     } catch (error: any) {
-        console.error(error); // Log the actual error on the server
-        return NextResponse.json({ error: "An internal server error occurred." }, { status: 500 });
+        console.error("Login API error:", error);
+        return NextResponse.json({ error: "An internal server error occurred during login." }, { status: 500 });
     }
 }
