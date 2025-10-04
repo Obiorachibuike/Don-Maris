@@ -26,7 +26,8 @@ import { Button } from '@/components/ui/button';
 const user = {
     name: 'Admin User',
     role: 'admin', // available roles: 'admin', 'sales', 'accountant', 'supplier'
-    avatar: 'https://placehold.co/100x100.png'
+    avatar: 'https://placehold.co/100x100.png',
+    ledgerBalance: 125.50
 };
 
 const navItems = [
@@ -66,6 +67,11 @@ export default function AdminLayout({
                         <div className="flex flex-col">
                             <span className="font-semibold text-lg">{user.name}</span>
                             <span className="text-xs text-muted-foreground capitalize">{user.role}</span>
+                             {user.ledgerBalance !== undefined && user.ledgerBalance > 0 && (
+                                <span className="text-xs text-destructive font-semibold">
+                                    Balance: ${user.ledgerBalance.toFixed(2)}
+                                </span>
+                            )}
                         </div>
                     </div>
                   </SidebarHeader>
@@ -77,8 +83,7 @@ export default function AdminLayout({
                                       <SidebarMenuButton 
                                         isActive={pathname === item.href} 
                                         icon={<item.icon />}
-                                        disabled={item.disabled}
-                                        className={item.disabled ? 'cursor-not-allowed opacity-50' : ''}
+                                        
                                       >
                                           {item.label}
                                       </SidebarMenuButton>
