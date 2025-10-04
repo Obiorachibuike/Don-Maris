@@ -37,7 +37,9 @@ async function dbConnect() {
       return mongoose;
     }).catch(err => {
         console.error("Database connection failed:", err);
-        cached.promise = null; // Reset promise on error
+        // Reset promise on error to allow retries
+        cached.promise = null; 
+        // Re-throw the error to be caught by the calling function
         throw err;
     });
   }
@@ -45,6 +47,8 @@ async function dbConnect() {
   try {
     cached.conn = await cached.promise;
   } catch (e) {
+    // If the promise was rejected, it will be caught here.
+    // Ensure the promise is cleared so the next request can try again.
     cached.promise = null;
     throw e;
   }
