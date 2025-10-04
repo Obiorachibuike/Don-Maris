@@ -51,18 +51,13 @@ export default function LoginPage() {
         router.refresh(); // Refresh to update server components if needed
       }
     } catch (error) {
-        let errorMessage = 'An unexpected error occurred.';
-        if (axios.isAxiosError(error)) {
-            const serverError = error as AxiosError<{ error: string }>;
-            if (serverError.response && serverError.response.data && serverError.response.data.error) {
-                errorMessage = serverError.response.data.error;
-            }
-        }
-      toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: errorMessage,
-      });
+        const axiosError = error as AxiosError<{ error: string }>;
+        const errorMessage = axiosError.response?.data?.error || 'An unexpected error occurred. Please try again.';
+        toast({
+            variant: 'destructive',
+            title: 'Login Failed',
+            description: errorMessage,
+        });
     } finally {
       setIsLoading(false);
     }
