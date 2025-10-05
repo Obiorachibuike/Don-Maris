@@ -59,15 +59,15 @@ export const useProductStore = create<ProductState>((set, get) => ({
   fetchProducts: async () => {
     // Avoid refetching if products are already loaded or if it's already loading
     if (get().products.length > 0 || get().isLoading === false) {
-      // set isLoading to false if it was true for some reason
-      if(get().isLoading) set({ isLoading: false });
+      if (get().isLoading) set({ isLoading: false });
       return;
     }
     set({ isLoading: true, error: null });
     try {
       let response = await fetch('/api/products');
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch products');
+        throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`);
       }
       
       let products = await response.json();
@@ -82,15 +82,14 @@ export const useProductStore = create<ProductState>((set, get) => ({
           }
           console.log("Database seeded successfully.");
 
-          // Refetch products after seeding
           response = await fetch('/api/products');
           if (!response.ok) {
             throw new Error('Failed to fetch products after seeding');
           }
           products = await response.json();
-        } catch (seedError) {
+        } catch (seedError: any) {
           console.error("Seeding process failed:", seedError);
-          throw seedError; // Propagate the seeding error
+          throw seedError;
         }
       }
 
@@ -104,12 +103,11 @@ export const useProductStore = create<ProductState>((set, get) => ({
         trending,
         isLoading: false 
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch products from API.", error);
-       // Fallback to dummy data is handled in getProducts, but we can set an error state
       set({
         isLoading: false,
-        error: 'Could not fetch products. Please try refreshing the page.',
+        error: error.message || 'Could not fetch products. Please try refreshing the page.',
       });
     }
   },
@@ -129,7 +127,6 @@ export const useProductStore = create<ProductState>((set, get) => ({
             ...derived
         };
     });
-    // In a real app, you would also make an API call to save the product to the database.
   },
   editProduct: async (productId, updatedData) => {
     try {
@@ -157,7 +154,6 @@ export const useProductStore = create<ProductState>((set, get) => ({
       });
     } catch (error) {
         console.error("Failed to update product:", error);
-        // Optionally handle the error in the UI
         set({ error: 'Failed to update product. Please try again.' });
     }
   },

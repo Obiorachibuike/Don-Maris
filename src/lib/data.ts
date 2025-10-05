@@ -1,7 +1,5 @@
 
 import type { Product } from './types';
-import { dummyProducts } from './dummy-products';
-import axios from 'axios';
 import dbConnect from './dbConnect';
 import ProductModel from '@/models/Product';
 import OrderModel from '@/models/Order';
@@ -12,15 +10,10 @@ import OrderModel from '@/models/Order';
  * @returns A promise that resolves to an array of products.
  */
 export async function getProducts(): Promise<Product[]> {
-  try {
-    await dbConnect();
-    const products = await ProductModel.find({}).sort({ dateAdded: -1 }).lean();
-    // A bit of a hack to serialize the _id to a string, which is what `JSON.stringify` does.
-    return JSON.parse(JSON.stringify(products));
-  } catch (error) {
-    console.error("Failed to fetch products from DB, falling back to dummy data.", error);
-    return dummyProducts;
-  }
+  await dbConnect();
+  const products = await ProductModel.find({}).sort({ dateAdded: -1 }).lean();
+  // A bit of a hack to serialize the _id to a string, which is what `JSON.stringify` does.
+  return JSON.parse(JSON.stringify(products));
 }
 
 /**
