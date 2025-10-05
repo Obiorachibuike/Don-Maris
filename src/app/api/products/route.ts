@@ -6,8 +6,11 @@ export async function GET(request: Request) {
     try {
         const products = await getProducts();
         return NextResponse.json(products);
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error in /api/products:", error);
-        return new NextResponse('Internal Server Error', { status: 500 });
+        return new NextResponse(
+            JSON.stringify({ message: 'Internal Server Error', error: error.message }), 
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
     }
 }
