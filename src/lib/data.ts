@@ -5,7 +5,7 @@ import OrderModel from '@/models/Order';
 
 
 /**
- * Fetches all products from the database. Assumes DB connection is already handled by the API route.
+ * Fetches all products from the database. Assumes DB connection is already handled.
  * @returns A promise that resolves to an array of products.
  */
 export async function getProducts(): Promise<Product[]> {
