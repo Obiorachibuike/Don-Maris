@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package && (node -e 'try { require(\"geoip-lite\").reloadDataSync() } catch (e) { console.log(\"Could not reload geoip-lite data\") }' || true)"
   },
   "dependencies": {
     "@genkit-ai/firebase": "^1.16.1",
