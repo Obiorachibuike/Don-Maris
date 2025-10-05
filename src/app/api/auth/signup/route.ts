@@ -21,22 +21,26 @@ export async function POST(request: NextRequest) {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const role = email === DEVELOPER_EMAIL ? 'admin' : 'customer';
+        const isAdmin = email === DEVELOPER_EMAIL;
+        const role = isAdmin ? 'admin' : 'customer';
 
         const newUser = new User({
             name,
             email,
             password: hashedPassword,
             role,
+            isVerified: isAdmin, // Auto-verify the admin user
         });
 
         const savedUser = await newUser.save();
 
-        // Send verification email
-        await sendEmail({ email, emailType: 'VERIFY', userId: savedUser._id });
+        // Send verification email only for non-admin users
+        if (!isAdmin) {
+            await sendEmail({ email, emailType: 'VERIFY', userId: savedUser._id });
+        }
 
         return NextResponse.json({
-            message: "User registered successfully. Please verify your email.",
+            message: isAdmin ? "Admin user registered and verified." : "User registered successfully. Please verify your email.",
             success: true,
             user: { id: savedUser._id, name: savedUser.name, email: savedUser.email, role: savedUser.role }
         }, { status: 201 });
