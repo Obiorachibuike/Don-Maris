@@ -10,6 +10,7 @@ import { chatWithProductAI } from '@/app/actions';
 import { ScrollArea } from './ui/scroll-area';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 
 type ChatMessage = {
@@ -28,6 +29,7 @@ export function ProductChat({ productId, productName, className }: ChatProps) {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
+    const { toast } = useToast();
     const scrollAreaRef = useRef<HTMLDivElement>(null);
 
     const initializeChat = useCallback(() => {
@@ -78,8 +80,14 @@ export function ProductChat({ productId, productName, className }: ChatProps) {
             const modelMessage: ChatMessage = { role: 'model', content: result.response };
             setMessages(prev => [...prev, modelMessage]);
         } else {
-            const errorMessage: ChatMessage = { role: 'model', content: result.error || 'Sorry, something went wrong.' };
+            const errorMessageContent = result.error || 'Sorry, something went wrong.';
+            const errorMessage: ChatMessage = { role: 'model', content: errorMessageContent };
             setMessages(prev => [...prev, errorMessage]);
+            toast({
+                variant: 'destructive',
+                title: 'AI Assistant Error',
+                description: errorMessageContent,
+            });
         }
     };
     

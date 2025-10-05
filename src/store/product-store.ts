@@ -3,6 +3,7 @@
 
 import { create } from 'zustand';
 import type { Product } from '@/lib/types';
+import { toast } from '@/hooks/use-toast';
 
 interface ProductState {
   products: Product[];
@@ -104,10 +105,16 @@ export const useProductStore = create<ProductState>((set, get) => ({
         isLoading: false 
       });
     } catch (error: any) {
+      const errorMessage = error.message || 'Could not fetch products. Please try refreshing the page.';
       console.error("Failed to fetch products from API.", error);
       set({
         isLoading: false,
-        error: error.message || 'Could not fetch products. Please try refreshing the page.',
+        error: errorMessage,
+      });
+      toast({
+        variant: 'destructive',
+        title: 'Error Fetching Products',
+        description: errorMessage
       });
     }
   },
@@ -139,7 +146,8 @@ export const useProductStore = create<ProductState>((set, get) => ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update product on server');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update product on server');
       }
 
       const updatedProductFromServer: Product = await response.json();
@@ -152,9 +160,15 @@ export const useProductStore = create<ProductState>((set, get) => ({
             ...derived
         };
       });
-    } catch (error) {
+    } catch (error: any) {
+        const errorMessage = error.message || 'Failed to update product. Please try again.';
         console.error("Failed to update product:", error);
-        set({ error: 'Failed to update product. Please try again.' });
+        set({ error: errorMessage });
+        toast({
+          variant: 'destructive',
+          title: 'Update Failed',
+          description: errorMessage,
+        });
     }
   },
   deleteProduct: async (productId) => {
@@ -164,7 +178,8 @@ export const useProductStore = create<ProductState>((set, get) => ({
         });
 
         if (!response.ok) {
-            throw new Error('Failed to delete product on server');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to delete product on server');
         }
 
         set(state => {
@@ -175,9 +190,15 @@ export const useProductStore = create<ProductState>((set, get) => ({
                 ...derived
             };
         });
-    } catch (error) {
+    } catch (error: any) {
+        const errorMessage = error.message || 'Failed to delete product. Please try again.';
         console.error("Failed to delete product:", error);
-        set({ error: 'Failed to delete product. Please try again.' });
+        set({ error: errorMessage });
+        toast({
+          variant: 'destructive',
+          title: 'Delete Failed',
+          description: errorMessage,
+        });
     }
   },
   decreaseStock: (productId: string, quantity: number) => {

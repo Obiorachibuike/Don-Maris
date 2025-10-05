@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,15 +44,16 @@ export default function SignupPage() {
       if (response.data.success) {
         toast({
           title: 'Account Created!',
-          description: 'We\'ve sent a verification link to your email.',
+          description: response.data.message || 'We\'ve sent a verification link to your email.',
         });
         router.push('/login');
       }
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error: string }>;
       toast({
         variant: 'destructive',
         title: 'Signup Failed',
-        description: error.response?.data?.error || 'An unexpected error occurred.',
+        description: axiosError.response?.data?.error || 'An unexpected error occurred.',
       });
     } finally {
       setIsLoading(false);

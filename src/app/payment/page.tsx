@@ -12,7 +12,7 @@ import { Loader2, Banknote, CreditCard, Copy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { submitOrder } from '@/lib/data';
 import type { PaymentStatus, CartItem } from '@/lib/types';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { useProductStore } from '@/store/product-store';
 import {
   Elements,
@@ -84,7 +84,7 @@ function CheckoutForm({ shippingDetails }: { shippingDetails: ShippingDetails })
             if (error.type === "card_error" || error.type === "validation_error") {
                 toast({ variant: 'destructive', title: "Payment Failed", description: error.message });
             } else {
-                toast({ variant: 'destructive', title: "An unexpected error occurred." });
+                toast({ variant: 'destructive', title: "An unexpected error occurred.", description: error.message });
             }
 
         } else {
@@ -149,12 +149,13 @@ export default function PaymentPage() {
                 clientSecret: res.data.clientSecret,
                 appearance: { theme: 'stripe' },
             });
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error creating payment intent", err);
+            const axiosError = err as AxiosError<{ error: string }>;
             toast({
                 variant: 'destructive',
                 title: 'Error',
-                description: 'Could not initialize card payment. Please try again.'
+                description: axiosError.response?.data?.error || 'Could not initialize card payment. Please try again.'
             });
             setPaymentMethod(null);
         }
@@ -173,7 +174,8 @@ export default function PaymentPage() {
             setPaymentMethod('transfer');
         } catch (error: any) {
             console.error('Error creating virtual account', error);
-            const errorMessage = error.response?.data?.error || 'Could not create a bank account for transfer. Please try again.';
+            const axiosError = error as AxiosError<{ error: string, details?: any }>;
+            const errorMessage = axiosError.response?.data?.error || 'Could not create a bank account for transfer. Please try again.';
             toast({
                 variant: 'destructive',
                 title: 'Bank Transfer Failed',

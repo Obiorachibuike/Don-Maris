@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -53,11 +53,12 @@ function ResetPasswordContent() {
         description: 'You can now log in with your new password.',
       });
       router.push('/login');
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error: string }>;
       toast({
         variant: 'destructive',
         title: 'Password Reset Failed',
-        description: error.response?.data?.error || 'An unexpected error occurred.',
+        description: axiosError.response?.data?.error || 'An unexpected error occurred.',
       });
     } finally {
       setIsLoading(false);

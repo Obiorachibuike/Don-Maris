@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -40,11 +40,12 @@ export default function ForgotPasswordPage() {
         description: 'If an account with that email exists, we have sent a password reset link.',
       });
       setIsSubmitted(true);
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error: string }>;
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.response?.data?.error || 'An unexpected error occurred.',
+        description: axiosError.response?.data?.error || 'An unexpected error occurred.',
       });
     } finally {
       setIsLoading(false);

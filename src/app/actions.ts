@@ -34,9 +34,10 @@ export async function getRecommendationsAction(
       return { recommendations: result.recommendations };
     }
     return { error: 'Could not find any recommendations for this model.' };
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
-    return { error: 'An unexpected error occurred. Please try again.' };
+    const errorMessage = e.message || 'An unexpected error occurred. Please try again.';
+    return { error: errorMessage };
   }
 }
 
@@ -44,8 +45,9 @@ export async function chatWithProductAI(input: ProductChatInput) {
     try {
         const result = await chatAboutProduct(input);
         return { success: true, response: result.response };
-    } catch (e) {
+    } catch (e: any) {
         console.error(e);
-        return { success: false, error: 'An unexpected error occurred. Please try again.' };
+        const errorMessage = e.message || 'An unexpected error occurred. Please try again.';
+        return { success: false, error: errorMessage };
     }
 }
