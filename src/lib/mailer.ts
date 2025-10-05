@@ -1,4 +1,5 @@
 
+
 import nodemailer from 'nodemailer';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
@@ -58,8 +59,7 @@ export const sendEmail = async ({ email, emailType, userId }: { email: string, e
         }
 
         const transport = nodemailer.createTransport({
-            host: process.env.EMAIL_SERVER_HOST,
-            port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
+            service: 'gmail',
             auth: {
                 user: process.env.EMAIL_SERVER_USER,
                 pass: process.env.EMAIL_SERVER_PASSWORD,
@@ -67,6 +67,9 @@ export const sendEmail = async ({ email, emailType, userId }: { email: string, e
         });
 
         const user = await User.findById(userId);
+        if (!user) {
+            throw new Error("User not found to send email.");
+        }
         const userName = user.name;
         
         let subject = '';
