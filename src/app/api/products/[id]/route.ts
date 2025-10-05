@@ -17,6 +17,12 @@ export async function GET(
     const { id } = params;
     try {
         await dbConnect();
+    } catch (dbError: any) {
+        console.error(`Database connection failed for product ${id}:`, dbError);
+        return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });
+    }
+    
+    try {
         const product = await ProductModel.findOne({ id: id }).lean();
 
         if (product) {
@@ -37,6 +43,12 @@ export async function PUT(
     const { id } = params;
     try {
         await dbConnect();
+    } catch (dbError: any) {
+        console.error(`Database connection failed for updating product ${id}:`, dbError);
+        return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });
+    }
+    
+    try {
         const updatedData: Partial<Product> = await request.json();
         
         const updatedProduct = await ProductModel.findOneAndUpdate(
@@ -64,6 +76,12 @@ export async function DELETE(
     const { id } = params;
     try {
         await dbConnect();
+    } catch (dbError: any) {
+        console.error(`Database connection failed for deleting product ${id}:`, dbError);
+        return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });
+    }
+
+    try {
         const result = await ProductModel.deleteOne({ id: id });
 
         if (result.deletedCount === 0) {

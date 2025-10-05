@@ -18,7 +18,12 @@ export async function GET() {
     
     try {
         await dbConnect();
+    } catch (dbError: any) {
+        console.error('Database seeding failed during connection:', dbError);
+        return NextResponse.json({ error: 'Database connection failed for seeding.', details: dbError.message }, { status: 500 });
+    }
 
+    try {
         // Clear existing data
         await User.deleteMany({});
         await Product.deleteMany({});

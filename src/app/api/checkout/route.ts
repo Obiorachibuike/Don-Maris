@@ -11,18 +11,19 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: NextRequest) {
   try {
+    await dbConnect();
+  } catch (dbError: any) {
+      console.error("Database connection failed:", dbError);
+      return NextResponse.json({ error: "Could not connect to the database. Please try again later.", details: dbError.message }, { status: 500 });
+  }
+
+  try {
     const { items, email, saveCard }: { items: CartItem[], email: string, saveCard: boolean } = await req.json();
 
     if (!items || !email) {
       return NextResponse.json({ error: "Missing items or email" }, { status: 400 });
     }
     
-    try {
-        await dbConnect();
-    } catch (dbError: any) {
-        console.error("Database connection failed:", dbError);
-        return NextResponse.json({ error: "Could not connect to the database. Please try again later.", details: dbError.message }, { status: 500 });
-    }
     const user = await User.findOne({ email: email });
 
     const country = user?.countryCode || 'NG'; // Default to Nigeria if user or countryCode is not found
