@@ -21,9 +21,9 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Printer, Pencil } from 'lucide-react';
 import type { CartItem, Order } from '@/lib/types';
-import { getProductsSync } from '@/lib/data';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { EditOrderForm } from '@/components/edit-order-form';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const getOrderDetails = (id: string): Order | undefined => {
     // Return a copy to prevent direct mutation
@@ -36,12 +36,14 @@ export default function OrderDetailsPage() {
     const router = useRouter();
     const orderId = params.id as string;
     
-    // We use state to hold the order so it can be updated after editing
     const [order, setOrder] = useState(() => getOrderDetails(orderId));
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-    const { products } = useProductStore();
-    const allProducts = getProductsSync();
+    const { products, fetchProducts, isLoading: areProductsLoading } = useProductStore();
+    
+    useEffect(() => {
+      fetchProducts();
+    }, [fetchProducts]);
 
     if (!order) {
         return (
@@ -57,7 +59,7 @@ export default function OrderDetailsPage() {
     }
 
     const orderItems = order.items.map(item => {
-        const product = allProducts.find(p => p.id === item.productId);
+        const product = products.find(p => p.id === item.productId);
         return {
             ...item,
             product: product || { name: 'Unknown Product', image: 'https://placehold.co/100x100.png', price: 0 }
@@ -69,8 +71,9 @@ export default function OrderDetailsPage() {
     const total = subtotal + shipping;
 
     const handlePreviewInvoice = () => {
+        if (areProductsLoading) return; // Prevent action if products are not loaded
         const cartItems: CartItem[] = order.items.map(item => {
-            const product = allProducts.find(p => p.id === item.productId);
+            const product = products.find(p => p.id === item.productId);
             return {
                 id: item.productId,
                 product: product!,
@@ -115,7 +118,7 @@ export default function OrderDetailsPage() {
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit Order
                         </Button>
-                        <Button onClick={handlePreviewInvoice} variant="outline">
+                        <Button onClick={handlePreviewInvoice} variant="outline" disabled={areProductsLoading}>
                             <Printer className="mr-2 h-4 w-4" />
                             Preview Invoice
                         </Button>
@@ -145,7 +148,13 @@ export default function OrderDetailsPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {orderItems.map(item => (
+                                    {areProductsLoading ? (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-24 text-center">
+                                                <Skeleton className="h-6 w-1/2 mx-auto" />
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : orderItems.map(item => (
                                         <TableRow key={item.productId}>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">

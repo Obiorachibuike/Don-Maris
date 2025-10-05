@@ -15,22 +15,12 @@ export async function getProducts(): Promise<Product[]> {
   try {
     await dbConnect();
     const products = await ProductModel.find({}).sort({ dateAdded: -1 }).lean();
-    return products.map(p => ({ ...p, _id: p._id.toString() })) as Product[];
+    // A bit of a hack to serialize the _id to a string, which is what `JSON.stringify` does.
+    return JSON.parse(JSON.stringify(products));
   } catch (error) {
     console.error("Failed to fetch products from DB, falling back to dummy data.", error);
     return dummyProducts;
   }
-}
-
-
-/**
- * Fetches all products from the server with a fallback to local data.
- */
-export function getProductsSync(): Product[] {
-  // This function is kept for components that are not yet async.
-  // It will now only return dummy data as we can't synchronously fetch from DB.
-  // Components using this should be migrated to use getProducts().
-  return dummyProducts;
 }
 
 /**

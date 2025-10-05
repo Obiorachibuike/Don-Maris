@@ -57,8 +57,10 @@ export const useProductStore = create<ProductState>((set, get) => ({
   isLoading: true,
   error: null,
   fetchProducts: async () => {
-    // Avoid refetching if products are already loaded
-    if (get().products.length > 0 && !get().isLoading) {
+    // Avoid refetching if products are already loaded or if it's already loading
+    if (get().products.length > 0 || get().isLoading === false) {
+      // set isLoading to false if it was true for some reason
+      if(get().isLoading) set({ isLoading: false });
       return;
     }
     set({ isLoading: true, error: null });

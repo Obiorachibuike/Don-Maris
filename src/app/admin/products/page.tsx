@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type SortKey = keyof Product | null;
 
@@ -159,6 +160,21 @@ export default function ProductsAdminPage() {
         </TableHead>
     );
 
+    const TableSkeleton = () => (
+        [...Array(productsPerPage)].map((_, i) => (
+            <TableRow key={i}>
+                <TableCell><Skeleton className="h-10 w-10 rounded-md" /></TableCell>
+                <TableCell><Skeleton className="h-6 w-32" /></TableCell>
+                <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                <TableCell><Skeleton className="h-6 w-12" /></TableCell>
+                <TableCell><Skeleton className="h-6 w-12" /></TableCell>
+                <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+            </TableRow>
+        ))
+    );
+
     return (
         <>
             <div className="space-y-6">
@@ -221,7 +237,7 @@ export default function ProductsAdminPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {currentProducts.map(product => (
+                                {isLoading ? <TableSkeleton /> : currentProducts.map(product => (
                                     <TableRow key={product.id}>
                                         <TableCell>
                                             <Image src={product.image} alt={product.name} width={40} height={40} className="rounded-md object-cover" />
