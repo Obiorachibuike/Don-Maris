@@ -25,11 +25,25 @@ export async function POST(request: NextRequest) {
         const isAdmin = email === DEVELOPER_EMAIL;
         const role = isAdmin ? 'admin' : 'customer';
 
+        // Get user's country from IP
+        let countryCode = 'NG'; // Default to Nigeria
+        try {
+            const ip = request.headers.get("x-forwarded-for") || '102.89.23.10';
+            const geoRes = await fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`);
+            if(geoRes.ok) {
+                const geoData = await geoRes.json();
+                countryCode = geoData.country_code || 'NG';
+            }
+        } catch (geoError) {
+            console.error("Could not fetch geolocation data:", geoError);
+        }
+
         const newUser = new User({
             name,
             email,
             password: hashedPassword,
             role,
+            countryCode,
             isVerified: isAdmin, // Auto-verify the admin user
         });
 

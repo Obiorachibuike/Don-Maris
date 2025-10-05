@@ -23,6 +23,9 @@ const UserSchema = new mongoose.Schema<UserType>({
     enum: ['admin', 'sales', 'accountant', 'supplier', 'customer'],
     default: 'customer',
   },
+  countryCode: {
+    type: String,
+  },
   isVerified: {
     type: Boolean,
     default: false,

@@ -1,8 +1,9 @@
 
 import { NextResponse, NextRequest } from "next/server";
 import Stripe from "stripe";
-import geoip from "geoip-lite";
 import type { CartItem } from "@/lib/types";
+import dbConnect from "@/lib/dbConnect";
+import User from "@/models/User";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2024-06-20",
@@ -15,11 +16,11 @@ export async function POST(req: NextRequest) {
     if (!items || !email) {
       return NextResponse.json({ error: "Missing items or email" }, { status: 400 });
     }
+    
+    await dbConnect();
+    const user = await User.findOne({ email: email });
 
-    // Detect country from IP
-    const ip = req.headers.get("x-forwarded-for") || "102.89.23.10"; // fallback for development
-    const geo = geoip.lookup(ip);
-    const country = geo?.country || "NG"; // Default to Nigeria if IP lookup fails
+    const country = user?.countryCode || 'NG'; // Default to Nigeria if user or countryCode is not found
 
     let currency: string;
     if (country === "NG") {
