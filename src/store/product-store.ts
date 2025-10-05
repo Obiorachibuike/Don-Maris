@@ -65,11 +65,35 @@ export const useProductStore = create<ProductState>((set, get) => ({
     }
     set({ isLoading: true, error: null });
     try {
-      const response = await fetch('/api/products');
+      let response = await fetch('/api/products');
       if (!response.ok) {
         throw new Error('Failed to fetch products');
       }
-      const products = await response.json();
+      
+      let products = await response.json();
+
+      if (products.length === 0) {
+        console.log("No products found, attempting to seed database...");
+        try {
+          const seedResponse = await fetch('/api/seed');
+          if (!seedResponse.ok) {
+            const seedError = await seedResponse.json();
+            throw new Error(`Seeding failed: ${seedError.message || 'Unknown error'}`);
+          }
+          console.log("Database seeded successfully.");
+
+          // Refetch products after seeding
+          response = await fetch('/api/products');
+          if (!response.ok) {
+            throw new Error('Failed to fetch products after seeding');
+          }
+          products = await response.json();
+        } catch (seedError) {
+          console.error("Seeding process failed:", seedError);
+          throw seedError; // Propagate the seeding error
+        }
+      }
+
       const { featured, newArrivals, bestRated, bestSellers, trending } = computeDerivedProducts(products);
       set({ 
         products, 
