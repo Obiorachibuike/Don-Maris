@@ -7,7 +7,7 @@ dotenv.config();
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
-    serverActions: false,
+    serverActions: true,
   },
   typescript: {
     ignoreBuildErrors: true,
