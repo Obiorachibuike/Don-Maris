@@ -93,7 +93,7 @@ export const sendEmail = async ({ email, emailType, userId }: { email: string, e
         }
 
         const mailOptions = {
-            from: process.env.EMAIL_FROM,
+            from: `"Don Maris" <${process.env.EMAIL_FROM}>`,
             to: email,
             subject: subject,
             html: emailTemplate(userName, title, content, ctaLink, ctaText),
@@ -106,4 +106,3 @@ export const sendEmail = async ({ email, emailType, userId }: { email: string, e
         throw new Error(error.message);
     }
 };
-
