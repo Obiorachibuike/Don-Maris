@@ -1,16 +1,14 @@
 
 import type { Product } from './types';
-import dbConnect from './dbConnect';
 import ProductModel from '@/models/Product';
 import OrderModel from '@/models/Order';
 
 
 /**
- * Fetches all products from the database. Assumes DB connection is already handled.
+ * Fetches all products from the database. Assumes DB connection is already handled by the API route.
  * @returns A promise that resolves to an array of products.
  */
 export async function getProducts(): Promise<Product[]> {
-  await dbConnect();
   const products = await ProductModel.find({}).sort({ dateAdded: -1 }).lean();
   // A bit of a hack to serialize the _id to a string, which is what `JSON.stringify` does.
   return JSON.parse(JSON.stringify(products));
@@ -39,7 +37,6 @@ export async function getProductById(id: string): Promise<Product | null> {
  */
 export async function submitOrder(orderData: any) {
     try {
-        await dbConnect();
         const newOrderId = `DM-${Date.now()}`;
         const newOrder = new OrderModel({
             ...orderData,
