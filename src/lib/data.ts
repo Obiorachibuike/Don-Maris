@@ -2,22 +2,26 @@
 import type { Product } from './types';
 import { dummyProducts } from './dummy-products';
 import axios from 'axios';
-
-// This is a placeholder for where the API is located.
-const API_BASE_URL = '/api';
+import dbConnect from './dbConnect';
+import ProductModel from '@/models/Product';
+import OrderModel from '@/models/Order';
 
 
 /**
- * Fetches all products from the server.
+ * Fetches all products from the database.
  * @returns A promise that resolves to an array of products.
  */
 export async function getProducts(): Promise<Product[]> {
   try {
-    // We use a timestamp to prevent caching of the API route.
-    const response = await axios.get(`${API_BASE_URL}/products`, { params: { t: new Date().getTime() }});
-    return response.data;
+    await dbConnect();
+    const products = await ProductModel.find({}).lean();
+    // The .lean() method returns a plain JavaScript object, not a Mongoose document.
+    // Mongoose documents have a lot of internal state for change tracking.
+    // Using .lean() is faster and uses less memory.
+    // We need to convert the _id to a string for consistency.
+    return products.map(p => ({ ...p, _id: p._id.toString() })) as Product[];
   } catch (error) {
-    console.error("Failed to fetch products from API, falling back to dummy data.", error);
+    console.error("Failed to fetch products from DB, falling back to dummy data.", error);
     return dummyProducts;
   }
 }
@@ -28,21 +32,24 @@ export async function getProducts(): Promise<Product[]> {
  */
 export function getProductsSync(): Product[] {
   // This function is kept for components that are not yet async.
+  // It will now only return dummy data as we can't synchronously fetch from DB.
+  // Components using this should be migrated to use getProducts().
   return dummyProducts;
 }
 
 /**
- * Fetches a single product by its ID from the server with a fallback to local data.
+ * Fetches a single product by its ID from the database.
  */
 export async function getProductById(id: string): Promise<Product | undefined> {
   try {
-    const response = await axios.get(`${API_BASE_URL}/products/${id}`);
-    return response.data;
-  } catch (error: any) {
-    if (error.response && error.response.status === 404) {
-        return undefined;
+    await dbConnect();
+    const product = await ProductModel.findOne({ id: id }).lean();
+    if (product) {
+      return { ...product, _id: product._id.toString() } as Product;
     }
-    console.error(`Failed to fetch product ${id} from API, falling back to dummy data.`, error);
+    return undefined;
+  } catch (error: any) {
+    console.error(`Failed to fetch product ${id} from DB, falling back to dummy data.`, error);
     return dummyProducts.find(p => p.id === id);
   }
 }
@@ -54,15 +61,29 @@ export async function getProductById(id: string): Promise<Product | undefined> {
  */
 export async function submitOrder(orderData: any) {
     try {
-        const response = await axios.post(`${API_BASE_URL}/orders`, orderData);
-        return response.data;
+        await dbConnect();
+        const newOrderId = `DM-${Date.now()}`;
+        const newOrder = new OrderModel({
+            ...orderData,
+            id: newOrderId,
+            customer: {
+              id: orderData.customer.email, // Using email as a stable customer ID
+              name: `${orderData.customer.firstName} ${orderData.customer.lastName}`,
+              email: orderData.customer.email,
+              avatar: 'https://placehold.co/100x100.png' // Default avatar
+            }
+        });
+        const savedOrder = await newOrder.save();
+        return { 
+            status: 'success', 
+            message: 'Order saved successfully',
+            id: savedOrder.id,
+        };
     } catch (error) {
         console.error('Could not submit order to server.', error);
-        // Fallback for demo purposes: return the submitted data with a mock order ID
         return {
-            ...orderData,
-            id: `MOCK-${Date.now()}`,
-            status: 'success'
+            status: 'error',
+            message: 'Failed to save order.'
         };
     }
 }
