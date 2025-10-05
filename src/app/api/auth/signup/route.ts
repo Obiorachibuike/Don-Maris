@@ -1,4 +1,5 @@
 
+
 import dbConnect from "@/lib/dbConnect";
 import User from "@/models/User";
 import { NextRequest, NextResponse } from "next/server";
@@ -36,7 +37,8 @@ export async function POST(request: NextRequest) {
 
         // Send verification email only for non-admin users
         if (!isAdmin) {
-            await sendEmail({ email, emailType: 'VERIFY', userId: savedUser._id });
+            const baseUrl = new URL(request.url).origin;
+            await sendEmail({ email, emailType: 'VERIFY', userId: savedUser._id, baseUrl });
         }
 
         return NextResponse.json({

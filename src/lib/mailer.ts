@@ -48,7 +48,7 @@ const emailTemplate = (name: string, title: string, content: string, ctaLink: st
 `;
 
 
-export const sendEmail = async ({ email, emailType, userId }: { email: string, emailType: 'VERIFY' | 'RESET', userId: string }) => {
+export const sendEmail = async ({ email, emailType, userId, baseUrl }: { email: string, emailType: 'VERIFY' | 'RESET', userId: string, baseUrl: string }) => {
     try {
         const hashedToken = await bcrypt.hash(userId.toString(), 10);
 
@@ -82,13 +82,13 @@ export const sendEmail = async ({ email, emailType, userId }: { email: string, e
             subject = 'Verify your email address';
             title = 'Email Verification';
             content = 'Welcome to Don Maris Accessories! We\'re excited to have you. Please verify your email address to complete your registration by clicking the button below.';
-            ctaLink = `${process.env.NEXT_PUBLIC_BASE_URL}/verify-email?token=${hashedToken}`;
+            ctaLink = `${baseUrl}/verify-email?token=${hashedToken}`;
             ctaText = 'Verify Email';
         } else if (emailType === 'RESET') {
             subject = 'Reset your password';
             title = 'Password Reset';
             content = 'You requested a password reset. Click the button below to set a new password. This link will expire in 1 hour.';
-            ctaLink = `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password?token=${hashedToken}`;
+            ctaLink = `${baseUrl}/reset-password?token=${hashedToken}`;
             ctaText = 'Reset Password';
         }
 
