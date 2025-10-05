@@ -59,7 +59,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
   error: null,
   fetchProducts: async () => {
     // Avoid refetching if products are already loaded or if it's already loading
-    if (get().products.length > 0 || get().isLoading === false) {
+    if (get().products.length > 0 || get().isLoading === false && get().products.length > 0) {
       if (get().isLoading) set({ isLoading: false });
       return;
     }
@@ -68,7 +68,14 @@ export const useProductStore = create<ProductState>((set, get) => ({
       let response = await fetch('/api/products');
       
       if (!response.ok) {
-        throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`);
+        let errorDetails = `Failed to fetch products: ${response.status} ${response.statusText}`;
+        try {
+            const errorBody = await response.json();
+            errorDetails = errorBody.error || errorDetails;
+        } catch (e) {
+            // response body is not json or empty
+        }
+        throw new Error(errorDetails);
       }
       
       let products = await response.json();
@@ -85,7 +92,12 @@ export const useProductStore = create<ProductState>((set, get) => ({
 
           response = await fetch('/api/products');
           if (!response.ok) {
-            throw new Error('Failed to fetch products after seeding');
+             let errorDetails = `Failed to fetch products after seeding: ${response.status} ${response.statusText}`;
+             try {
+                const errorBody = await response.json();
+                errorDetails = errorBody.error || errorDetails;
+             } catch(e) {}
+            throw new Error(errorDetails);
           }
           products = await response.json();
         } catch (seedError: any) {
