@@ -3,7 +3,6 @@
 
 import { create } from 'zustand';
 import type { Product } from '@/lib/types';
-import { getProducts } from '@/lib/data';
 
 interface ProductState {
   products: Product[];
@@ -59,13 +58,16 @@ export const useProductStore = create<ProductState>((set, get) => ({
   error: null,
   fetchProducts: async () => {
     // Avoid refetching if products are already loaded
-    if (get().products.length > 0) {
-      set({ isLoading: false });
+    if (get().products.length > 0 && !get().isLoading) {
       return;
     }
     set({ isLoading: true, error: null });
     try {
-      const products = await getProducts();
+      const response = await fetch('/api/products');
+      if (!response.ok) {
+        throw new Error('Failed to fetch products');
+      }
+      const products = await response.json();
       const { featured, newArrivals, bestRated, bestSellers, trending } = computeDerivedProducts(products);
       set({ 
         products, 
@@ -81,7 +83,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
        // Fallback to dummy data is handled in getProducts, but we can set an error state
       set({
         isLoading: false,
-        error: 'Could not fetch products. Displaying sample data.',
+        error: 'Could not fetch products. Please try refreshing the page.',
       });
     }
   },
@@ -172,5 +174,3 @@ export const useProductStore = create<ProductState>((set, get) => ({
     })
   }
 }));
-
-    

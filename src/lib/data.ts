@@ -14,11 +14,7 @@ import OrderModel from '@/models/Order';
 export async function getProducts(): Promise<Product[]> {
   try {
     await dbConnect();
-    const products = await ProductModel.find({}).lean();
-    // The .lean() method returns a plain JavaScript object, not a Mongoose document.
-    // Mongoose documents have a lot of internal state for change tracking.
-    // Using .lean() is faster and uses less memory.
-    // We need to convert the _id to a string for consistency.
+    const products = await ProductModel.find({}).sort({ dateAdded: -1 }).lean();
     return products.map(p => ({ ...p, _id: p._id.toString() })) as Product[];
   } catch (error) {
     console.error("Failed to fetch products from DB, falling back to dummy data.", error);
@@ -40,17 +36,16 @@ export function getProductsSync(): Product[] {
 /**
  * Fetches a single product by its ID from the database.
  */
-export async function getProductById(id: string): Promise<Product | undefined> {
+export async function getProductById(id: string): Promise<Product | null> {
   try {
-    await dbConnect();
-    const product = await ProductModel.findOne({ id: id }).lean();
-    if (product) {
-      return { ...product, _id: product._id.toString() } as Product;
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/products/${id}`);
+    if (!response.ok) {
+        return null;
     }
-    return undefined;
-  } catch (error: any) {
-    console.error(`Failed to fetch product ${id} from DB, falling back to dummy data.`, error);
-    return dummyProducts.find(p => p.id === id);
+    return await response.json();
+  } catch (error) {
+    console.error(`Failed to fetch product ${id} from API, returning null.`, error);
+    return null;
   }
 }
 

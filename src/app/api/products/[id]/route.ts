@@ -1,24 +1,35 @@
 
 import { NextResponse } from 'next/server';
 import type { Product } from '@/lib/types';
+import dbConnect from '@/lib/dbConnect';
+import ProductModel from '@/models/Product';
 import { dummyProducts } from '@/lib/dummy-products';
 
-// In a real application, this data would come from a database.
-let products: Product[] = [...dummyProducts];
-
+// Fallback function in case DB fails
+function getDummyProductById(id: string): Product | undefined {
+    return dummyProducts.find(p => p.id === id);
+}
 
 export async function GET(
     request: Request,
     { params }: { params: { id: string } }
 ) {
     const { id } = params;
-    const product = products.find(p => p.id === id);
+    try {
+        await dbConnect();
+        const product = await ProductModel.findOne({ id: id }).lean();
 
-    if (product) {
-        // Simulate a delay to mimic a real API call
-        await new Promise(resolve => setTimeout(resolve, 300));
-        return NextResponse.json(product);
-    } else {
+        if (product) {
+            return NextResponse.json({ ...product, _id: product._id.toString() });
+        } else {
+            return new NextResponse('Product not found', { status: 404 });
+        }
+    } catch (error) {
+        console.error(`Error fetching product ${id} from DB`, error);
+        const dummyProduct = getDummyProductById(id);
+        if (dummyProduct) {
+            return NextResponse.json(dummyProduct);
+        }
         return new NextResponse('Product not found', { status: 404 });
     }
 }
@@ -29,27 +40,23 @@ export async function PUT(
 ) {
     const { id } = params;
     try {
-        const updatedData: Product = await request.json();
+        await dbConnect();
+        const updatedData: Partial<Product> = await request.json();
         
-        const productIndex = products.findIndex(p => p.id === id);
+        const updatedProduct = await ProductModel.findOneAndUpdate(
+            { id: id },
+            { $set: updatedData },
+            { new: true, runValidators: true }
+        ).lean();
 
-        if (productIndex === -1) {
+        if (!updatedProduct) {
             return new NextResponse('Product not found', { status: 404 });
         }
 
-        // In a real app, you'd validate the updatedData here.
-        // For this demo, we'll just merge it.
-        products[productIndex] = { ...products[productIndex], ...updatedData };
-        
-        // Simulate a delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        return NextResponse.json(products[productIndex]);
+        return NextResponse.json({ ...updatedProduct, _id: updatedProduct._id.toString() });
 
     } catch (error) {
         console.error("Failed to update product", error);
-        // If an error occurs, the server state remains unchanged (dummy data).
-        // A real app would have more robust error handling and transactions.
         return new NextResponse('Error updating product', { status: 500 });
     }
 }
@@ -59,16 +66,17 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     const { id } = params;
-    const productIndex = products.findIndex(p => p.id === id);
+    try {
+        await dbConnect();
+        const result = await ProductModel.deleteOne({ id: id });
 
-    if (productIndex === -1) {
-        return new NextResponse('Product not found', { status: 404 });
+        if (result.deletedCount === 0) {
+            return new NextResponse('Product not found', { status: 404 });
+        }
+
+        return new NextResponse(null, { status: 204 }); // No Content
+    } catch (error) {
+        console.error("Failed to delete product", error);
+        return new NextResponse('Error deleting product', { status: 500 });
     }
-
-    products.splice(productIndex, 1);
-
-    // Simulate a delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    return new NextResponse(null, { status: 204 }); // No Content
 }
