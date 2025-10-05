@@ -24,13 +24,9 @@ export async function GET(
         } else {
             return new NextResponse('Product not found', { status: 404 });
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error(`Error fetching product ${id} from DB`, error);
-        const dummyProduct = getDummyProductById(id);
-        if (dummyProduct) {
-            return NextResponse.json(dummyProduct);
-        }
-        return new NextResponse('Product not found', { status: 404 });
+        return NextResponse.json({ error: `Failed to fetch product: ${error.message}` }, { status: 500 });
     }
 }
 
@@ -55,9 +51,9 @@ export async function PUT(
 
         return NextResponse.json({ ...updatedProduct, _id: updatedProduct._id.toString() });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to update product", error);
-        return new NextResponse('Error updating product', { status: 500 });
+        return NextResponse.json({ error: `Failed to update product: ${error.message}` }, { status: 500 });
     }
 }
 
@@ -75,8 +71,8 @@ export async function DELETE(
         }
 
         return new NextResponse(null, { status: 204 }); // No Content
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to delete product", error);
-        return new NextResponse('Error deleting product', { status: 500 });
+        return NextResponse.json({ error: `Failed to delete product: ${error.message}` }, { status: 500 });
     }
 }

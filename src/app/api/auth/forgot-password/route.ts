@@ -1,12 +1,17 @@
 
-
 import dbConnect from "@/lib/dbConnect";
 import User from "@/models/User";
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail } from "@/lib/mailer";
 
 export async function POST(request: NextRequest) {
-    await dbConnect();
+    try {
+        await dbConnect();
+    } catch (dbError: any) {
+        console.error("Database connection failed:", dbError);
+        return NextResponse.json({ error: "Could not connect to the database. Please try again later.", details: dbError.message }, { status: 500 });
+    }
+
     try {
         const { email } = await request.json();
         const user = await User.findOne({ email });

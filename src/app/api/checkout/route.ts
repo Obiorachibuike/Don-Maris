@@ -17,7 +17,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing items or email" }, { status: 400 });
     }
     
-    await dbConnect();
+    try {
+        await dbConnect();
+    } catch (dbError: any) {
+        console.error("Database connection failed:", dbError);
+        return NextResponse.json({ error: "Could not connect to the database. Please try again later.", details: dbError.message }, { status: 500 });
+    }
     const user = await User.findOne({ email: email });
 
     const country = user?.countryCode || 'NG'; // Default to Nigeria if user or countryCode is not found

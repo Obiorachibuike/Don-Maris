@@ -8,9 +8,9 @@ import jwt from "jsonwebtoken";
 export async function POST(request: NextRequest) {
     try {
         await dbConnect();
-    } catch (dbError) {
+    } catch (dbError: any) {
         console.error("Database connection failed:", dbError);
-        return NextResponse.json({ error: "Could not connect to the database. Please try again later." }, { status: 500 });
+        return NextResponse.json({ error: "Could not connect to the database. Please try again later.", details: dbError.message }, { status: 500 });
     }
 
     try {

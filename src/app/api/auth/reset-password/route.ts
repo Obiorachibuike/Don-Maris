@@ -5,7 +5,13 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: NextRequest) {
-    await dbConnect();
+    try {
+        await dbConnect();
+    } catch (dbError: any) {
+        console.error("Database connection failed:", dbError);
+        return NextResponse.json({ error: "Could not connect to the database. Please try again later.", details: dbError.message }, { status: 500 });
+    }
+
     try {
         const { token, password } = await request.json();
 
