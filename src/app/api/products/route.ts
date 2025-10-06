@@ -1,11 +1,11 @@
 
 import { NextResponse } from 'next/server';
 import { getProducts } from '@/lib/data';
-import dbConnect from '@/lib/dbConnect';
+import { connectDB } from '@/lib/dbConnect';
 
 export async function GET(request: Request) {
     try {
-        await dbConnect();
+        await connectDB();
     } catch (dbError: any) {
         console.error("Error connecting to database in /api/products:", dbError);
         return NextResponse.json(

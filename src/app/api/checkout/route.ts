@@ -2,7 +2,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import Stripe from "stripe";
 import type { CartItem } from "@/lib/types";
-import dbConnect from "@/lib/dbConnect";
+import { connectDB } from "@/lib/dbConnect";
 import User from "@/models/User";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -11,7 +11,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: NextRequest) {
   try {
-    await dbConnect();
+    await connectDB();
   } catch (dbError: any) {
       console.error("Database connection failed:", dbError);
       return NextResponse.json({ error: "Could not connect to the database. Please try again later.", details: dbError.message }, { status: 500 });
