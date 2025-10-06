@@ -85,7 +85,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
           const seedResponse = await fetch('/api/seed');
           if (!seedResponse.ok) {
             const seedError = await seedResponse.json();
-            throw new Error(`Seeding failed: ${seedError.message || 'Unknown error'}`);
+            throw new Error(`Seeding failed: ${seedError.error || seedError.message || 'Unknown error'}`);
           }
           console.log("Database seeded successfully.");
 
