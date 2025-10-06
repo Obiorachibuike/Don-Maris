@@ -37,11 +37,9 @@ export function Header() {
     { href: '/recommendations', label: 'AI Recommender', icon: Sparkles },
     { href: '/about', label: 'About', icon: Info },
     { href: '/contact', label: 'Contact', icon: Mail },
+    { href: '/profile', label: 'Profile', icon: UserIcon },
+    { href: '/admin', label: 'Admin', icon: LayoutDashboard },
   ];
-  
-  if (user?.role === 'admin') {
-      navLinks.push({ href: '/admin', label: 'Admin', icon: LayoutDashboard });
-  }
 
   const totalItems = items.length;
 
