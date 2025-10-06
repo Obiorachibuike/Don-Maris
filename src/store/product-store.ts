@@ -4,6 +4,7 @@
 import { create } from 'zustand';
 import type { Product } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
+import { dummyProducts } from '@/lib/dummy-products';
 
 interface ProductState {
   products: Product[];
@@ -58,74 +59,51 @@ export const useProductStore = create<ProductState>((set, get) => ({
   isLoading: true,
   error: null,
   fetchProducts: async () => {
-    if (get().products.length > 0 || (get().isLoading === false && get().products.length > 0)) {
+    if (get().products.length > 0) {
       if (get().isLoading) set({ isLoading: false });
       return;
     }
     set({ isLoading: true, error: null });
     try {
-      let response = await fetch('/api/products');
+      const response = await fetch('/api/products');
       
       if (!response.ok) {
-        let errorDetails = `Failed to fetch products: ${response.status} ${response.statusText}`;
-        try {
-            const errorBody = await response.json();
-            errorDetails = errorBody.error || errorDetails;
-        } catch (e) {
-            // response body is not json or empty
-        }
-        throw new Error(errorDetails);
+        throw new Error('Failed to connect to the database.');
       }
       
-      let products = await response.json();
+      const productsFromDb = await response.json();
 
-      if (products.length === 0) {
-        console.log("No products found, attempting to seed database...");
-        try {
-          const seedResponse = await fetch('/api/seed');
-          if (!seedResponse.ok) {
-            const seedError = await seedResponse.json();
-            throw new Error(`Seeding failed: ${seedError.error || seedError.message || 'Unknown error'}`);
-          }
-          console.log("Database seeded successfully.");
-
-          response = await fetch('/api/products');
-          if (!response.ok) {
-             let errorDetails = `Failed to fetch products after seeding: ${response.status} ${response.statusText}`;
-             try {
-                const errorBody = await response.json();
-                errorDetails = errorBody.error || errorDetails;
-             } catch(e) {}
-            throw new Error(errorDetails);
-          }
-          products = await response.json();
-        } catch (seedError: any) {
-          console.error("Seeding process failed:", seedError);
-          throw seedError;
-        }
+      if (productsFromDb.length > 0) {
+        const derived = computeDerivedProducts(productsFromDb);
+        set({ 
+          products: productsFromDb, 
+          ...derived,
+          isLoading: false 
+        });
+      } else {
+        // If DB is empty, fall back to dummy data
+        console.warn("Database is empty. Falling back to local dummy data.");
+        const derived = computeDerivedProducts(dummyProducts);
+        set({
+            products: dummyProducts,
+            ...derived,
+            isLoading: false,
+        });
       }
 
-      const { featured, newArrivals, bestRated, bestSellers, trending } = computeDerivedProducts(products);
-      set({ 
-        products, 
-        featuredProducts: featured,
-        newArrivals,
-        bestRated,
-        bestSellers,
-        trending,
-        isLoading: false 
-      });
     } catch (error: any) {
-      const errorMessage = error.message || 'Could not fetch products. Please try refreshing the page.';
-      console.error("Failed to fetch products from API.", error);
-      set({
-        isLoading: false,
-        error: errorMessage,
-      });
+      console.error("Failed to fetch products from API, falling back to dummy data.", error);
       toast({
         variant: 'destructive',
-        title: 'Error Fetching Products',
-        description: errorMessage
+        title: 'Database Connection Failed',
+        description: 'Could not fetch products from the database. Displaying local data.',
+      });
+      const derived = computeDerivedProducts(dummyProducts);
+      set({
+        products: dummyProducts,
+        ...derived,
+        isLoading: false,
+        error: error.message,
       });
     }
   },
