@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Smartphone, Sparkles, Home, ShoppingCart, Package, Info, Mail, Menu, LayoutDashboard, Wallet, LogIn, UserPlus, LogOut } from 'lucide-react';
+import { Smartphone, Sparkles, Home, ShoppingCart, Package, Info, Mail, Menu, LayoutDashboard, Wallet, LogIn, UserPlus, LogOut, User as UserIcon } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -117,13 +117,21 @@ export function Header() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56" align="end" forceMount>
-                      <DropdownMenuLabel className="font-normal">
-                        <div className="flex flex-col space-y-1">
-                          <p className="text-sm font-medium leading-none">{user.name}</p>
-                          <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                        </div>
-                      </DropdownMenuLabel>
+                        <DropdownMenuLabel className="font-normal">
+                          <Link href="/profile" className="block hover:bg-muted -m-1 p-1 rounded-md transition-colors">
+                            <div className="flex flex-col space-y-1">
+                              <p className="text-sm font-medium leading-none">{user.name}</p>
+                              <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                            </div>
+                          </Link>
+                        </DropdownMenuLabel>
                       <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                           <Link href="/profile">
+                                <UserIcon className="mr-2 h-4 w-4" />
+                                <span>Profile</span>
+                           </Link>
+                        </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => logout()}>
                         <LogOut className="mr-2 h-4 w-4" />
                         <span>Log out</span>
