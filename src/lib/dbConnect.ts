@@ -39,6 +39,7 @@ export async function connectDB() {
     return cached.conn;
   } catch (error: any) {
     // If connection fails or URI is invalid, throw the error
+    cached.promise = null; // Reset promise on failure
     throw new Error("❌ Invalid MongoDB URI or connection failed: " + error.message);
   }
 }

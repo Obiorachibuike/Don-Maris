@@ -7,11 +7,8 @@ export async function GET(request: Request) {
     try {
         await connectDB();
     } catch (dbError: any) {
-        console.error("Error connecting to database in /api/products:", dbError);
-        return NextResponse.json(
-            { error: "Could not connect to the database.", details: dbError.message },
-            { status: 500 }
-        );
+        console.error("Database connection failed:", dbError);
+        return NextResponse.json({ error: "Could not connect to the database. Please try again later.", details: dbError.message }, { status: 500 });
     }
     
     try {
@@ -25,3 +22,4 @@ export async function GET(request: Request) {
         );
     }
 }
+
