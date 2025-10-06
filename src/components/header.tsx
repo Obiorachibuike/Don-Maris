@@ -132,6 +132,15 @@ export function Header() {
                                 <span>Profile</span>
                            </Link>
                         </DropdownMenuItem>
+                        {user.role === 'admin' && (
+                            <DropdownMenuItem asChild>
+                                <Link href="/admin">
+                                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                                    <span>Admin</span>
+                                </Link>
+                            </DropdownMenuItem>
+                        )}
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => logout()}>
                         <LogOut className="mr-2 h-4 w-4" />
                         <span>Log out</span>
