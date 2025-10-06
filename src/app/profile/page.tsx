@@ -15,20 +15,27 @@ import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
     const { user, isLoading } = useSession();
-    const router = useRouter();
     const [userOrders, setUserOrders] = useState<Order[]>([]);
 
-    useEffect(() => {
-        if (!isLoading && !user) {
-            router.push('/login');
-        }
-        if (user) {
-            // In a real app, this would be an API call
-            setUserOrders(getOrdersByUserId(user.id));
-        }
-    }, [user, isLoading, router]);
+    const mockUser = {
+        id: 'CUST_MOCK',
+        name: 'Test User',
+        email: 'test@example.com',
+        role: 'customer',
+        dateJoined: new Date().toISOString(),
+        avatar: 'https://placehold.co/100x100.png',
+        ledgerBalance: 42.50,
+    };
+    
+    const displayUser = user || mockUser;
 
-    if (isLoading || !user) {
+    useEffect(() => {
+        if (displayUser && displayUser.role === 'customer') {
+            setUserOrders(getOrdersByUserId(displayUser.id));
+        }
+    }, [displayUser]);
+
+    if (isLoading && !user) {
         return (
             <div className="container mx-auto flex min-h-[80vh] items-center justify-center">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -37,7 +44,7 @@ export default function ProfilePage() {
     }
     
     const totalSpent = userOrders.reduce((acc, order) => acc + order.amount, 0);
-    const isCustomer = user.role === 'customer';
+    const isCustomer = displayUser.role === 'customer';
 
     return (
         <div className="container mx-auto px-4 py-12 space-y-6">
@@ -45,13 +52,13 @@ export default function ProfilePage() {
                 <CardHeader>
                     <div className="flex flex-col sm:flex-row items-center gap-4">
                         <Avatar className="w-24 h-24 border-2 border-primary">
-                            <AvatarImage src={(user as any).avatar} alt={user.name} />
-                            <AvatarFallback className="text-3xl">{user.name.charAt(0)}</AvatarFallback>
+                            <AvatarImage src={(displayUser as any).avatar} alt={displayUser.name} />
+                            <AvatarFallback className="text-3xl">{displayUser.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <CardTitle className="text-3xl font-headline">{user.name}</CardTitle>
+                            <CardTitle className="text-3xl font-headline">{displayUser.name}</CardTitle>
                             <CardDescription className="flex items-center gap-2 mt-1">
-                                <Badge variant="secondary" className="capitalize text-sm">{user.role}</Badge>
+                                <Badge variant="secondary" className="capitalize text-sm">{displayUser.role}</Badge>
                             </CardDescription>
                         </div>
                     </div>
@@ -60,12 +67,12 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-muted-foreground">
                         <div className="flex items-center gap-3">
                             <Mail className="h-5 w-5" />
-                            <a href={`mailto:${user.email}`} className="hover:text-primary transition-colors">{user.email}</a>
+                            <a href={`mailto:${displayUser.email}`} className="hover:text-primary transition-colors">{displayUser.email}</a>
                         </div>
-                         {(user as any).dateJoined && (
+                         {(displayUser as any).dateJoined && (
                             <div className="flex items-center gap-3">
                                 <Calendar className="h-5 w-5" />
-                                <p>Joined on {new Date((user as any).dateJoined).toLocaleDateString()}</p>
+                                <p>Joined on {new Date((displayUser as any).dateJoined).toLocaleDateString()}</p>
                             </div>
                          )}
                     </div>
@@ -99,8 +106,8 @@ export default function ProfilePage() {
                             <Wallet className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className={`text-2xl font-bold ${user.ledgerBalance && user.ledgerBalance > 0 ? 'text-destructive' : ''}`}>
-                                ${user.ledgerBalance?.toFixed(2) || '0.00'}
+                            <div className={`text-2xl font-bold ${displayUser.ledgerBalance && displayUser.ledgerBalance > 0 ? 'text-destructive' : ''}`}>
+                                ${displayUser.ledgerBalance?.toFixed(2) || '0.00'}
                             </div>
                         </CardContent>
                     </Card>
