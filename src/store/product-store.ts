@@ -59,21 +59,23 @@ export const useProductStore = create<ProductState>((set, get) => ({
   isLoading: true,
   error: null,
   fetchProducts: async () => {
+    // Only fetch if products are not already loaded
     if (get().products.length > 0) {
-      if (get().isLoading) set({ isLoading: false });
+      set({ isLoading: false });
       return;
     }
+    
     set({ isLoading: true, error: null });
     try {
       const response = await fetch('/api/products');
       
       if (!response.ok) {
-        throw new Error('Failed to connect to the database.');
+        throw new Error('Failed to fetch from the database.');
       }
       
       const productsFromDb = await response.json();
 
-      if (productsFromDb.length > 0) {
+      if (productsFromDb && productsFromDb.length > 0) {
         const derived = computeDerivedProducts(productsFromDb);
         set({ 
           products: productsFromDb, 
@@ -81,8 +83,8 @@ export const useProductStore = create<ProductState>((set, get) => ({
           isLoading: false 
         });
       } else {
-        // If DB is empty, fall back to dummy data
-        console.warn("Database is empty. Falling back to local dummy data.");
+        // If DB is empty or fetch returns nothing, fall back to dummy data
+        console.warn("Database is empty or fetch failed. Falling back to local dummy data.");
         const derived = computeDerivedProducts(dummyProducts);
         set({
             products: dummyProducts,
@@ -95,8 +97,8 @@ export const useProductStore = create<ProductState>((set, get) => ({
       console.error("Failed to fetch products from API, falling back to dummy data.", error);
       toast({
         variant: 'destructive',
-        title: 'Database Connection Failed',
-        description: 'Could not fetch products from the database. Displaying local data.',
+        title: 'Network Error',
+        description: 'Could not fetch products. Displaying local data.',
       });
       const derived = computeDerivedProducts(dummyProducts);
       set({
