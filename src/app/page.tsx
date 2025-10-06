@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useProductStore } from '@/store/product-store';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
@@ -17,12 +17,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StarRating } from '@/components/star-rating';
 
 export default function Home() {
-  const { featuredProducts, newArrivals, bestSellers, bestRated, trending, isLoading, fetchProducts } = useProductStore();
+  const { featuredProducts, newArrivals, bestSellers, bestRated, trending, isLoading } = useProductStore();
   
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
-
   const plugin = useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true })
   )
@@ -342,5 +338,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

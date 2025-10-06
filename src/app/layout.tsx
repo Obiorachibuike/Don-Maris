@@ -6,6 +6,7 @@ import { Footer } from '@/components/footer';
 import { Toaster } from "@/components/ui/toaster"
 import { CartProvider } from '@/hooks/use-cart';
 import { SessionProvider } from '@/contexts/SessionProvider';
+import { ProductStoreInitializer } from '@/store/product-store-initializer';
 
 export const metadata: Metadata = {
   title: 'Don Maris Accessories',
@@ -28,6 +29,7 @@ export default function RootLayout({
       <body className="font-body antialiased flex flex-col min-h-screen bg-background">
         <SessionProvider>
           <CartProvider>
+            <ProductStoreInitializer />
             <Header />
             <main className="flex-grow">{children}</main>
             <Footer />
