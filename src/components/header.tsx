@@ -19,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { buttonVariants } from './ui/button';
 
 export function Header() {
   const pathname = usePathname();
@@ -46,20 +47,19 @@ export function Header() {
   const NavLink = ({ href, label, icon: Icon, isMobile = false }: { href: string, label: string, icon: React.ElementType, isMobile?: boolean }) => {
     const isActive = (href === '/' && pathname === '/') || (href !== '/' && pathname.startsWith(href) && href.length > 1);
     return (
-      <Button
-        variant="ghost"
-        asChild
-        className={cn(
-          isActive && 'bg-accent text-accent-foreground',
-          isMobile && 'w-full justify-start text-lg'
-        )}
-        onClick={() => isMobile && setSheetOpen(false)}
-      >
-        <Link href={href} className="flex items-center gap-4">
-          <Icon className="h-5 w-5" />
-          {label}
+        <Link 
+            href={href} 
+            className={cn(
+                buttonVariants({ variant: 'ghost' }),
+                'flex items-center gap-4',
+                isActive && 'bg-accent text-accent-foreground',
+                isMobile && 'w-full justify-start text-lg'
+            )}
+            onClick={() => isMobile && setSheetOpen(false)}
+        >
+            <Icon className="h-5 w-5" />
+            {label}
         </Link>
-      </Button>
     );
   };
 
