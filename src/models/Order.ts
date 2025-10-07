@@ -1,6 +1,6 @@
 
 import mongoose from 'mongoose';
-import type { Order as OrderType } from '@/lib/types';
+import type { Order as OrderType, PrintHistoryEntry } from '@/lib/types';
 
 const OrderItemSchema = new mongoose.Schema({
   productId: { type: String, required: true },
@@ -12,6 +12,11 @@ const CustomerSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true },
     avatar: { type: String, required: true },
+}, { _id: false });
+
+const PrintHistoryEntrySchema = new mongoose.Schema<PrintHistoryEntry>({
+    printedBy: { type: String, required: true },
+    printedAt: { type: String, required: true },
 }, { _id: false });
 
 
@@ -41,7 +46,8 @@ const OrderSchema = new mongoose.Schema<OrderType>({
   amountPaid: {
       type: Number,
       required: true
-  }
+  },
+  printHistory: [PrintHistoryEntrySchema],
 });
 
 export default mongoose.models.Order || mongoose.model<OrderType>('Order', OrderSchema);

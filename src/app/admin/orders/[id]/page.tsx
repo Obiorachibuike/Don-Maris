@@ -39,7 +39,7 @@ export default function OrderDetailsPage() {
     const { user } = useSession();
     const orderId = params.id as string;
     
-    const [order, setOrder] = useState(() => getOrderDetails(orderId));
+    const [order, setOrder] = useState<Order | null | undefined>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
@@ -49,7 +49,28 @@ export default function OrderDetailsPage() {
       fetchProducts();
     }, [fetchProducts]);
 
-    if (!order) {
+    useEffect(() => {
+        async function fetchOrder() {
+            if (orderId) {
+                try {
+                    const response = await fetch(`/api/orders/${orderId}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        setOrder(data);
+                    } else {
+                        // Fallback to dummy data if API fails
+                        setOrder(getOrderDetails(orderId));
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch order, using fallback.", error);
+                    setOrder(getOrderDetails(orderId));
+                }
+            }
+        }
+        fetchOrder();
+    }, [orderId]);
+
+    if (order === undefined) {
         return (
             <Card>
                 <CardHeader>
@@ -60,6 +81,31 @@ export default function OrderDetailsPage() {
                 </CardContent>
             </Card>
         )
+    }
+
+    if (!order) {
+         return (
+            <div className="space-y-6">
+                <Skeleton className="h-8 w-1/4" />
+                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                     <Card className="lg:col-span-2">
+                         <CardHeader>
+                            <Skeleton className="h-6 w-1/3" />
+                         </CardHeader>
+                         <CardContent>
+                            <div className="space-y-2">
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
+                            </div>
+                         </CardContent>
+                     </Card>
+                      <div className="space-y-6">
+                        <Skeleton className="h-48 w-full" />
+                        <Skeleton className="h-48 w-full" />
+                     </div>
+                 </div>
+            </div>
+         )
     }
 
     const orderItems = order.items.map(item => {

@@ -10,7 +10,8 @@ import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import type { CartItem, PaymentStatus } from '@/lib/types';
 import { ArrowLeft, Printer } from 'lucide-react';
-import { addPrintRecord } from '@/lib/dummy-orders';
+import { useToast } from '@/hooks/use-toast';
+
 
 interface CustomerDetails {
     name: string;
@@ -34,6 +35,7 @@ interface OrderDetails {
 export default function InvoicePage() {
     const [order, setOrder] = useState<OrderDetails | null>(null);
     const router = useRouter();
+    const { toast } = useToast();
 
     useEffect(() => {
         const savedOrder = sessionStorage.getItem('don_maris_order');
@@ -44,10 +46,23 @@ export default function InvoicePage() {
         }
     }, [router]);
 
-    const handlePrint = () => {
+    const handlePrint = async () => {
         if (order) {
-            addPrintRecord(order.invoiceId, order.printedBy);
-            window.print();
+            try {
+                await fetch(`/api/orders/${order.invoiceId}/print`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ printedBy: order.printedBy }),
+                });
+                window.print();
+            } catch (error) {
+                console.error("Failed to record print history:", error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: 'Could not record print history. Please try again.'
+                });
+            }
         }
     };
 
