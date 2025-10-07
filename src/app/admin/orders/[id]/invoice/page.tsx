@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import type { CartItem, PaymentStatus } from '@/lib/types';
 import { ArrowLeft, Printer } from 'lucide-react';
+import { addPrintRecord } from '@/lib/dummy-orders';
 
 interface CustomerDetails {
     name: string;
@@ -27,6 +28,7 @@ interface OrderDetails {
     date: string;
     customer: CustomerDetails;
     paymentStatus: PaymentStatus;
+    printedBy: string;
 }
 
 export default function InvoicePage() {
@@ -38,11 +40,16 @@ export default function InvoicePage() {
         if (savedOrder) {
             setOrder(JSON.parse(savedOrder));
         } else {
-            // If there's no order data, maybe redirect to the main orders page
-            // to avoid being on a broken page.
             router.push('/admin/orders');
         }
     }, [router]);
+
+    const handlePrint = () => {
+        if (order) {
+            addPrintRecord(order.invoiceId, order.printedBy);
+            window.print();
+        }
+    };
 
     if (!order) {
         return (
@@ -154,7 +161,7 @@ export default function InvoicePage() {
                                 Back to Order
                             </Link>
                         </Button>
-                        <Button onClick={() => window.print()}>
+                        <Button onClick={handlePrint}>
                             <Printer className="mr-2 h-4 w-4" />
                             Print Invoice
                         </Button>

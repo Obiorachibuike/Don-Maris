@@ -1,4 +1,5 @@
 
+
 export type ProductType = 'Power Flex' | 'Charging Flex' | 'Screen' | 'Backglass' | 'Glass' | 'Tools';
 
 export type Review = {
@@ -69,6 +70,11 @@ export interface User {
   countryCode?: string;
 }
 
+export interface PrintHistoryEntry {
+  printedBy: string;
+  printedAt: string;
+}
+
 export interface Order {
   id: string;
   customer: Customer;
@@ -81,4 +87,5 @@ export interface Order {
   deliveryMethod: DeliveryMethod;
   paymentStatus: OrderPaymentStatus;
   amountPaid: number;
+  printHistory?: PrintHistoryEntry[];
 }

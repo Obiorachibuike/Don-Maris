@@ -1,6 +1,6 @@
 
 
-import type { Order, DeliveryMethod, OrderPaymentStatus } from './types';
+import type { Order, DeliveryMethod, OrderPaymentStatus, PrintHistoryEntry } from './types';
 
 // More detailed mock data for orders, including items.
 export const dummyOrders: Order[] = [
@@ -19,6 +19,7 @@ export const dummyOrders: Order[] = [
         ],
         paymentStatus: 'Paid',
         amountPaid: 219.95,
+        printHistory: [],
     },
     {
         id: '123457',
@@ -34,6 +35,7 @@ export const dummyOrders: Order[] = [
         ],
         paymentStatus: 'Paid',
         amountPaid: 145.00,
+        printHistory: [],
     },
     {
         id: '123458',
@@ -51,6 +53,7 @@ export const dummyOrders: Order[] = [
         ],
         paymentStatus: 'Paid',
         amountPaid: 92.48,
+        printHistory: [],
     },
     {
         id: '123459',
@@ -66,6 +69,7 @@ export const dummyOrders: Order[] = [
         ],
         paymentStatus: 'Not Paid',
         amountPaid: 0,
+        printHistory: [],
     },
      {
         id: '123460',
@@ -81,6 +85,7 @@ export const dummyOrders: Order[] = [
         ],
         paymentStatus: 'Paid',
         amountPaid: 189.99,
+        printHistory: [],
     },
     ...Array.from({ length: 50 }, (_, i) => {
         const orderId = `${123461 + i}`;
@@ -110,6 +115,7 @@ export const dummyOrders: Order[] = [
             ],
             paymentStatus,
             amountPaid: parseFloat(amountPaid.toFixed(2)),
+            printHistory: [],
         };
     })
 ];
@@ -129,4 +135,28 @@ export function updateOrder(orderId: string, updatedItems: { productId: string, 
     dummyOrders[orderIndex] = updatedOrderData;
 
     return updatedOrderData;
+}
+
+export function addPrintRecord(orderId: string, printedBy: string): Order | undefined {
+    const orderIndex = dummyOrders.findIndex(o => o.id === orderId);
+    if (orderIndex === -1) {
+        return undefined;
+    }
+
+    const newPrintEntry: PrintHistoryEntry = {
+        printedBy,
+        printedAt: new Date().toISOString(),
+    };
+
+    const currentOrder = dummyOrders[orderIndex];
+    const updatedHistory = [...(currentOrder.printHistory || []), newPrintEntry];
+
+    const updatedOrder = {
+        ...currentOrder,
+        printHistory: updatedHistory,
+    };
+    
+    dummyOrders[orderIndex] = updatedOrder;
+    
+    return updatedOrder;
 }

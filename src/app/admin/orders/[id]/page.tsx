@@ -24,20 +24,24 @@ import type { CartItem, Order } from '@/lib/types';
 import { useState, useEffect } from 'react';
 import { EditOrderForm } from '@/components/edit-order-form';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PrintConfirmationDialog } from '@/components/print-confirmation-dialog';
+import { useSession } from '@/contexts/SessionProvider';
 
 const getOrderDetails = (id: string): Order | undefined => {
     // Return a copy to prevent direct mutation
     const order = dummyOrders.find(order => order.id === id);
-    return order ? { ...order, items: [...order.items] } : undefined;
+    return order ? { ...order, items: [...order.items], printHistory: [...(order.printHistory || [])] } : undefined;
 }
 
 export default function OrderDetailsPage() {
     const params = useParams();
     const router = useRouter();
+    const { user } = useSession();
     const orderId = params.id as string;
     
     const [order, setOrder] = useState(() => getOrderDetails(orderId));
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
     const { products, fetchProducts, isLoading: areProductsLoading } = useProductStore();
     
@@ -70,7 +74,7 @@ export default function OrderDetailsPage() {
     const shipping = 5.00; // Example shipping cost
     const total = subtotal + shipping;
 
-    const handlePreviewInvoice = () => {
+    const navigateToInvoice = () => {
         if (areProductsLoading) return; // Prevent action if products are not loaded
         const cartItems: CartItem[] = order.items.map(item => {
             const product = products.find(p => p.id === item.productId);
@@ -95,14 +99,28 @@ export default function OrderDetailsPage() {
                 zip: order.shippingAddress.split(', ')[2].split(' ')[1],
             },
             paymentStatus: order.status === 'Fulfilled' ? 'paid' : 'unpaid',
+            printedBy: user?.name || "Unknown Admin",
         };
 
         sessionStorage.setItem('don_maris_order', JSON.stringify(invoiceData));
         router.push(`/admin/orders/${orderId}/invoice`);
     };
 
+    const handlePreviewInvoice = () => {
+        if (order?.printHistory && order.printHistory.length > 0) {
+            setIsPrintModalOpen(true);
+        } else {
+            navigateToInvoice();
+        }
+    };
+
     const handleOrderUpdate = (updatedOrder: Order) => {
         setOrder(updatedOrder);
+    }
+    
+    const handleForcePrint = () => {
+        navigateToInvoice();
+        setIsPrintModalOpen(false);
     }
 
     return (
@@ -234,6 +252,12 @@ export default function OrderDetailsPage() {
                     onOrderUpdate={handleOrderUpdate}
                 />
             )}
+             <PrintConfirmationDialog
+                isOpen={isPrintModalOpen}
+                setIsOpen={setIsPrintModalOpen}
+                onConfirm={handleForcePrint}
+                printHistory={order.printHistory || []}
+            />
         </>
     )
 }
