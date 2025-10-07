@@ -95,8 +95,8 @@ export function AddProductForm() {
     }
   };
 
-  const onSubmit = (data: ProductFormValues) => {
-    addProduct(data);
+  const onSubmit = async (data: ProductFormValues) => {
+    await addProduct(data);
     toast({
       title: 'Product Added',
       description: `The product "${data.name}" has been successfully added.`,

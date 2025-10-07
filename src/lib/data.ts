@@ -1,64 +1,55 @@
 
 import type { Product } from './types';
+import { connectDB } from './dbConnect';
 import ProductModel from '@/models/Product';
-import OrderModel from '@/models/Order';
-
+import { dummyProducts } from './dummy-products';
 
 /**
- * Fetches all products from the database. Assumes DB connection is already handled.
+ * Fetches all products from the database.
+ * If the database fetch fails or returns no products, it falls back to dummy data.
  * @returns A promise that resolves to an array of products.
  */
 export async function getProducts(): Promise<Product[]> {
-  const products = await ProductModel.find({}).sort({ dateAdded: -1 }).lean();
-  // A bit of a hack to serialize the _id to a string, which is what `JSON.stringify` does.
-  return JSON.parse(JSON.stringify(products));
-}
-
-/**
- * Fetches a single product by its ID from the database.
- */
-export async function getProductById(id: string): Promise<Product | null> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/products/${id}`);
-    if (!response.ok) {
-        return null;
+    await connectDB();
+    const products = await ProductModel.find({}).sort({ dateAdded: -1 }).lean();
+    if (products.length > 0) {
+      // A bit of a hack to serialize the _id to a string, which is what `JSON.stringify` does.
+      return JSON.parse(JSON.stringify(products));
     }
-    return await response.json();
+    // Fallback to dummy data if DB is empty
+    return dummyProducts; 
   } catch (error) {
-    console.error(`Failed to fetch product ${id} from API, returning null.`, error);
-    return null;
+    console.error("Database fetch failed, falling back to dummy data:", error);
+    return dummyProducts; // Fallback on error
   }
 }
 
 /**
- * Submits an order to the server.
- * @param orderData - The data for the order to be submitted.
- * @returns The response from the server.
+ * Fetches a single product by its ID. It first tries the database, then falls back to an API endpoint.
+ * This function exists for client components that can't directly access the DB.
  */
-export async function submitOrder(orderData: any) {
+export async function getProductById(id: string): Promise<Product | null> {
     try {
-        const newOrderId = `DM-${Date.now()}`;
-        const newOrder = new OrderModel({
-            ...orderData,
-            id: newOrderId,
-            customer: {
-              id: orderData.customer.email, // Using email as a stable customer ID
-              name: `${orderData.customer.firstName} ${orderData.customer.lastName}`,
-              email: orderData.customer.email,
-              avatar: 'https://placehold.co/100x100.png' // Default avatar
-            }
-        });
-        const savedOrder = await newOrder.save();
-        return { 
-            status: 'success', 
-            message: 'Order saved successfully',
-            id: savedOrder.id,
-        };
+        await connectDB();
+        const product = await ProductModel.findOne({ id: id }).lean();
+        if (product) {
+            return JSON.parse(JSON.stringify(product));
+        }
     } catch (error) {
-        console.error('Could not submit order to server.', error);
-        return {
-            status: 'error',
-            message: 'Failed to save order.'
-        };
+        console.error(`DB error fetching product ${id}.`, error);
+    }
+    
+    // Fallback to API if DB fails or product not found
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/products/${id}`);
+        if (!response.ok) {
+            return null;
+        }
+        return await response.json();
+    } catch (apiError) {
+        console.error(`API error fetching product ${id}.`, apiError);
+        // Final fallback to dummy data
+        return dummyProducts.find(p => p.id === id) || null;
     }
 }

@@ -16,8 +16,8 @@ interface ProductState {
   isLoading: boolean;
   error: string | null;
   fetchProducts: () => Promise<void>;
-  addProduct: (product: Omit<Product, 'id' | 'rating' | 'reviews' | 'dateAdded'>) => void;
-  editProduct: (productId: string, updatedData: Omit<Product, 'id' | 'rating' | 'reviews' | 'dateAdded'>) => Promise<void>;
+  addProduct: (product: Omit<Product, 'id' | 'rating' | 'reviews' | 'dateAdded' | 'totalSales' | 'stock'> & { stock: number }) => Promise<void>;
+  editProduct: (productId: string, updatedData: Partial<Omit<Product, 'id' | 'rating' | 'reviews' | 'dateAdded'>>) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
   decreaseStock: (productId: string, quantity: number) => void;
 }
@@ -37,13 +37,11 @@ const computeDerivedProducts = (products: Product[]) => {
     return a.id.localeCompare(b.id);
   }).slice(0, 8);
   
-  // Simulate best sellers by sorting by stock in descending order (assuming higher stock means it's a popular item that's restocked often)
   const bestSellers = [...products].sort((a, b) => {
     if (b.stock !== a.stock) return b.stock - a.stock;
     return a.id.localeCompare(b.id);
   }).slice(0, 8);
 
-  // Simulate trending products for now, e.g., by taking some from best sellers and new arrivals
   const trending = [...bestSellers.slice(0, 4), ...newArrivals.slice(0, 4)].filter((p, i, a) => a.findIndex(p2 => p2.id === p.id) === i).slice(0, 8);
 
   return { featured, newArrivals, bestRated, bestSellers, trending };
@@ -59,9 +57,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
   isLoading: true,
   error: null,
   fetchProducts: async () => {
-    // Only fetch if products are not already loaded
-    if (get().products.length > 0) {
-      set({ isLoading: false });
+    if (get().products.length > 0 && !get().isLoading) {
       return;
     }
     
@@ -73,7 +69,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
         throw new Error('Failed to fetch from the database.');
       }
       
-      const productsFromDb = await response.json();
+      const productsFromDb: Product[] = await response.json();
 
       if (productsFromDb && productsFromDb.length > 0) {
         const derived = computeDerivedProducts(productsFromDb);
@@ -83,22 +79,15 @@ export const useProductStore = create<ProductState>((set, get) => ({
           isLoading: false 
         });
       } else {
-        // If DB is empty or fetch returns nothing, fall back to dummy data
-        console.warn("Database is empty or fetch failed. Falling back to local dummy data.");
-        const derived = computeDerivedProducts(dummyProducts);
-        set({
-            products: dummyProducts,
-            ...derived,
-            isLoading: false,
-        });
+        throw new Error("No products found in database.");
       }
 
     } catch (error: any) {
       console.error("Failed to fetch products from API, falling back to dummy data.", error);
       toast({
         variant: 'destructive',
-        title: 'Network Error',
-        description: 'Could not fetch products. Displaying local data.',
+        title: 'API Error',
+        description: 'Could not fetch products. Displaying local fallback data.',
       });
       const derived = computeDerivedProducts(dummyProducts);
       set({
@@ -109,22 +98,41 @@ export const useProductStore = create<ProductState>((set, get) => ({
       });
     }
   },
-  addProduct: (newProductData) => {
-    const newProduct: Product = {
-        ...newProductData,
-        id: `prod-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-        rating: 0,
-        reviews: [],
-        dateAdded: new Date().toISOString().split('T')[0], // YYYY-MM-DD
-    };
-    set(state => {
-        const updatedProducts = [newProduct, ...state.products];
+  addProduct: async (newProductData) => {
+     try {
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newProductData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add product on server');
+      }
+
+      const newProductFromServer: Product = await response.json();
+
+      set(state => {
+        const updatedProducts = [newProductFromServer, ...state.products];
         const derived = computeDerivedProducts(updatedProducts);
         return {
             products: updatedProducts,
             ...derived
         };
-    });
+      });
+    } catch (error: any) {
+       const errorMessage = error.message || 'Failed to add product. Please try again.';
+        console.error("Failed to add product:", error);
+        set({ error: errorMessage });
+        toast({
+          variant: 'destructive',
+          title: 'Add Failed',
+          description: errorMessage,
+        });
+    }
   },
   editProduct: async (productId, updatedData) => {
     try {
@@ -144,7 +152,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
       const updatedProductFromServer: Product = await response.json();
 
       set(state => {
-        const updatedProducts = state.products.map(p => p.id === productId ? updatedProductFromServer : p);
+        const updatedProducts = state.products.map(p => p.id === productId ? { ...p, ...updatedProductFromServer } : p);
         const derived = computeDerivedProducts(updatedProducts);
         return {
             products: updatedProducts,
@@ -168,8 +176,8 @@ export const useProductStore = create<ProductState>((set, get) => ({
             method: 'DELETE',
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
+        if (!response.ok && response.status !== 204) {
+            const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || 'Failed to delete product on server');
         }
 
@@ -200,11 +208,8 @@ export const useProductStore = create<ProductState>((set, get) => ({
             }
             return p;
         });
-        const derived = computeDerivedProducts(updatedProducts);
-        return {
-            products: updatedProducts,
-            ...derived
-        };
+        // We don't need to recompute derived products here as stock changes don't affect them
+        return { products: updatedProducts };
     })
   }
 }));
