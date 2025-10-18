@@ -31,24 +31,21 @@ export async function getProducts(): Promise<Product[]> {
  */
 export async function getProductById(id: string): Promise<Product | null> {
     try {
-        await connectDB();
-        const product = await ProductModel.findOne({ id: id }).lean();
-        if (product) {
-            return JSON.parse(JSON.stringify(product));
-        }
-    } catch (error) {
-        console.error(`DB error fetching product ${id}.`, error);
-    }
-    
-    // Fallback to API if DB fails or product not found
-    try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/products/${id}`);
+        // Use fetch to call the API route, which is a server-side operation.
+        // This prevents the client component from importing server-only code.
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+        const response = await fetch(`${baseUrl}/api/products/${id}`);
+        
         if (!response.ok) {
-            return null;
+             // If API fails, fallback to dummy data
+            console.warn(`API failed for product ${id}, falling back to dummy data.`);
+            return dummyProducts.find(p => p.id === id) || null;
         }
+
         return await response.json();
+
     } catch (apiError) {
-        console.error(`API error fetching product ${id}.`, apiError);
+        console.error(`API error fetching product ${id}. Falling back to dummy data.`, apiError);
         // Final fallback to dummy data
         return dummyProducts.find(p => p.id === id) || null;
     }
