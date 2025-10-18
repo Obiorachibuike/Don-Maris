@@ -87,6 +87,36 @@ export const dummyOrders: Order[] = [
         amountPaid: 189.99,
         printHistory: [],
     },
+    // New orders for purchase history
+    {
+        id: '123500',
+        customer: { id: 'CUST001', name: 'Olivia Martin', email: 'olivia.martin@email.com', avatar: 'https://placehold.co/100x100.png' },
+        shippingAddress: '123 Main St, Anytown, USA 12345',
+        amount: 299.99,
+        status: 'Fulfilled',
+        date: '2023-11-20',
+        paymentMethod: 'Credit Card (**** **** **** 4242)',
+        deliveryMethod: 'Waybill',
+        items: [{ productId: '1', quantity: 1 }],
+        paymentStatus: 'Paid',
+        amountPaid: 299.99,
+        printHistory: [],
+    },
+    {
+        id: '123501',
+        customer: { id: 'CUST002', name: 'Jackson Lee', email: 'jackson.lee@email.com', avatar: 'https://placehold.co/100x100.png' },
+        shippingAddress: '456 Oak Ave, Anytown, USA 12345',
+        amount: 45.98,
+        status: 'Processing',
+        date: '2023-11-19',
+        paymentMethod: 'PayPal',
+        deliveryMethod: 'Come Market',
+        items: [{ productId: '11', quantity: 2 }],
+        paymentStatus: 'Paid',
+        amountPaid: 45.98,
+        printHistory: [],
+    },
+    // ... more dummy orders
     ...Array.from({ length: 50 }, (_, i) => {
         const orderId = `${123461 + i}`;
         const customerId = `CUST${100 + i}`;
