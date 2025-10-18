@@ -16,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { getProductById } from '@/lib/data';
+import { getProductById } from '@/lib/client-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface PurchaseHistoryEntry {
@@ -279,5 +279,3 @@ export default function AdminProductDetailsPage() {
         </div>
     )
 }
-
-    

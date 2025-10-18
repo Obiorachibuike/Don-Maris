@@ -1,7 +1,6 @@
 
 'use client'
 
-import { getProductById } from '@/lib/data';
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,7 @@ import { ProductChat } from '@/components/product-chat';
 import type { Product } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatProductType } from '@/lib/display-utils';
+import { getProductById } from '@/lib/client-data';
 
 export default function ProductPage() {
   const params = useParams();

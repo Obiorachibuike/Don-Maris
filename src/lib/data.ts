@@ -26,27 +26,19 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 /**
- * Fetches a single product by its ID. It first tries the database, then falls back to an API endpoint.
- * This function exists for client components that can't directly access the DB.
+ * Fetches a single product by its ID directly from the database.
+ * This function is for SERVER-SIDE use only.
  */
-export async function getProductById(id: string): Promise<Product | null> {
+export async function getProductById_SERVER(id: string): Promise<Product | null> {
     try {
-        // Use fetch to call the API route, which is a server-side operation.
-        // This prevents the client component from importing server-only code.
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
-        const response = await fetch(`${baseUrl}/api/products/${id}`);
-        
-        if (!response.ok) {
-             // If API fails, fallback to dummy data
-            console.warn(`API failed for product ${id}, falling back to dummy data.`);
-            return dummyProducts.find(p => p.id === id) || null;
+        await connectDB();
+        const product = await ProductModel.findOne({ id: id }).lean();
+        if (product) {
+            return JSON.parse(JSON.stringify(product));
         }
-
-        return await response.json();
-
-    } catch (apiError) {
-        console.error(`API error fetching product ${id}. Falling back to dummy data.`, apiError);
-        // Final fallback to dummy data
+        return dummyProducts.find(p => p.id === id) || null;
+    } catch (dbError) {
+        console.error(`Database error fetching product ${id}. Falling back to dummy data.`, dbError);
         return dummyProducts.find(p => p.id === id) || null;
     }
 }
