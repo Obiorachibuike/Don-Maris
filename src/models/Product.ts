@@ -1,4 +1,5 @@
 
+
 import mongoose from 'mongoose';
 import type { Product as ProductType, Review as ReviewType } from '@/lib/types';
 
@@ -16,7 +17,7 @@ const ProductSchema = new mongoose.Schema<ProductType>({
   description: { type: String, required: true },
   longDescription: { type: String, required: true },
   price: { type: Number, required: true },
-  image: { type: String, required: true },
+  images: { type: [String], required: true },
   brand: { type: String, required: true },
   type: {
     type: String,

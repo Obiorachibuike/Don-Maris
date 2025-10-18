@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from "react";
@@ -240,7 +241,7 @@ export default function ProductsAdminPage() {
                                 {isLoading ? <TableSkeleton /> : currentProducts.map(product => (
                                     <TableRow key={product.id}>
                                         <TableCell>
-                                            <Image src={product.image} alt={product.name} width={40} height={40} className="rounded-md object-cover" />
+                                            <Image src={product.images[0] || 'https://placehold.co/40x40.png'} alt={product.name} width={40} height={40} className="rounded-md object-cover" />
                                         </TableCell>
                                         <TableCell className="font-medium">
                                             <Link href={`/admin/products/${product.id}`} className="hover:underline">

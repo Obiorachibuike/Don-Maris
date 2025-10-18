@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
@@ -112,7 +113,7 @@ export default function OrderDetailsPage() {
         const product = products.find(p => p.id === item.productId);
         return {
             ...item,
-            product: product || { name: 'Unknown Product', image: 'https://placehold.co/100x100.png', price: 0 }
+            product: product || { name: 'Unknown Product', images: ['https://placehold.co/100x100.png'], price: 0 }
         };
     });
 
@@ -222,7 +223,7 @@ export default function OrderDetailsPage() {
                                         <TableRow key={item.productId}>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
-                                                    <Image src={item.product.image} alt={item.product.name} width={40} height={40} className="rounded-md object-cover" />
+                                                    <Image src={item.product.images[0]} alt={item.product.name} width={40} height={40} className="rounded-md object-cover" />
                                                     <span className="font-medium">{item.product.name}</span>
                                                 </div>
                                             </TableCell>

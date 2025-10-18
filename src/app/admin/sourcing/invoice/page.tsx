@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -106,7 +107,7 @@ export default function SourcingInvoicePage() {
                                                         <div className="h-16 w-16 flex-shrink-0">
                                                             <Image
                                                                 className="h-16 w-16 rounded-md object-cover"
-                                                                src={item.product.image}
+                                                                src={item.product.images[0]}
                                                                 alt={item.product.name}
                                                                 width={64}
                                                                 height={64}

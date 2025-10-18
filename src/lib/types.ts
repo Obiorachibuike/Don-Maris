@@ -16,7 +16,7 @@ export type Product = {
   description: string;
   longDescription: string;
   price: number;
-  image: string;
+  images: string[];
   brand: string;
   type: ProductType;
   rating: number;

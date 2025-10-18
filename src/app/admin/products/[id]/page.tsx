@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
@@ -112,7 +113,7 @@ export default function AdminProductDetailsPage() {
                                 <CardContent className="p-4 flex items-center justify-center">
                                      <div className="aspect-square relative w-full max-w-sm">
                                         <Image
-                                            src={product.image}
+                                            src={product.images[0]}
                                             alt={product.name}
                                             fill
                                             className="object-contain rounded-md"

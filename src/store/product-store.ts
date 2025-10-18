@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { create } from 'zustand';
@@ -16,7 +17,7 @@ interface ProductState {
   isLoading: boolean;
   error: string | null;
   fetchProducts: () => Promise<void>;
-  addProduct: (product: Omit<Product, 'id' | 'rating' | 'reviews' | 'dateAdded' | 'totalSales' | 'stock'> & { stock: number }) => Promise<void>;
+  addProduct: (product: Omit<Product, 'id' | 'rating' | 'reviews' | 'dateAdded' | 'totalSales'>) => Promise<void>;
   editProduct: (productId: string, updatedData: Partial<Omit<Product, 'id' | 'rating' | 'reviews' | 'dateAdded'>>) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
   decreaseStock: (productId: string, quantity: number) => void;

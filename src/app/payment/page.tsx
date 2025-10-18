@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -291,7 +292,7 @@ export default function PaymentPage() {
                             {items.map(item => (
                                 <div key={item.id} className="flex justify-between items-center">
                                     <div className="flex items-center gap-3">
-                                        <Image src={item.product.image} alt={item.product.name} width={48} height={48} className="rounded-md" />
+                                        <Image src={item.product.images[0]} alt={item.product.name} width={48} height={48} className="rounded-md" />
                                         <div>
                                             <p className="font-medium">{item.product.name}</p>
                                             <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>

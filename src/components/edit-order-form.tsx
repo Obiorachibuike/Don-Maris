@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -160,7 +161,7 @@ export function EditOrderForm({ isOpen, setIsOpen, order, onOrderUpdate }: EditO
                                 {editableItems.map(item => (
                                     <TableRow key={item.productId}>
                                         <TableCell className="font-medium flex items-center gap-2">
-                                            <Image src={item.product.image} alt={item.product.name} width={32} height={32} className="rounded-sm" />
+                                            <Image src={item.product.images[0]} alt={item.product.name} width={32} height={32} className="rounded-sm" />
                                             {item.product.name}
                                         </TableCell>
                                         <TableCell>

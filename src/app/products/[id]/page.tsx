@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import { notFound, useParams } from 'next/navigation';
@@ -18,6 +19,7 @@ import type { Product } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatProductType } from '@/lib/display-utils';
 import { getProductById } from '@/lib/client-data';
+import { cn } from '@/lib/utils';
 
 export default function ProductPage() {
   const params = useParams();
@@ -26,6 +28,7 @@ export default function ProductPage() {
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<Product | null | undefined>(null);
+  const [selectedImage, setSelectedImage] = useState(0);
 
   useEffect(() => {
     async function loadProduct() {
@@ -57,6 +60,11 @@ export default function ProductPage() {
             <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
                 <div>
                     <Skeleton className="aspect-square w-full rounded-lg" />
+                    <div className="flex gap-2 mt-4">
+                        <Skeleton className="w-16 h-16 rounded-md" />
+                        <Skeleton className="w-16 h-16 rounded-md" />
+                        <Skeleton className="w-16 h-16 rounded-md" />
+                    </div>
                 </div>
                 <div className="space-y-4">
                     <Skeleton className="h-10 w-3/4" />
@@ -76,16 +84,32 @@ export default function ProductPage() {
     <div className="container mx-auto px-4 py-8">
       <AnimatedSection>
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-          <div className="bg-card rounded-lg p-4 flex items-center justify-center">
-              <div className="aspect-square relative w-full max-w-md">
-                  <Image
-                      src={product.image}
-                      alt={product.name}
-                      fill
-                      className="object-contain"
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      data-ai-hint={product.data_ai_hint}
-                  />
+          <div className="flex flex-col gap-4">
+              <div className="bg-card rounded-lg p-4 flex items-center justify-center">
+                  <div className="aspect-square relative w-full max-w-md">
+                      <Image
+                          src={product.images[selectedImage]}
+                          alt={product.name}
+                          fill
+                          className="object-contain"
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                          data-ai-hint={product.data_ai_hint}
+                      />
+                  </div>
+              </div>
+              <div className="flex gap-2 justify-center">
+                  {product.images.map((image, index) => (
+                      <button 
+                        key={index} 
+                        onClick={() => setSelectedImage(index)} 
+                        className={cn(
+                          "w-16 h-16 rounded-md overflow-hidden border-2 transition-all",
+                          index === selectedImage ? "border-primary" : "border-transparent hover:border-muted-foreground"
+                        )}
+                      >
+                          <Image src={image} alt={`${product.name} thumbnail ${index + 1}`} width={64} height={64} className="object-cover w-full h-full" />
+                      </button>
+                  ))}
               </div>
           </div>
 

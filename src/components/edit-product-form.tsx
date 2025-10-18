@@ -1,8 +1,9 @@
 
+
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState, useEffect } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useProductStore } from '@/store/product-store';
@@ -35,10 +36,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Product, ProductType } from '@/lib/types';
-import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from './ui/scroll-area';
 
@@ -52,7 +51,7 @@ const formSchema = z.object({
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative.'),
   description: z.string().min(10, 'Description must be at least 10 characters long.'),
   longDescription: z.string().min(20, 'Long description must be at least 20 characters long.'),
-  image: z.string().min(1, 'Image URL or upload is required.'),
+  images: z.array(z.object({ value: z.string().url('Please enter a valid URL.') })).min(1, "At least one image is required.").max(5, "You can add a maximum of 5 images."),
   data_ai_hint: z.string().min(1, 'AI hint is required.'),
   isFeatured: z.boolean().default(false),
 });
@@ -68,56 +67,33 @@ interface EditProductFormProps {
 export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormProps) {
   const { editProduct } = useProductStore();
   const { toast } = useToast();
-  const [imagePreview, setImagePreview] = useState<string | null>(product.image);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: product.name,
-      brand: product.brand,
-      type: product.type,
-      price: product.price,
-      stock: product.stock,
-      description: product.description,
-      longDescription: product.longDescription,
-      image: product.image,
-      data_ai_hint: product.data_ai_hint,
-      isFeatured: product.isFeatured || false,
+      ...product,
+      images: product.images.map(url => ({ value: url })),
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "images"
   });
 
   useEffect(() => {
     form.reset({
-      name: product.name,
-      brand: product.brand,
-      type: product.type,
-      price: product.price,
-      stock: product.stock,
-      description: product.description,
-      longDescription: product.longDescription,
-      image: product.image,
-      data_ai_hint: product.data_ai_hint,
-      isFeatured: product.isFeatured || false,
+      ...product,
+      images: product.images.map(url => ({ value: url })),
     });
-    setImagePreview(product.image);
   }, [product, form, isOpen]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUri = reader.result as string;
-        form.setValue('image', dataUri);
-        setImagePreview(dataUri);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const onSubmit = async (data: ProductFormValues) => {
-    await editProduct(product.id, data);
+    const submissionData = {
+        ...data,
+        images: data.images.map(img => img.value)
+    };
+    await editProduct(product.id, submissionData);
     toast({
       title: 'Product Updated',
       description: `The product "${data.name}" has been successfully updated.`,
@@ -280,50 +256,26 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
               </div>
 
               <div className="space-y-4">
-                  <Label>Product Image</Label>
-                  <div className="aspect-square w-full rounded-md border border-dashed flex items-center justify-center overflow-hidden">
-                      {imagePreview && <Image src={imagePreview} alt="Product preview" width={200} height={200} className="object-contain" />}
-                  </div>
-                  <Tabs defaultValue="url" className="w-full">
-                      <TabsList className="grid w-full grid-cols-2">
-                          <TabsTrigger value="url">URL</TabsTrigger>
-                          <TabsTrigger value="upload">Upload</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="url">
-                           <FormField
-                              control={form.control}
-                              name="image"
-                              render={({ field }) => (
-                                  <FormItem>
-                                  <FormLabel className="sr-only">Image URL</FormLabel>
-                                  <FormControl>
-                                      <Input 
-                                          placeholder="https://..." {...field}
-                                          onChange={(e) => {
-                                              field.onChange(e);
-                                              setImagePreview(e.target.value);
-                                          }}
-                                       />
-                                  </FormControl>
-                                  <FormMessage />
-                                  </FormItem>
-                              )}
-                              />
-                      </TabsContent>
-                      <TabsContent value="upload">
-                          <Input
-                              type="file"
-                              accept="image/*"
-                              ref={fileInputRef}
-                              onChange={handleFileChange}
-                              className="hidden"
-                              />
-                          <Button type="button" variant="outline" className="w-full" onClick={() => fileInputRef.current?.click()}>
-                             <Upload className="mr-2 h-4 w-4" /> Choose File
-                          </Button>
-                      </TabsContent>
-                  </Tabs>
-                  <FormField name="image" render={() => <FormMessage />} />
+                <Label>Product Images (up to 5)</Label>
+                <div className="space-y-2">
+                    {fields.map((field, index) => (
+                        <div key={field.id} className="flex items-center gap-2">
+                            <Input
+                                {...form.register(`images.${index}.value`)}
+                                placeholder="https://..."
+                            />
+                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length === 1}>
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+                {fields.length < 5 && (
+                    <Button type="button" variant="outline" size="sm" onClick={() => append({ value: "" })}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Image
+                    </Button>
+                )}
+                <FormField name="images" render={() => <FormMessage />} />
               </div>
             </form>
           </Form>

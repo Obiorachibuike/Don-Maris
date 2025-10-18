@@ -1,4 +1,5 @@
 
+
 'use client';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -34,7 +35,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <CardHeader className="p-0">
           <div className="aspect-square relative">
             <Image
-              src={product.image}
+              src={product.images[0] || 'https://placehold.co/600x600.png'}
               alt={product.name}
               fill
               className="object-cover"
