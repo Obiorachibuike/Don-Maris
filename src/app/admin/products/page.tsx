@@ -242,7 +242,11 @@ export default function ProductsAdminPage() {
                                         <TableCell>
                                             <Image src={product.image} alt={product.name} width={40} height={40} className="rounded-md object-cover" />
                                         </TableCell>
-                                        <TableCell className="font-medium">{product.name}</TableCell>
+                                        <TableCell className="font-medium">
+                                            <Link href={`/admin/products/${product.id}`} className="hover:underline">
+                                                {product.name}
+                                            </Link>
+                                        </TableCell>
                                         <TableCell>{product.brand}</TableCell>
                                         <TableCell>
                                             <Badge variant="outline">{formatProductType(product.type)}</Badge>
@@ -331,3 +335,5 @@ export default function ProductsAdminPage() {
         </>
     );
 }
+
+    
