@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Banknote, CreditCard, Copy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { submitOrder } from '@/lib/data';
+import { submitOrder } from '@/lib/client-data';
 import type { PaymentStatus, CartItem } from '@/lib/types';
 import axios, { AxiosError } from 'axios';
 import { useProductStore } from '@/store/product-store';
@@ -292,7 +292,7 @@ export default function PaymentPage() {
                             {items.map(item => (
                                 <div key={item.id} className="flex justify-between items-center">
                                     <div className="flex items-center gap-3">
-                                        <Image src={item.product.images[0]} alt={item.product.name} width={48} height={48} className="rounded-md" />
+                                        <Image src={item.product.images?.[0] || 'https://placehold.co/48x48.png'} alt={item.product.name} width={48} height={48} className="rounded-md" />
                                         <div>
                                             <p className="font-medium">{item.product.name}</p>
                                             <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>

@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation';
 import { useProductStore } from '@/store/product-store';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { submitOrder } from '@/lib/data';
+import { submitOrder } from '@/lib/client-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface SupplyItem {
@@ -186,10 +186,10 @@ export default function SourcingPage() {
             firstName,
             lastName: lastNameParts.join(' '),
             email: customerEmail,
-            address: address.split('\n')[0] || '',
-            city: address.split('\n')[1]?.split(',')[0] || '',
-            state: address.split('\n')[1]?.split(',')[1]?.trim().split(' ')[0] || '',
-            zip: address.split('\n')[1]?.split(',')[1]?.trim().split(' ')[1] || '',
+            address: address.split('\\n')[0] || '',
+            city: address.split('\\n')[1]?.split(',')[0] || '',
+            state: address.split('\\n')[1]?.split(',')[1]?.trim().split(' ')[0] || '',
+            zip: address.split('\\n')[1]?.split(',')[1]?.trim().split(' ')[1] || '',
         };
 
         const cartItems: CartItem[] = supplyItems.map(supplyItem => {
