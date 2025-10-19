@@ -1,7 +1,7 @@
 
 
 import mongoose from 'mongoose';
-import type { Product as ProductType, Review as ReviewType } from '@/lib/types';
+import type { Product as ProductType, Review as ReviewType, StockHistoryEntry } from '@/lib/types';
 
 const ReviewSchema = new mongoose.Schema<ReviewType>({
   id: { type: String, required: true },
@@ -10,6 +10,14 @@ const ReviewSchema = new mongoose.Schema<ReviewType>({
   comment: { type: String, required: true },
   date: { type: String, required: true },
 });
+
+const StockHistoryEntrySchema = new mongoose.Schema<StockHistoryEntry>({
+  date: { type: String, required: true },
+  quantityChange: { type: Number, required: true },
+  newStockLevel: { type: Number, required: true },
+  type: { type: String, enum: ['Initial', 'Admin Update', 'Sale'], required: true },
+  updatedBy: { type: String, required: true },
+}, { _id: false });
 
 const ProductSchema = new mongoose.Schema<ProductType>({
   id: { type: String, required: true, unique: true },
@@ -30,6 +38,7 @@ const ProductSchema = new mongoose.Schema<ProductType>({
   isFeatured: { type: Boolean, default: false },
   dateAdded: { type: String, required: true },
   stock: { type: Number, required: true },
+  stockHistory: [StockHistoryEntrySchema],
 });
 
 export default mongoose.models.Product || mongoose.model<ProductType>('Product', ProductSchema);

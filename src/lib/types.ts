@@ -10,6 +10,14 @@ export type Review = {
   date: string;
 };
 
+export type StockHistoryEntry = {
+  date: string;
+  quantityChange: number;
+  newStockLevel: number;
+  type: 'Initial' | 'Admin Update' | 'Sale';
+  updatedBy: string; // User ID or name
+};
+
 export type Product = {
   id: string;
   name: string;
@@ -25,6 +33,7 @@ export type Product = {
   isFeatured?: boolean;
   dateAdded: string;
   stock: number;
+  stockHistory?: StockHistoryEntry[];
   totalSales?: number;
 };
 

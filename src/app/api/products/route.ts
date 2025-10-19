@@ -3,7 +3,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { getProducts } from '@/lib/data';
 import { connectDB } from '@/lib/dbConnect';
 import ProductModel from '@/models/Product';
-import type { Product } from '@/lib/types';
+import type { Product, StockHistoryEntry } from '@/lib/types';
 
 export async function GET(request: Request) {
     try {
@@ -36,12 +36,21 @@ export async function POST(request: NextRequest) {
     try {
         const productData: Omit<Product, 'id'> = await request.json();
         
+        const initialStockHistory: StockHistoryEntry = {
+            date: new Date().toISOString(),
+            quantityChange: productData.stock,
+            newStockLevel: productData.stock,
+            type: 'Initial',
+            updatedBy: 'Admin', // Or get from session
+        };
+
         const newProduct = new ProductModel({
             ...productData,
             id: `prod-${Date.now()}-${Math.floor(Math.random() * 1000)}`, // Generate a unique ID
             rating: 0,
             reviews: [],
             dateAdded: new Date().toISOString(),
+            stockHistory: [initialStockHistory],
         });
         
         await newProduct.save();

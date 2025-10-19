@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import type { Product } from '@/lib/types';
+import type { Product, StockHistoryEntry } from '@/lib/types';
 import { connectDB } from '@/lib/dbConnect';
 import ProductModel from '@/models/Product';
 import { dummyProducts } from '@/lib/dummy-products';
@@ -56,15 +56,35 @@ export async function PUT(
     
     try {
         const updatedData: Partial<Product> = await request.json();
-        
+        const existingProduct = await ProductModel.findOne({ id: id }).lean();
+
+        if (!existingProduct) {
+            return new NextResponse('Product not found', { status: 404 });
+        }
+
+        const newStockHistory = existingProduct.stockHistory ? [...existingProduct.stockHistory] : [];
+
+        // Check if stock has been updated
+        if (updatedData.stock !== undefined && updatedData.stock !== existingProduct.stock) {
+            const stockChange: StockHistoryEntry = {
+                date: new Date().toISOString(),
+                quantityChange: updatedData.stock - existingProduct.stock,
+                newStockLevel: updatedData.stock,
+                type: 'Admin Update',
+                updatedBy: 'Admin', // In a real app, get this from session
+            };
+            newStockHistory.push(stockChange);
+        }
+
         const updatedProduct = await ProductModel.findOneAndUpdate(
             { id: id },
-            { $set: updatedData },
+            { $set: { ...updatedData, stockHistory: newStockHistory } },
             { new: true, runValidators: true }
         ).lean();
 
         if (!updatedProduct) {
-            return new NextResponse('Product not found', { status: 404 });
+            // This case should theoretically not be hit if existingProduct was found
+            return new NextResponse('Product not found during update', { status: 404 });
         }
 
         return NextResponse.json({ ...updatedProduct, _id: updatedProduct._id.toString() });
@@ -100,5 +120,3 @@ export async function DELETE(
         return NextResponse.json({ error: `Failed to delete product: ${error.message}` }, { status: 500 });
     }
 }
-
-    

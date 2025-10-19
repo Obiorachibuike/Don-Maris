@@ -9,16 +9,19 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from '@/components/ui/separator';
 import { StarRating } from '@/components/star-rating';
 import { formatProductType } from '@/lib/display-utils';
-import { Tag, DollarSign, Package, CheckCircle, BarChart2, Calendar, ShoppingCart, TrendingUp } from 'lucide-react';
+import { Tag, DollarSign, Package, CheckCircle, BarChart2, Calendar, ShoppingCart, TrendingUp, History } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { dummyOrders } from '@/lib/dummy-orders';
-import type { Order, Customer, Product } from '@/lib/types';
+import type { Order, Customer, Product, StockHistoryEntry } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { getProductById } from '@/lib/client-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 interface PurchaseHistoryEntry {
     orderId: string;
@@ -90,6 +93,7 @@ export default function AdminProductDetailsPage() {
 
     const totalUnitsSold = purchaseHistory.reduce((sum, item) => sum + item.quantity, 0);
     const totalRevenue = purchaseHistory.reduce((sum, item) => sum + (item.quantity * item.pricePerUnit), 0);
+    const sortedStockHistory = product.stockHistory?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) || [];
 
     return (
         <div className="space-y-6">
@@ -226,6 +230,51 @@ export default function AdminProductDetailsPage() {
                             </CardContent>
                         </Card>
                     </div>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Stock Movement History</CardTitle>
+                            <CardDescription>
+                                An audit trail of all stock changes for this product.
+                            </CardDescription>
+                        </CardHeader>
+                        {sortedStockHistory.length > 0 ? (
+                            <CardContent>
+                                <ScrollArea className="h-72">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead>Type</TableHead>
+                                            <TableHead>Updated By</TableHead>
+                                            <TableHead className="text-center">Change</TableHead>
+                                            <TableHead className="text-right">New Stock Level</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {sortedStockHistory.map((entry, index) => (
+                                            <TableRow key={index}>
+                                                <TableCell>{format(new Date(entry.date), "MMM d, yyyy 'at' h:mm a")}</TableCell>
+                                                <TableCell>
+                                                    <Badge variant={entry.type === 'Initial' ? 'secondary' : 'default'} className={cn(entry.type === 'Admin Update' && 'bg-blue-100 text-blue-800')}>{entry.type}</Badge>
+                                                </TableCell>
+                                                <TableCell>{entry.updatedBy}</TableCell>
+                                                <TableCell className={cn("text-center font-medium", entry.quantityChange > 0 ? 'text-green-600' : 'text-destructive')}>
+                                                    {entry.quantityChange > 0 ? `+${entry.quantityChange}` : entry.quantityChange}
+                                                </TableCell>
+                                                <TableCell className="text-right font-medium">{entry.newStockLevel}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                                </ScrollArea>
+                            </CardContent>
+                        ) : (
+                             <CardContent>
+                                <p className="text-muted-foreground text-sm">No stock movement has been recorded for this product yet.</p>
+                            </CardContent>
+                        )}
+                    </Card>
 
                     <Card>
                         <CardHeader>
