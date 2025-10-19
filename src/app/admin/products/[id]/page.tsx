@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from '@/components/ui/separator';
 import { StarRating } from '@/components/star-rating';
 import { formatProductType } from '@/lib/display-utils';
-import { Tag, DollarSign, Package, CheckCircle, BarChart2, Calendar, ShoppingCart } from 'lucide-react';
+import { Tag, DollarSign, Package, CheckCircle, BarChart2, Calendar, ShoppingCart, TrendingUp } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { dummyOrders } from '@/lib/dummy-orders';
 import type { Order, Customer, Product } from '@/lib/types';
@@ -25,6 +25,7 @@ interface PurchaseHistoryEntry {
     customer: Customer;
     date: string;
     quantity: number;
+    pricePerUnit: number;
 }
 
 export default function AdminProductDetailsPage() {
@@ -48,6 +49,7 @@ export default function AdminProductDetailsPage() {
                                 customer: order.customer,
                                 date: order.date,
                                 quantity: item.quantity,
+                                pricePerUnit: fetchedProduct.price,
                             };
                         }
                         return null;
@@ -85,6 +87,9 @@ export default function AdminProductDetailsPage() {
             </div>
         )
     }
+
+    const totalUnitsSold = purchaseHistory.reduce((sum, item) => sum + item.quantity, 0);
+    const totalRevenue = purchaseHistory.reduce((sum, item) => sum + (item.quantity * item.pricePerUnit), 0);
 
     return (
         <div className="space-y-6">
@@ -199,6 +204,29 @@ export default function AdminProductDetailsPage() {
                     </div>
                 </TabsContent>
                 <TabsContent value="activities" className="mt-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                <CardTitle className="text-sm font-medium">Total Units Sold</CardTitle>
+                                <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{totalUnitsSold}</div>
+                                <p className="text-xs text-muted-foreground">across {purchaseHistory.length} orders</p>
+                            </CardContent>
+                        </Card>
+                         <Card>
+                            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
+                                <p className="text-xs text-muted-foreground">from all-time sales</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+
                     <Card>
                         <CardHeader>
                             <CardTitle>Purchase History</CardTitle>
@@ -217,7 +245,8 @@ export default function AdminProductDetailsPage() {
                                             <TableHead>Customer</TableHead>
                                             <TableHead>Order ID</TableHead>
                                             <TableHead>Date</TableHead>
-                                            <TableHead className="text-right">Quantity</TableHead>
+                                            <TableHead className="text-center">Quantity</TableHead>
+                                            <TableHead className="text-right">Total Value</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -241,7 +270,8 @@ export default function AdminProductDetailsPage() {
                                                     </Link>
                                                 </TableCell>
                                                 <TableCell>{new Date(purchase.date).toLocaleDateString()}</TableCell>
-                                                <TableCell className="text-right">{purchase.quantity}</TableCell>
+                                                <TableCell className="text-center">{purchase.quantity}</TableCell>
+                                                <TableCell className="text-right font-medium">${(purchase.quantity * purchase.pricePerUnit).toFixed(2)}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
