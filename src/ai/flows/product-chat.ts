@@ -10,7 +10,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { getProductById, getProducts } from '@/lib/data';
+import { getProductById_SERVER, getProducts } from '@/lib/data';
 import type { Product } from '@/lib/types';
 import { z } from 'genkit';
 
@@ -38,7 +38,7 @@ const getProductInfoTool = ai.defineTool(
         outputSchema: z.custom<Product>(),
     },
     async ({ id }) => {
-        return getProductById(id);
+        return getProductById_SERVER(id);
     }
 );
 
