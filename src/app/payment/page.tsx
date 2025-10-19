@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Banknote, CreditCard, Copy } from 'lucide-react';
+import { Loader2, Banknote, CreditCard, Copy, Forward } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { submitOrder } from '@/lib/client-data';
 import type { PaymentStatus, CartItem } from '@/lib/types';
@@ -117,15 +117,17 @@ function CheckoutForm({ shippingDetails }: { shippingDetails: ShippingDetails })
 }
 
 export default function PaymentPage() {
-    const { items, total } = useCart();
+    const { items, total, clearCart } = useCart();
     const router = useRouter();
     const [shippingDetails, setShippingDetails] = useState<ShippingDetails | null>(null);
     const [clientSecret, setClientSecret] = useState<string | null>(null);
     const [options, setOptions] = useState<StripeElementsOptions | null>(null);
     const [paymentMethod, setPaymentMethod] = useState<'card' | 'transfer' | null>(null);
     const [isTransferLoading, setIsTransferLoading] = useState(false);
+    const [isPayLaterLoading, setIsPayLaterLoading] = useState(false);
     const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null);
     const { toast } = useToast();
+    const { decreaseStock } = useProductStore();
     
     useEffect(() => {
         const savedShipping = sessionStorage.getItem('don_maris_shipping');
@@ -186,6 +188,31 @@ export default function PaymentPage() {
         setIsTransferLoading(false);
     };
 
+    const handlePayLater = async () => {
+        if (!shippingDetails) return;
+
+        setIsPayLaterLoading(true);
+        const orderDetails = { ...shippingDetails, date: new Date().toISOString(), paymentStatus: 'unpaid' as PaymentStatus };
+        const result = await submitOrder(orderDetails);
+        
+        if (result.status === 'success' || result.id) {
+            shippingDetails.items.forEach(item => decreaseStock(item.product.id, item.quantity));
+            const finalOrder = { ...orderDetails, invoiceId: result.id || `DM-${Date.now()}`, date: new Date(orderDetails.date).toLocaleDateString(), customer: { ...orderDetails.customer, name: `${orderDetails.customer.firstName} ${orderDetails.customer.lastName}`.trim() } };
+            sessionStorage.setItem('don_maris_order', JSON.stringify(finalOrder));
+            
+            toast({
+                title: "Order Placed!",
+                description: "Your order has been recorded. You can pay at a later time.",
+            });
+            clearCart();
+            router.push('/invoice');
+        } else {
+            toast({ variant: 'destructive', title: "Order Failed", description: "Could not save your order. Please contact support." });
+        }
+        
+        setIsPayLaterLoading(false);
+    };
+
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
         toast({
@@ -222,6 +249,12 @@ export default function PaymentPage() {
                                         {isTransferLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Banknote className="mr-4 h-6 w-6"/>}
                                         Pay with Bank Transfer
                                     </Button>
+                                    <div className="sm:col-span-2">
+                                        <Button variant="secondary" size="lg" className="h-20 w-full text-lg" onClick={handlePayLater} disabled={isPayLaterLoading}>
+                                            {isPayLaterLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Forward className="mr-4 h-6 w-6"/>}
+                                            Continue Without Payment
+                                        </Button>
+                                    </div>
                                 </div>
                              ) : paymentMethod === 'card' ? (
                                  clientSecret && options ? (
