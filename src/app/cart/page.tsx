@@ -74,7 +74,7 @@ export default function CartPage() {
                                                     <div className="h-16 w-16 flex-shrink-0">
                                                         <Image
                                                             className="h-16 w-16 rounded-md object-cover"
-                                                            src={item.product.images[0]}
+                                                            src={item.product.images?.[0] || 'https://placehold.co/64x64.png'}
                                                             alt={item.product.name}
                                                             width={64}
                                                             height={64}
