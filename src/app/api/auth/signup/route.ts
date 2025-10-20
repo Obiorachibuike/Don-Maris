@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/dbConnect";
 import User from "@/models/User";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { sendEmail, createVirtualAccount } from "@/lib/mailer";
+import { sendEmail, createPaystackVirtualAccount, createFlutterwaveVirtualAccount } from "@/lib/mailer";
 
 const DEVELOPER_EMAIL = 'obiorachibuike22@gmail.com';
 
@@ -31,11 +31,10 @@ export async function POST(request: NextRequest) {
         const isAdmin = email === DEVELOPER_EMAIL;
         const role = isAdmin ? 'admin' : 'customer';
 
-        // Get user's country from IP
         let country = 'Nigeria';
-        let countryCode = 'NG'; // Default to Nigeria
+        let countryCode = 'NG';
         try {
-            const ip = request.headers.get("x-forwarded-for") || '102.89.23.10'; // Fallback IP for local dev
+            const ip = request.headers.get("x-forwarded-for") || '102.89.23.10';
             const geoRes = await fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`);
             if(geoRes.ok) {
                 const geoData = await geoRes.json();
@@ -53,26 +52,25 @@ export async function POST(request: NextRequest) {
             role,
             country,
             countryCode,
-            isVerified: isAdmin, // Auto-verify the admin user
+            isVerified: isAdmin,
         });
 
         const savedUser = await newUser.save();
         
-        // Create virtual account based on country
+        let virtualAccountDetails;
         if (countryCode === 'NG') {
-            const virtualAccountDetails = await createVirtualAccount({ name, email });
-            if (virtualAccountDetails) {
-                savedUser.virtualBankName = virtualAccountDetails.bankName;
-                savedUser.virtualAccountNumber = virtualAccountDetails.accountNumber;
-                savedUser.virtualAccountName = virtualAccountDetails.accountName;
-                await savedUser.save();
-            }
+            virtualAccountDetails = await createPaystackVirtualAccount({ name, email });
         } else {
-            // Placeholder for Flutterwave or other non-Nigerian providers
-            // For now, we do nothing.
+            virtualAccountDetails = await createFlutterwaveVirtualAccount({ name, email });
         }
 
-        // Send verification email only for non-admin users
+        if (virtualAccountDetails) {
+            savedUser.virtualBankName = virtualAccountDetails.bankName;
+            savedUser.virtualAccountNumber = virtualAccountDetails.accountNumber;
+            savedUser.virtualAccountName = virtualAccountDetails.accountName;
+            await savedUser.save();
+        }
+
         if (!isAdmin) {
             const baseUrl = new URL(request.url).origin;
             await sendEmail({ email, emailType: 'VERIFY', userId: savedUser._id, baseUrl });

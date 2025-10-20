@@ -107,7 +107,7 @@ export const sendEmail = async ({ email, emailType, userId, baseUrl }: { email: 
     }
 };
 
-export const createVirtualAccount = async (user: { name: string, email: string, phone?: string }) => {
+export const createPaystackVirtualAccount = async (user: { name: string, email: string, phone?: string }) => {
   try {
     const [firstName, ...lastNameParts] = user.name.split(' ');
     const lastName = lastNameParts.join(' ');
@@ -130,7 +130,6 @@ export const createVirtualAccount = async (user: { name: string, email: string, 
 
     let customerCode = customerData.data?.customer_code;
 
-    // Handle existing customer case
     if (!customerData.status && customerData.message.includes("Customer with email already exists")) {
       const existingCustomerRes = await fetch(`https://api.paystack.co/customer/${user.email}`, {
           headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
@@ -169,8 +168,47 @@ export const createVirtualAccount = async (user: { name: string, email: string, 
         accountName: vaData.data.account_name
     };
   } catch (error: any) {
-    console.error("Virtual Account Creation Error in helper:", error);
-    // Don't re-throw, just return null so signup doesn't fail
+    console.error("Paystack Virtual Account Creation Error in helper:", error);
     return null;
   }
+}
+
+export const createFlutterwaveVirtualAccount = async (user: { name: string, email: string, phone?: string }) => {
+    try {
+        const [firstName, ...lastNameParts] = user.name.split(' ');
+        const lastName = lastNameParts.join(' ');
+        
+        const res = await fetch("https://api.flutterwave.com/v3/virtual-account-numbers", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                email: user.email,
+                is_permanent: true,
+                bvn: "12345678901", // Placeholder BVN
+                firstname: firstName,
+                lastname: lastName,
+                phone_number: user.phone || "09000000000", // Placeholder phone
+                narration: "Don Maris Payment",
+            }),
+        });
+
+        const data = await res.json();
+        
+        if (data.status !== 'success') {
+            throw new Error(`Failed to create Flutterwave virtual account: ${data.message}`);
+        }
+
+        return {
+            bankName: data.data.bank_name,
+            accountNumber: data.data.account_number,
+            accountName: `${firstName} ${lastName}`, // Flutterwave doesn't always return account name
+        };
+
+    } catch (error: any) {
+        console.error("Flutterwave Virtual Account Creation Error in helper:", error);
+        return null;
+    }
 }
