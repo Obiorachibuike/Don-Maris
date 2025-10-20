@@ -33,13 +33,15 @@ export async function POST(request: NextRequest) {
 
         let country = 'Nigeria';
         let countryCode = 'NG';
+        let currency = 'NGN';
         try {
-            const ip = request.headers.get("x-forwarded-for") || '102.89.23.10';
-            const geoRes = await fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`);
+            const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || request.ip || '102.89.23.10';
+            const geoRes = await fetch(`https://ipapi.co/${ip}/json/`);
             if(geoRes.ok) {
                 const geoData = await geoRes.json();
-                country = geoData.country || 'Nigeria';
+                country = geoData.country_name || 'Nigeria';
                 countryCode = geoData.country_code || 'NG';
+                currency = geoData.currency || 'NGN';
             }
         } catch (geoError) {
             console.error("Could not fetch geolocation data:", geoError);
@@ -52,6 +54,7 @@ export async function POST(request: NextRequest) {
             role,
             country,
             countryCode,
+            currency,
             isVerified: isAdmin,
         });
 

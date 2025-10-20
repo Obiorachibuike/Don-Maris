@@ -30,6 +30,9 @@ const UserSchema = new mongoose.Schema<UserType>({
   countryCode: {
     type: String,
   },
+  currency: {
+    type: String,
+  },
   isVerified: {
     type: Boolean,
     default: false,

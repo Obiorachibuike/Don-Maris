@@ -78,6 +78,7 @@ export interface User {
   verifyTokenExpiry?: Date;
   country?: string;
   countryCode?: string;
+  currency?: string;
   virtualBankName?: string;
   virtualAccountNumber?: string;
   virtualAccountName?: string;

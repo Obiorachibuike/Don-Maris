@@ -26,16 +26,7 @@ export async function POST(req: NextRequest) {
     
     const user = await User.findOne({ email: email });
 
-    const country = user?.countryCode || 'NG'; // Default to Nigeria if user or countryCode is not found
-
-    let currency: string;
-    if (country === "NG") {
-      currency = "ngn";
-    } else if (country === "BJ") {
-      currency = "xof";
-    } else {
-      currency = "usd";
-    }
+    const currency = user?.currency?.toLowerCase() || 'usd';
     
     const totalAmount = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
