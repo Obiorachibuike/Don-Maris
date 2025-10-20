@@ -22,6 +22,7 @@ const StockHistoryEntrySchema = new mongoose.Schema<StockHistoryEntry>({
 const ProductSchema = new mongoose.Schema<ProductType>({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
+  brand: { type: String, required: true },
   description: { type: String, required: true },
   longDescription: { type: String, required: true },
   price: { type: Number, required: true },
