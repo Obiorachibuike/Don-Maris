@@ -26,6 +26,7 @@ const ProductSchema = new mongoose.Schema<ProductType>({
   longDescription: { type: String, required: true },
   price: { type: Number, required: true },
   images: { type: [String], required: true },
+  brand: { type: String, required: true },
   type: {
     type: String,
     enum: ['Power Flex', 'Charging Flex', 'Screen', 'Backglass', 'Glass', 'Tools', 'Machine'],
