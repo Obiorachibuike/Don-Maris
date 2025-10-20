@@ -133,6 +133,7 @@ export const createPaystackVirtualAccount = async (user: { name: string, email: 
 
     let customerCode = customerData.data?.customer_code;
 
+    // Handle case where customer already exists
     if (!customerData.status && customerData.message.includes("Customer with email already exists")) {
       const existingCustomerRes = await fetch(`https://api.paystack.co/customer/${user.email}`, {
           headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
@@ -155,14 +156,16 @@ export const createPaystackVirtualAccount = async (user: { name: string, email: 
       },
       body: JSON.stringify({
         customer: customerCode,
-        preferred_bank: "wema-bank",
+        preferred_bank: "wema-bank", // Use 'test-bank' for testing if needed
       }),
     });
 
     const vaData = await vaRes.json();
 
     if (!vaData.status) {
-      throw new Error(`Failed to create Paystack virtual account: ${vaData.message}`);
+      // Don't throw, just log and return null so signup doesn't fail
+      console.error(`Failed to create Paystack DVA: ${vaData.message}`);
+      return null;
     }
     
     return {
@@ -201,7 +204,9 @@ export const createFlutterwaveVirtualAccount = async (user: { name: string, emai
         const data = await res.json();
         
         if (data.status !== 'success') {
-            throw new Error(`Failed to create Flutterwave virtual account: ${data.message}`);
+            // Don't throw, just log and return null
+            console.error(`Failed to create Flutterwave virtual account: ${data.message}`);
+            return null;
         }
 
         return {
