@@ -11,6 +11,7 @@ interface User {
     email: string;
     role: string;
     ledgerBalance?: number;
+    countryCode?: string;
 }
 
 interface SessionContextType {

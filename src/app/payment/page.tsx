@@ -25,6 +25,7 @@ import { loadStripe, StripeElementsOptions } from "@stripe/stripe-js";
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useSession } from '@/contexts/SessionProvider';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -119,6 +120,7 @@ function CheckoutForm({ shippingDetails }: { shippingDetails: ShippingDetails })
 export default function PaymentPage() {
     const { items, total, clearCart } = useCart();
     const router = useRouter();
+    const { user } = useSession();
     const [shippingDetails, setShippingDetails] = useState<ShippingDetails | null>(null);
     const [clientSecret, setClientSecret] = useState<string | null>(null);
     const [options, setOptions] = useState<StripeElementsOptions | null>(null);
@@ -128,6 +130,8 @@ export default function PaymentPage() {
     const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null);
     const { toast } = useToast();
     const { decreaseStock } = useProductStore();
+    
+    const isNigeria = user?.countryCode === 'NG';
     
     useEffect(() => {
         const savedShipping = sessionStorage.getItem('don_maris_shipping');
@@ -245,10 +249,12 @@ export default function PaymentPage() {
                                         <CreditCard className="mr-4 h-6 w-6"/>
                                         Pay with Card
                                     </Button>
+                                    {isNigeria && (
                                      <Button variant="outline" size="lg" className="h-20 text-lg" onClick={handleBankTransferCheckout} disabled={isTransferLoading}>
                                         {isTransferLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Banknote className="mr-4 h-6 w-6"/>}
                                         Pay with Bank Transfer
                                     </Button>
+                                    )}
                                     <div className="sm:col-span-2">
                                         <Button variant="secondary" size="lg" className="h-20 w-full text-lg" onClick={handlePayLater} disabled={isPayLaterLoading}>
                                             {isPayLaterLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Forward className="mr-4 h-6 w-6"/>}
@@ -298,7 +304,7 @@ export default function PaymentPage() {
                                                 <div className="flex justify-between items-center">
                                                     <div>
                                                         <p className="text-xs text-muted-foreground">Amount</p>
-                                                        <p className="font-semibold text-lg">${total.toFixed(2)}</p>
+                                                        <p className="font-semibold text-lg">₦{total.toFixed(2)}</p>
                                                     </div>
                                                     <Button variant="ghost" size="icon" onClick={() => copyToClipboard(total.toFixed(2))}>
                                                         <Copy className="h-4 w-4" />
