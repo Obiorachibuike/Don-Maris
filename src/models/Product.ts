@@ -29,7 +29,7 @@ const ProductSchema = new mongoose.Schema<ProductType>({
   brand: { type: String, required: true },
   type: {
     type: String,
-    enum: ['Power Flex', 'Charging Flex', 'Screen', 'Backglass', 'Glass', 'Tools'],
+    enum: ['Power Flex', 'Charging Flex', 'Screen', 'Backglass', 'Glass', 'Tools', 'Machine'],
     required: true,
   },
   rating: { type: Number, required: true },

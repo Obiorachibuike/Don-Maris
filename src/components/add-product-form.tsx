@@ -42,7 +42,7 @@ import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from './ui/scroll-area';
 
-const productTypes: ProductType[] = ['Power Flex', 'Charging Flex', 'Screen', 'Backglass', 'Glass', 'Tools'];
+const productTypes: ProductType[] = ['Power Flex', 'Charging Flex', 'Screen', 'Backglass', 'Glass', 'Tools', 'Machine'];
 
 const formSchema = z.object({
   name: z.string().min(3, 'Product name must be at least 3 characters long.'),
@@ -341,5 +341,3 @@ export function AddProductForm() {
     </Dialog>
   );
 }
-
-    
