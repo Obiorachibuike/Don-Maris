@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -123,10 +122,6 @@ export function AddProductForm() {
 
   const onSubmit = async (data: ProductFormValues) => {
     await addProduct(data);
-    toast({
-      title: 'Product Added',
-      description: `The product "${data.name}" has been successfully added.`,
-    });
     form.reset(defaultFormValues);
     setIsOpen(false);
   };
@@ -177,7 +172,7 @@ export function AddProductForm() {
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Brand</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value || ''}>
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select a brand" />
@@ -278,11 +273,20 @@ export function AddProductForm() {
                       name="data_ai_hint"
                       render={({ field }) => (
                           <FormItem>
-                          <FormLabel>AI Image Hint</FormLabel>
-                          <FormControl>
-                              <Input placeholder="e.g., 'phone screen'" {...field} />
-                          </FormControl>
-                          <FormMessage />
+                              <FormLabel>AI Image Hint</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                  <FormControl>
+                                  <SelectTrigger>
+                                      <SelectValue placeholder="Select an AI hint" />
+                                  </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                  {productTypes.map(type => (
+                                      <SelectItem key={type} value={type.toLowerCase().replace(/ /g, '_')}>{type}</SelectItem>
+                                  ))}
+                                  </SelectContent>
+                              </Select>
+                              <FormMessage />
                           </FormItem>
                       )}
                    />

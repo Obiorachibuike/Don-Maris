@@ -246,9 +246,18 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
                       render={({ field }) => (
                           <FormItem>
                           <FormLabel>AI Image Hint</FormLabel>
-                          <FormControl>
-                              <Input placeholder="e.g., 'phone screen'" {...field} />
-                          </FormControl>
+                           <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                  <FormControl>
+                                  <SelectTrigger>
+                                      <SelectValue placeholder="Select an AI hint" />
+                                  </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                  {productTypes.map(type => (
+                                      <SelectItem key={type} value={type.toLowerCase().replace(/ /g, '_')}>{type}</SelectItem>
+                                  ))}
+                                  </SelectContent>
+                              </Select>
                           <FormMessage />
                           </FormItem>
                       )}
