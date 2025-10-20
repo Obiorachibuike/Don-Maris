@@ -106,3 +106,71 @@ export const sendEmail = async ({ email, emailType, userId, baseUrl }: { email: 
         throw new Error(error.message);
     }
 };
+
+export const createVirtualAccount = async (user: { name: string, email: string, phone?: string }) => {
+  try {
+    const [firstName, ...lastNameParts] = user.name.split(' ');
+    const lastName = lastNameParts.join(' ');
+
+    const customerRes = await fetch("https://api.paystack.co/customer", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: user.email,
+        first_name: firstName,
+        last_name: lastName,
+        phone: user.phone,
+      }),
+    });
+
+    const customerData = await customerRes.json();
+
+    let customerCode = customerData.data?.customer_code;
+
+    // Handle existing customer case
+    if (!customerData.status && customerData.message.includes("Customer with email already exists")) {
+      const existingCustomerRes = await fetch(`https://api.paystack.co/customer/${user.email}`, {
+          headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
+      });
+      const existingCustomerData = await existingCustomerRes.json();
+      if(existingCustomerData.status) {
+          customerCode = existingCustomerData.data.customer_code;
+      } else {
+           throw new Error(`Failed to retrieve existing Paystack customer: ${existingCustomerData.message}`);
+      }
+    } else if (!customerData.status) {
+        throw new Error(`Failed to create Paystack customer: ${customerData.message}`);
+    }
+
+    const vaRes = await fetch("https://api.paystack.co/dedicated_account", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        customer: customerCode,
+        preferred_bank: "wema-bank",
+      }),
+    });
+
+    const vaData = await vaRes.json();
+
+    if (!vaData.status) {
+      throw new Error(`Failed to create Paystack virtual account: ${vaData.message}`);
+    }
+    
+    return {
+        bankName: vaData.data.bank.name,
+        accountNumber: vaData.data.account_number,
+        accountName: vaData.data.account_name
+    };
+  } catch (error: any) {
+    console.error("Virtual Account Creation Error in helper:", error);
+    // Don't re-throw, just return null so signup doesn't fail
+    return null;
+  }
+}

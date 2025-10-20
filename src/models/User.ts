@@ -53,7 +53,10 @@ const UserSchema = new mongoose.Schema<UserType>({
   lifetimeValue: {
       type: Number,
       default: 0
-  }
+  },
+  virtualBankName: String,
+  virtualAccountNumber: String,
+  virtualAccountName: String,
 });
 
 export default mongoose.models.User || mongoose.model<UserType>('User', UserSchema);

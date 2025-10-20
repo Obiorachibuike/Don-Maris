@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/dbConnect";
 import User from "@/models/User";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { sendEmail } from "@/lib/mailer";
+import { sendEmail, createVirtualAccount } from "@/lib/mailer";
 
 const DEVELOPER_EMAIL = 'obiorachibuike22@gmail.com';
 
@@ -57,6 +57,20 @@ export async function POST(request: NextRequest) {
         });
 
         const savedUser = await newUser.save();
+        
+        // Create virtual account based on country
+        if (countryCode === 'NG') {
+            const virtualAccountDetails = await createVirtualAccount({ name, email });
+            if (virtualAccountDetails) {
+                savedUser.virtualBankName = virtualAccountDetails.bankName;
+                savedUser.virtualAccountNumber = virtualAccountDetails.accountNumber;
+                savedUser.virtualAccountName = virtualAccountDetails.accountName;
+                await savedUser.save();
+            }
+        } else {
+            // Placeholder for Flutterwave or other non-Nigerian providers
+            // For now, we do nothing.
+        }
 
         // Send verification email only for non-admin users
         if (!isAdmin) {
