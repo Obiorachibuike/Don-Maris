@@ -1,60 +1,55 @@
 
 import { NextResponse, NextRequest } from "next/server";
-import Stripe from "stripe";
-import type { CartItem } from "@/lib/types";
-import { connectDB } from "@/lib/dbConnect";
-import User from "@/models/User";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-06-20",
-});
+import Flutterwave from "flutterwave-node-v3";
+import { connectDB } from '@/lib/dbConnect';
+import User from '@/models/User';
 
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
-  } catch (dbError: any) {
-      console.error("Database connection failed:", dbError);
-      return NextResponse.json({ error: "Could not connect to the database. Please try again later.", details: dbError.message }, { status: 500 });
-  }
 
-  try {
-    const { items, email, saveCard }: { items: CartItem[], email: string, saveCard: boolean } = await req.json();
+    const { userId, amount } = await req.json();
 
-    if (!items || !email) {
-      return NextResponse.json({ error: "Missing items or email" }, { status: 400 });
-    }
-    
-    const user = await User.findOne({ email: email });
-
-    const currency = user?.currency?.toLowerCase() || 'usd';
-    
-    const totalAmount = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-
-    let customer: Stripe.Customer;
-    const existingCustomers = await stripe.customers.list({ email: email, limit: 1 });
-
-    if (existingCustomers.data.length > 0) {
-        customer = existingCustomers.data[0];
-    } else {
-        customer = await stripe.customers.create({ email: email });
+    const user = await User.findById(userId);
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(totalAmount * 100), // in cents/kobo
-        currency: currency,
-        customer: customer.id,
-        setup_future_usage: saveCard ? "off_session" : undefined,
-        automatic_payment_methods: { enabled: true },
-    });
+    const baseUrl = `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get("host")}`;
 
-    return NextResponse.json({ 
-        clientSecret: paymentIntent.client_secret, 
-        currency: currency,
-        amount: totalAmount,
+    const flw = new Flutterwave(process.env.FLW_PUBLIC_KEY!, process.env.FLW_SECRET_KEY!);
+
+    const tx_ref = `tx-${Date.now()}`;
+
+    const payload = {
+      tx_ref,
+      amount,
+      currency: user.currency || "USD",
+      redirect_url: `${baseUrl}/invoice`, // Using the existing invoice page for confirmation
+      customer: {
+        email: user.email,
+        name: user.name || "Customer",
+      },
+      customizations: {
+        title: "Don Maris Accessories Payment",
+        description: "Payment for your order",
+        logo: `${baseUrl}/logo.png`, // Optional: Ensure you have a logo at public/logo.png
+      },
+    };
+
+    const response = await flw.Payment.initialize(payload);
+
+    if (!response || !response.data) {
+      return NextResponse.json({ error: "Failed to initialize payment", details: response.message }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      checkoutUrl: response.data.link,
+      tx_ref,
     });
 
   } catch (error: any) {
-    console.error("Checkout error:", error);
+    console.error("Payment error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

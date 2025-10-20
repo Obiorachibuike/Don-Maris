@@ -41,6 +41,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,
     FLW_SECRET_KEY: process.env.FLW_SECRET_KEY,
+    FLW_PUBLIC_KEY: process.env.FLW_PUBLIC_KEY,
   }
 };
 

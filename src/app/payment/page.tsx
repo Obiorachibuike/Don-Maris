@@ -1,10 +1,8 @@
 
-
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useCart } from '@/hooks/use-cart';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
@@ -15,19 +13,9 @@ import { submitOrder } from '@/lib/client-data';
 import type { PaymentStatus, CartItem } from '@/lib/types';
 import axios, { AxiosError } from 'axios';
 import { useProductStore } from '@/store/product-store';
-import {
-  Elements,
-  PaymentElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
-import { loadStripe, StripeElementsOptions } from "@stripe/stripe-js";
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useSession } from '@/contexts/SessionProvider';
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+import Image from 'next/image';
 
 interface CustomerDetails {
     firstName: string;
@@ -54,77 +42,13 @@ interface VirtualAccount {
     };
 }
 
-function CheckoutForm({ shippingDetails }: { shippingDetails: ShippingDetails }) {
-    const { decreaseStock } = useProductStore();
-    const { toast } = useToast();
-    const stripe = useStripe();
-    const elements = useElements();
-    const [isLoading, setIsLoading] = useState(false);
-    const [saveCard, setSaveCard] = useState(true);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!stripe || !elements) return;
-
-        setIsLoading(true);
-
-        const orderDetails = { ...shippingDetails, date: new Date().toISOString(), paymentStatus: 'paid' as PaymentStatus };
-        const result = await submitOrder(orderDetails);
-        
-        if (result.status === 'success' || result.id) {
-            shippingDetails.items.forEach(item => decreaseStock(item.product.id, item.quantity));
-            const finalOrder = { ...orderDetails, invoiceId: result.id || `DM-${Date.now()}`, date: new Date(orderDetails.date).toLocaleDateString(), customer: { ...orderDetails.customer, name: `${orderDetails.customer.firstName} ${orderDetails.customer.lastName}`.trim() } };
-            sessionStorage.setItem('don_maris_order', JSON.stringify(finalOrder));
-            
-            const { error } = await stripe.confirmPayment({
-                elements,
-                confirmParams: {
-                    return_url: `${window.location.origin}/invoice`,
-                },
-            });
-
-            if (error.type === "card_error" || error.type === "validation_error") {
-                toast({ variant: 'destructive', title: "Payment Failed", description: error.message });
-            } else {
-                toast({ variant: 'destructive', title: "An unexpected error occurred.", description: error.message });
-            }
-
-        } else {
-            toast({ variant: 'destructive', title: "Order Failed", description: "Could not save your order. Please contact support." });
-        }
-
-        setIsLoading(false);
-    };
-
-    return (
-        <form onSubmit={handleSubmit}>
-            <PaymentElement />
-            <div className="flex items-center space-x-2 mt-4">
-                <Checkbox 
-                    id="save-card" 
-                    checked={saveCard}
-                    onCheckedChange={(checked) => setSaveCard(Boolean(checked))}
-                />
-                <Label htmlFor="save-card" className="cursor-pointer">
-                    Save card for future payments
-                </Label>
-            </div>
-            <Button disabled={isLoading || !stripe || !elements} className="w-full mt-4" size="lg">
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Pay Now
-            </Button>
-        </form>
-    );
-}
-
 export default function PaymentPage() {
     const { items, total, clearCart } = useCart();
     const router = useRouter();
     const { user } = useSession();
     const [shippingDetails, setShippingDetails] = useState<ShippingDetails | null>(null);
-    const [clientSecret, setClientSecret] = useState<string | null>(null);
-    const [options, setOptions] = useState<StripeElementsOptions | null>(null);
     const [paymentMethod, setPaymentMethod] = useState<'card' | 'transfer' | null>(null);
+    const [isCardLoading, setIsCardLoading] = useState(false);
     const [isTransferLoading, setIsTransferLoading] = useState(false);
     const [isPayLaterLoading, setIsPayLaterLoading] = useState(false);
     const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null);
@@ -144,27 +68,45 @@ export default function PaymentPage() {
     }, [router]);
 
     const handleCardCheckout = async () => {
-        setPaymentMethod('card');
+        if (!user || !shippingDetails) return;
+        setIsCardLoading(true);
+
+        // Pre-create the order in our system before redirecting
+        const orderDetails = { ...shippingDetails, date: new Date().toISOString(), paymentStatus: 'unpaid' as PaymentStatus };
+        const orderResult = await submitOrder(orderDetails);
+
+        if (!orderResult.id) {
+             toast({ variant: 'destructive', title: "Order Failed", description: "Could not save your order before payment. Please contact support." });
+             setIsCardLoading(false);
+             return;
+        }
+
+        shippingDetails.items.forEach(item => decreaseStock(item.product.id, item.quantity));
+
+        const finalOrder = { ...orderDetails, invoiceId: orderResult.id, date: new Date(orderDetails.date).toLocaleDateString(), customer: { ...orderDetails.customer, name: `${orderDetails.customer.firstName} ${orderDetails.customer.lastName}`.trim() } };
+        sessionStorage.setItem('don_maris_order', JSON.stringify(finalOrder));
+
         try {
-            const res = await axios.post('/api/checkout', {
-                items: shippingDetails!.items,
-                email: shippingDetails!.customer.email,
-                saveCard: true,
+            const res = await fetch("/api/checkout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userId: user._id,
+                    amount: total,
+                }),
             });
-            setClientSecret(res.data.clientSecret);
-            setOptions({
-                clientSecret: res.data.clientSecret,
-                appearance: { theme: 'stripe' },
-            });
-        } catch (err: any) {
-            console.error("Error creating payment intent", err);
-            const axiosError = err as AxiosError<{ error: string }>;
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: axiosError.response?.data?.error || 'Could not initialize card payment. Please try again.'
-            });
-            setPaymentMethod(null);
+
+            const data = await res.json();
+            if (data.checkoutUrl) {
+                clearCart();
+                window.location.href = data.checkoutUrl;
+            } else {
+                toast({ variant: 'destructive', title: 'Error', description: data.error || "Error initializing payment" });
+            }
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: "Could not initialize card payment. Please try again." });
+        } finally {
+            setIsCardLoading(false);
         }
     };
     
@@ -201,7 +143,7 @@ export default function PaymentPage() {
         
         if (result.status === 'success' || result.id) {
             shippingDetails.items.forEach(item => decreaseStock(item.product.id, item.quantity));
-            const finalOrder = { ...orderDetails, invoiceId: result.id || `DM-${Date.now()}`, date: new Date(orderDetails.date).toLocaleDateString(), customer: { ...orderDetails.customer, name: `${orderDetails.customer.firstName} ${orderDetails.customer.lastName}`.trim() } };
+            const finalOrder = { ...orderDetails, invoiceId: result.id || `DM-${Date.now()}`, date: new Date(orderDetails.date).toLocaleDateString(), customer: { ...orderDetails.customer, name: `${shippingDetails.customer.firstName} ${shippingDetails.customer.lastName}`.trim() } };
             sessionStorage.setItem('don_maris_order', JSON.stringify(finalOrder));
             
             toast({
@@ -224,7 +166,7 @@ export default function PaymentPage() {
         });
     }
 
-    if (!shippingDetails) {
+    if (!shippingDetails || !user) {
         return (
              <div className="container mx-auto px-4 py-16 text-center">
                 <Loader2 className="mx-auto h-8 w-8 animate-spin" />
@@ -245,8 +187,8 @@ export default function PaymentPage() {
                         <CardContent>
                              {!paymentMethod ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <Button variant="outline" size="lg" className="h-20 text-lg" onClick={handleCardCheckout}>
-                                        <CreditCard className="mr-4 h-6 w-6"/>
+                                    <Button variant="outline" size="lg" className="h-20 text-lg" onClick={handleCardCheckout} disabled={isCardLoading}>
+                                         {isCardLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <CreditCard className="mr-4 h-6 w-6"/>}
                                         Pay with Card
                                     </Button>
                                     {isNigeria && (
@@ -262,16 +204,6 @@ export default function PaymentPage() {
                                         </Button>
                                     </div>
                                 </div>
-                             ) : paymentMethod === 'card' ? (
-                                 clientSecret && options ? (
-                                    <Elements options={options} stripe={stripePromise}>
-                                        <CheckoutForm shippingDetails={shippingDetails} />
-                                    </Elements>
-                                ) : (
-                                    <div className='flex justify-center items-center h-40'>
-                                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                                    </div>
-                                )
                              ) : (
                                  virtualAccount && (
                                      <Alert>
