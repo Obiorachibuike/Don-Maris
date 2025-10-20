@@ -181,9 +181,6 @@ export const createPaystackVirtualAccount = async (user: { name: string, email: 
 
 export const createFlutterwaveVirtualAccount = async (user: { name: string, email: string, phone?: string }) => {
     try {
-        const [firstName, ...lastNameParts] = user.name.split(' ');
-        const lastName = lastNameParts.join(' ');
-        
         const res = await fetch("https://api.flutterwave.com/v3/virtual-account-numbers", {
             method: "POST",
             headers: {
@@ -193,26 +190,25 @@ export const createFlutterwaveVirtualAccount = async (user: { name: string, emai
             body: JSON.stringify({
                 email: user.email,
                 is_permanent: true,
-                bvn: "12345678901", // Placeholder BVN
-                firstname: firstName,
-                lastname: lastName,
-                phone_number: user.phone || "09000000000", // Placeholder phone
-                narration: "Don Maris Payment",
+                bvn: "12345678901", // Placeholder BVN, required in live mode
+                tx_ref: `signup_${Date.now()}`,
+                narration: `Virtual Account for ${user.name}`,
             }),
         });
 
         const data = await res.json();
         
         if (data.status !== 'success') {
-            // Don't throw, just log and return null
             console.error(`Failed to create Flutterwave virtual account: ${data.message}`);
             return null;
         }
 
+        const accountData = data.data;
+
         return {
-            bankName: data.data.bank_name,
-            accountNumber: data.data.account_number,
-            accountName: `${firstName} ${lastName}`, // Flutterwave doesn't always return account name
+            bankName: accountData.bank_name,
+            accountNumber: accountData.account_number,
+            accountName: user.name, // Flutterwave doesn't return account name in this response
         };
 
     } catch (error: any) {
