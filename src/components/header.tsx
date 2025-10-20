@@ -7,7 +7,7 @@ import { Button } from './ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/hooks/use-cart';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { useSession } from '@/contexts/SessionProvider';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -32,15 +32,25 @@ export function Header() {
     setIsClient(true);
   }, []);
 
-  const navLinks = [
-    { href: '/', label: 'Home', icon: Home },
-    { href: '/products', label: 'Products', icon: Package },
-    { href: '/recommendations', label: 'AI Recommender', icon: Sparkles },
-    { href: '/about', label: 'About', icon: Info },
-    { href: '/contact', label: 'Contact', icon: Mail },
-    { href: '/profile', label: 'Profile', icon: UserIcon },
-    { href: '/admin', label: 'Admin', icon: LayoutDashboard },
+  const baseNavLinks = [
+    { href: '/', label: 'Home', icon: Home, show: 'always' },
+    { href: '/products', label: 'Products', icon: Package, show: 'always' },
+    { href: '/recommendations', label: 'AI Recommender', icon: Sparkles, show: 'always' },
+    { href: '/about', label: 'About', icon: Info, show: 'always' },
+    { href: '/contact', label: 'Contact', icon: Mail, show: 'always' },
+    { href: '/profile', label: 'Profile', icon: UserIcon, show: 'loggedIn' },
+    { href: '/admin', label: 'Admin', icon: LayoutDashboard, show: 'adminOnly' },
   ];
+
+  const visibleNavLinks = useMemo(() => {
+    return baseNavLinks.filter(link => {
+        if (link.show === 'always') return true;
+        if (link.show === 'loggedIn' && user) return true;
+        if (link.show === 'adminOnly' && user && user.role !== 'customer') return true;
+        return false;
+    });
+  }, [user, baseNavLinks]);
+
 
   const totalItems = items.length;
 
@@ -75,7 +85,7 @@ export function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
+            {visibleNavLinks.map((link) => (
               <NavLink key={link.href} {...link} />
             ))}
           </nav>
@@ -130,7 +140,7 @@ export function Header() {
                                 <span>Profile</span>
                            </Link>
                         </DropdownMenuItem>
-                        {user.role === 'admin' && (
+                        {user.role !== 'customer' && (
                             <DropdownMenuItem asChild>
                                 <Link href="/admin">
                                     <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -171,7 +181,7 @@ export function Header() {
                     <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                   </SheetHeader>
                   <nav className="flex flex-col gap-4 mt-8">
-                     {navLinks.map((link) => (
+                     {visibleNavLinks.map((link) => (
                        <NavLink key={link.href} {...link} isMobile />
                      ))}
                       <div className="md:hidden pt-4 border-t">
