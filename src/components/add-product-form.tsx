@@ -47,6 +47,7 @@ const productTypes: ProductType[] = ['Power Flex', 'Charging Flex', 'Screen', 'B
 
 const formSchema = z.object({
   name: z.string().min(3, 'Product name must be at least 3 characters long.'),
+  brand: z.string().min(1, 'Brand is required.'),
   type: z.enum(productTypes, { required_error: 'Please select a product type.' }),
   price: z.coerce.number().min(0.01, 'Price must be greater than 0.'),
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative.'),
@@ -61,6 +62,7 @@ type ProductFormValues = z.infer<typeof formSchema>;
 
 const defaultFormValues: ProductFormValues = {
   name: '',
+  brand: '',
   type: 'Screen',
   price: 0,
   stock: 0,
@@ -168,7 +170,7 @@ export function AddProductForm() {
                   />
                   <FormField
                     control={form.control}
-                    name="type"
+                    name="brand"
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Brand</FormLabel>
