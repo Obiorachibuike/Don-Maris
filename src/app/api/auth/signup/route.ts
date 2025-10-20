@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         // Get user's country from IP
         let countryCode = 'NG'; // Default to Nigeria
         try {
-            const ip = request.headers.get("x-forwarded-for") || '102.89.23.10';
+            const ip = request.headers.get("x-forwarded-for") || '102.89.23.10'; // Fallback IP for local dev
             const geoRes = await fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`);
             if(geoRes.ok) {
                 const geoData = await geoRes.json();
