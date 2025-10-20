@@ -71,7 +71,6 @@ export default function PaymentPage() {
         if (!user || !shippingDetails) return;
         setIsCardLoading(true);
 
-        // Pre-create the order in our system before redirecting
         const orderDetails = { ...shippingDetails, date: new Date().toISOString(), paymentStatus: 'unpaid' as PaymentStatus };
         const orderResult = await submitOrder(orderDetails);
 
@@ -81,11 +80,6 @@ export default function PaymentPage() {
              return;
         }
 
-        shippingDetails.items.forEach(item => decreaseStock(item.product.id, item.quantity));
-
-        const finalOrder = { ...orderDetails, invoiceId: orderResult.id, date: new Date(orderDetails.date).toLocaleDateString(), customer: { ...orderDetails.customer, name: `${orderDetails.customer.firstName} ${orderDetails.customer.lastName}`.trim() } };
-        sessionStorage.setItem('don_maris_order', JSON.stringify(finalOrder));
-
         try {
             const res = await fetch("/api/checkout", {
                 method: "POST",
@@ -93,11 +87,14 @@ export default function PaymentPage() {
                 body: JSON.stringify({
                     userId: user._id,
                     amount: total,
+                    orderId: orderResult.id
                 }),
             });
 
             const data = await res.json();
             if (data.checkoutUrl) {
+                // Pre-emptively decrease stock
+                shippingDetails.items.forEach(item => decreaseStock(item.product.id, item.quantity));
                 clearCart();
                 window.location.href = data.checkoutUrl;
             } else {
