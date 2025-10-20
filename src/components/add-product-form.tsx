@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -53,12 +54,25 @@ const formSchema = z.object({
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative.'),
   description: z.string().min(10, 'Description must be at least 10 characters long.'),
   longDescription: z.string().min(20, 'Long description must be at least 20 characters long.'),
-  images: z.array(z.string().url('Invalid URL or data URI')).min(1, "At least one image is required.").max(5, "You can add a maximum of 5 images."),
+  images: z.array(z.string().min(1, 'Image data URI cannot be empty')).min(1, "At least one image is required.").max(5, "You can add a maximum of 5 images."),
   data_ai_hint: z.string().min(1, 'AI hint is required.'),
   isFeatured: z.boolean().default(false),
 });
 
 type ProductFormValues = z.infer<typeof formSchema>;
+
+const defaultFormValues: ProductFormValues = {
+  name: '',
+  brand: '',
+  type: 'Screen',
+  price: 0,
+  stock: 0,
+  description: '',
+  longDescription: '',
+  images: [],
+  data_ai_hint: '',
+  isFeatured: false,
+};
 
 export function AddProductForm() {
   const [isOpen, setIsOpen] = useState(false);
@@ -75,17 +89,7 @@ export function AddProductForm() {
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      brand: '',
-      price: 0,
-      stock: 0,
-      description: '',
-      longDescription: '',
-      images: [],
-      data_ai_hint: '',
-      isFeatured: false,
-    },
+    defaultValues: defaultFormValues,
   });
 
   const { fields, append, remove, replace } = useFieldArray({
@@ -96,10 +100,9 @@ export function AddProductForm() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
-      const fileArray = Array.from(files).slice(0, 5);
-      const dataUris: string[] = [];
+      const fileArray = Array.from(files);
 
-      if (fileArray.length > 5) {
+      if (fileArray.length + fields.length > 5) {
         toast({
           variant: "destructive",
           title: "Too many files",
@@ -108,15 +111,10 @@ export function AddProductForm() {
         return;
       }
       
-      let filesProcessed = 0;
       fileArray.forEach(file => {
           const reader = new FileReader();
           reader.onloadend = () => {
-              dataUris.push(reader.result as string);
-              filesProcessed++;
-              if (filesProcessed === fileArray.length) {
-                  form.setValue('images', dataUris, { shouldValidate: true });
-              }
+              append(reader.result as string);
           };
           reader.readAsDataURL(file);
       });
@@ -129,7 +127,7 @@ export function AddProductForm() {
       title: 'Product Added',
       description: `The product "${data.name}" has been successfully added.`,
     });
-    form.reset();
+    form.reset(defaultFormValues);
     setIsOpen(false);
   };
   
@@ -139,7 +137,7 @@ export function AddProductForm() {
     <Dialog open={isOpen} onOpenChange={(open) => {
         setIsOpen(open);
         if (!open) {
-            form.reset();
+            form.reset(defaultFormValues);
         }
     }}>
       <DialogTrigger asChild>
@@ -179,7 +177,7 @@ export function AddProductForm() {
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Brand</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select a brand" />
@@ -204,7 +202,7 @@ export function AddProductForm() {
                       render={({ field }) => (
                           <FormItem>
                           <FormLabel>Type</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                               <FormControl>
                               <SelectTrigger>
                                   <SelectValue placeholder="Select a type" />
@@ -322,15 +320,26 @@ export function AddProductForm() {
                         id="image-upload"
                     />
                 </FormControl>
-                <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
-                    <Upload className="mr-2 h-4 w-4" /> Select up to 5 Images
+                <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={fields.length >= 5}>
+                    <Upload className="mr-2 h-4 w-4" /> Select Images
                 </Button>
                 
                 {currentImages && currentImages.length > 0 && (
                   <div className="grid grid-cols-3 gap-2">
                     {currentImages.map((imgSrc, index) => (
-                      <div key={index} className="relative aspect-square">
+                      <div key={index} className="relative group aspect-square">
                         <Image src={imgSrc} alt={`Preview ${index + 1}`} layout="fill" className="rounded-md object-cover" />
+                         <div className="absolute top-1 right-1">
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => remove(index)}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

@@ -111,7 +111,8 @@ export const useProductStore = create<ProductState>((set, get) => ({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to add product on server');
+        const errorMessage = errorData.details ? `${errorData.error} ${errorData.details.join(', ')}` : errorData.error;
+        throw new Error(errorMessage || 'Failed to add product on server');
       }
 
       const newProductFromServer: Product = await response.json();
