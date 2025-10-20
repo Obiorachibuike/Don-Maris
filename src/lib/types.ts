@@ -81,6 +81,7 @@ export interface User {
   virtualBankName?: string;
   virtualAccountNumber?: string;
   virtualAccountName?: string;
+  age?: number;
 }
 
 export interface PrintHistoryEntry {

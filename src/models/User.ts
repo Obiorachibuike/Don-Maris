@@ -60,6 +60,9 @@ const UserSchema = new mongoose.Schema<UserType>({
   virtualBankName: String,
   virtualAccountNumber: String,
   virtualAccountName: String,
+  age: {
+      type: Number,
+  }
 });
 
 export default mongoose.models.User || mongoose.model<UserType>('User', UserSchema);
