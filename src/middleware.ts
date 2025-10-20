@@ -9,25 +9,22 @@ export function middleware(request: NextRequest) {
     || path === '/signup' 
     || path === '/verify-email' 
     || path === '/' 
-    || path.startsWith('/products') 
-    || path.startsWith('/admin') 
-    || path.startsWith('/profile')
+    || path.startsWith('/products')
     || path === '/cart'
-    || path === '/payment'
-    || path === '/invoice';
+    || path === '/about'
+    || path === '/contact'
+    || path === '/recommendations';
+    
+  const isAdminPath = path.startsWith('/admin');
 
   const token = request.cookies.get('token')?.value || ''
 
-  if(isPublicPath && token && path !== '/') {
-    // If user is logged in and tries to access login/signup, redirect to home.
-    // But allow them to see their profile and admin pages.
-    if (path === '/login' || path === '/signup') {
-        return NextResponse.redirect(new URL('/', request.nextUrl));
-    }
+  if (isPublicPath && token && (path === '/login' || path === '/signup')) {
+    return NextResponse.redirect(new URL('/', request.nextUrl));
   }
-
-  if (!isPublicPath && !token) {
-    return NextResponse.redirect(new URL('/login', request.nextUrl))
+  
+  if (!token && (path.startsWith('/profile') || isAdminPath)) {
+    return NextResponse.redirect(new URL('/login', request.nextUrl));
   }
 
   return NextResponse.next();
@@ -37,7 +34,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/',
-    '/profile',
+    '/profile/:path*',
     '/products/:path*',
     '/login',
     '/signup',
@@ -47,5 +44,8 @@ export const config = {
     '/checkout',
     '/payment',
     '/invoice',
+    '/recommendations',
+    '/about',
+    '/contact',
   ]
 }
