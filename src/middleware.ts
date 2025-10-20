@@ -13,7 +13,6 @@ export function middleware(request: NextRequest) {
     || path.startsWith('/admin') 
     || path.startsWith('/profile')
     || path === '/cart'
-    || path === '/checkout'
     || path === '/payment'
     || path === '/invoice';
 
