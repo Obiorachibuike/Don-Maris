@@ -1,5 +1,4 @@
 
-
 export type ProductType = 'Power Flex' | 'Charging Flex' | 'Screen' | 'Backglass' | 'Glass' | 'Tools';
 
 export type Review = {
@@ -48,7 +47,7 @@ export type OrderItem = {
   quantity: number;
 };
 
-export type PaymentStatus = 'paid' | 'unpaid';
+export type PaymentStatus = 'paid' | 'unpaid' | 'partial' | 'failed';
 export type OrderPaymentStatus = 'Paid' | 'Not Paid' | 'Incomplete';
 export type DeliveryMethod = 'Waybill' | 'Come Market';
 
@@ -94,7 +93,7 @@ export interface Order {
   customer: Customer;
   shippingAddress: string;
   amount: number;
-  status: 'Fulfilled' | 'Processing' | 'Pending' | 'Cancelled';
+  status: 'Fulfilled' | 'Processing' | 'Pending' | 'Cancelled' | 'unpaid' | 'partial' | 'paid' | 'failed';
   date: string;
   paymentMethod: string;
   items: OrderItem[];

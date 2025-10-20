@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       tx_ref,
       amount,
       currency: user.currency || "USD",
-      redirect_url: `${baseUrl}/api/payments/verify`, // Flutterwave will redirect here
+      redirect_url: `${baseUrl}/api/payments/verify?tx_ref=${tx_ref}`, // Pass tx_ref
       customer: {
         email: user.email,
         name: user.name || "Customer",
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       tx_ref,
       amount,
       currency: user.currency || "USD",
-      status: "pending",
+      status: "unpaid",
     });
 
     return NextResponse.json({
