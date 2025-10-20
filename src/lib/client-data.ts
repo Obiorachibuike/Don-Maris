@@ -12,8 +12,7 @@ import { dummyProducts } from './dummy-products';
  */
 export async function getProductById(id: string): Promise<Product | null> {
     try {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
-        const response = await fetch(`${baseUrl}/api/products/${id}`);
+        const response = await fetch(`/api/products/${id}`);
         
         if (!response.ok) {
             console.warn(`API failed for product ${id}, falling back to dummy data.`);
