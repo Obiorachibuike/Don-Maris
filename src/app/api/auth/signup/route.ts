@@ -32,12 +32,14 @@ export async function POST(request: NextRequest) {
         const role = isAdmin ? 'admin' : 'customer';
 
         // Get user's country from IP
+        let country = 'Nigeria';
         let countryCode = 'NG'; // Default to Nigeria
         try {
             const ip = request.headers.get("x-forwarded-for") || '102.89.23.10'; // Fallback IP for local dev
             const geoRes = await fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`);
             if(geoRes.ok) {
                 const geoData = await geoRes.json();
+                country = geoData.country || 'Nigeria';
                 countryCode = geoData.country_code || 'NG';
             }
         } catch (geoError) {
@@ -49,6 +51,7 @@ export async function POST(request: NextRequest) {
             email,
             password: hashedPassword,
             role,
+            country,
             countryCode,
             isVerified: isAdmin, // Auto-verify the admin user
         });

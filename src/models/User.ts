@@ -24,6 +24,9 @@ const UserSchema = new mongoose.Schema<UserType>({
     enum: ['admin', 'sales', 'accountant', 'supplier', 'customer'],
     default: 'customer',
   },
+  country: {
+      type: String,
+  },
   countryCode: {
     type: String,
   },

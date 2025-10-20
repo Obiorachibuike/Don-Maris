@@ -76,6 +76,7 @@ export interface User {
   forgotPasswordTokenExpiry?: Date;
   verifyToken?: string;
   verifyTokenExpiry?: Date;
+  country?: string;
   countryCode?: string;
 }
 
