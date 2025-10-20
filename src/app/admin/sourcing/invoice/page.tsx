@@ -119,9 +119,9 @@ export default function SourcingInvoicePage() {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">${item.product.price.toFixed(2)}</td>
+                                                <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">₦{item.product.price.toFixed(2)}</td>
                                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground text-center">{item.quantity}</td>
-                                                <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground text-right">${(item.product.price * item.quantity).toFixed(2)}</td>
+                                                <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground text-right">₦{(item.product.price * item.quantity).toFixed(2)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -136,16 +136,16 @@ export default function SourcingInvoicePage() {
                         <div className="w-full max-w-sm space-y-4">
                              <div className="flex justify-between">
                                 <span className="text-muted-foreground">Subtotal</span>
-                                <span className="font-medium">${total.toFixed(2)}</span>
+                                <span className="font-medium">₦{total.toFixed(2)}</span>
                             </div>
                              <div className="flex justify-between">
                                 <span className="text-muted-foreground">Previous Balance</span>
-                                <span className="font-medium text-destructive">${previousBalance.toFixed(2)}</span>
+                                <span className="font-medium text-destructive">₦{previousBalance.toFixed(2)}</span>
                             </div>
                             <Separator />
                             <div className="flex justify-between font-bold text-lg">
                                 <span>Total Amount Due</span>
-                                <span className={amountDue > 0 ? 'text-destructive' : ''}>${amountDue.toFixed(2)}</span>
+                                <span className={amountDue > 0 ? 'text-destructive' : ''}>₦{amountDue.toFixed(2)}</span>
                             </div>
                         </div>
                     </div>

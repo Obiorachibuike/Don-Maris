@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -37,16 +37,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PlusCircle, Loader2, Upload, Trash2 } from 'lucide-react';
-import { ProductType } from '@/lib/types';
+import { ProductType, Brand } from '@/lib/types';
 import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from './ui/scroll-area';
+import { useBrandStore } from '@/store/brand-store';
 
 const productTypes: ProductType[] = ['Power Flex', 'Charging Flex', 'Screen', 'Backglass', 'Glass', 'Tools', 'Machine'];
 
 const formSchema = z.object({
   name: z.string().min(3, 'Product name must be at least 3 characters long.'),
-  brand: z.string().min(2, 'Brand name must be at least 2 characters long.'),
+  brand: z.string().min(1, 'Brand is required.'),
   type: z.enum(productTypes, { required_error: 'Please select a product type.' }),
   price: z.coerce.number().min(0.01, 'Price must be greater than 0.'),
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative.'),
@@ -62,8 +63,15 @@ type ProductFormValues = z.infer<typeof formSchema>;
 export function AddProductForm() {
   const [isOpen, setIsOpen] = useState(false);
   const { addProduct } = useProductStore();
+  const { brands, fetchBrands } = useBrandStore();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+        fetchBrands();
+    }
+  }, [isOpen, fetchBrands]);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
@@ -116,9 +124,6 @@ export function AddProductForm() {
   };
 
   const onSubmit = async (data: ProductFormValues) => {
-    // Note: The 'data.images' are base64 data URIs.
-    // The server-side /api/products endpoint needs to be updated
-    // to handle these, upload them to Cloudinary, and save the resulting URLs.
     await addProduct(data);
     toast({
       title: 'Product Added',
@@ -169,17 +174,26 @@ export function AddProductForm() {
                   )}
                   />
                   <FormField
-                  control={form.control}
-                  name="brand"
-                  render={({ field }) => (
-                      <FormItem>
-                      <FormLabel>Brand</FormLabel>
-                      <FormControl>
-                          <Input placeholder="e.g., ScreenSavvy" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                      </FormItem>
-                  )}
+                    control={form.control}
+                    name="brand"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Brand</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a brand" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                            {brands.map(brand => (
+                                <SelectItem key={brand.id} value={brand.name}>{brand.name}</SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
                   />
               </div>
               

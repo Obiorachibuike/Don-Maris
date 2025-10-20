@@ -53,7 +53,7 @@ const findSimilarProductsTool = ai.defineTool(
         outputSchema: z.array(z.custom<Product>()),
     },
     async ({ category, brand }) => {
-        let products = getProducts();
+        let products = await getProducts();
         if (category) {
             products = products.filter(p => p.type === category);
         }

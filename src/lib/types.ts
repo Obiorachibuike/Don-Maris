@@ -102,3 +102,9 @@ export interface Order {
   amountPaid: number;
   printHistory?: PrintHistoryEntry[];
 }
+
+export interface Brand {
+    _id: string;
+    id: string;
+    name: string;
+}

@@ -19,6 +19,7 @@ import { ProductChat } from '@/components/product-chat';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSearchParams } from 'next/navigation';
 import { ProductsPageWrapper } from './page-wrapper';
+import { useBrandStore } from '@/store/brand-store';
 
 interface FilterState {
   searchQuery: string;
@@ -32,14 +33,15 @@ interface FilterState {
 
 function ProductsPageComponent() {
   const { products, isLoading, fetchProducts } = useProductStore();
+  const { brands, fetchBrands } = useBrandStore();
   const searchParams = useSearchParams();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
+    fetchBrands();
+  }, [fetchProducts, fetchBrands]);
   
-  const brands = useMemo(() => [...new Set(products.map((p) => p.brand))].sort(), [products]);
   const types = useMemo(() => [...new Set(products.map((p) => p.type))].sort(), [products]);
   const maxPrice = useMemo(() => products.length > 0 ? Math.ceil(Math.max(...products.map(p => p.price))) : 100, [products]);
 
@@ -171,9 +173,9 @@ function ProductsPageComponent() {
         <ScrollArea className="h-48">
           <div className="space-y-2 pr-4">
             {brands.map(brand => (
-              <div key={brand} className="flex items-center space-x-2">
-                <Checkbox id={`filter-${brand}`} checked={stagedFilters.selectedBrands.includes(brand)} onCheckedChange={() => handleBrandChange(brand)} />
-                <Label htmlFor={`filter-${brand}`} className="font-normal cursor-pointer">{brand}</Label>
+              <div key={brand.id} className="flex items-center space-x-2">
+                <Checkbox id={`filter-${brand.name}`} checked={stagedFilters.selectedBrands.includes(brand.name)} onCheckedChange={() => handleBrandChange(brand.name)} />
+                <Label htmlFor={`filter-${brand.name}`} className="font-normal cursor-pointer">{brand.name}</Label>
               </div>
             ))}
           </div>
@@ -189,8 +191,8 @@ function ProductsPageComponent() {
           onValueChange={(value) => handleFilterChange('priceRange', value as [number, number])}
         />
         <div className="flex justify-between text-sm text-muted-foreground mt-2">
-          <span>${stagedFilters.priceRange[0]}</span>
-          <span>${stagedFilters.priceRange[1]}</span>
+          <span>₦{stagedFilters.priceRange[0]}</span>
+          <span>₦{stagedFilters.priceRange[1]}</span>
         </div>
       </div>
       <div>

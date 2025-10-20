@@ -36,16 +36,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
-import { Product, ProductType } from '@/lib/types';
+import { Product, ProductType, Brand } from '@/lib/types';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from './ui/scroll-area';
 import Image from 'next/image';
+import { useBrandStore } from '@/store/brand-store';
 
 const productTypes: ProductType[] = ['Power Flex', 'Charging Flex', 'Screen', 'Backglass', 'Glass', 'Tools', 'Machine'];
 
 const formSchema = z.object({
   name: z.string().min(3, 'Product name must be at least 3 characters long.'),
-  brand: z.string().min(2, 'Brand name must be at least 2 characters long.'),
+  brand: z.string().min(1, 'Brand is required.'),
   type: z.enum(productTypes, { required_error: 'Please select a product type.' }),
   price: z.coerce.number().min(0.01, 'Price must be greater than 0.'),
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative.'),
@@ -66,6 +67,7 @@ interface EditProductFormProps {
 
 export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormProps) {
   const { editProduct } = useProductStore();
+  const { brands, fetchBrands } = useBrandStore();
   const { toast } = useToast();
 
   const form = useForm<ProductFormValues>({
@@ -80,6 +82,12 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
     control: form.control,
     name: "images"
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchBrands();
+    }
+  }, [isOpen, fetchBrands]);
 
   useEffect(() => {
     form.reset({
@@ -136,9 +144,18 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
                   render={({ field }) => (
                       <FormItem>
                       <FormLabel>Brand</FormLabel>
-                      <FormControl>
-                          <Input placeholder="e.g., ScreenSavvy" {...field} />
-                      </FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a brand" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                            {brands.map(brand => (
+                                <SelectItem key={brand.id} value={brand.name}>{brand.name}</SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
                       <FormMessage />
                       </FormItem>
                   )}
