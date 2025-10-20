@@ -73,34 +73,34 @@ function ProductsPageComponent() {
 
   }, [searchParams, initialFilterState]);
   
-  const handleFilterChange = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
+  const handleFilterChange = useCallback(<K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     setStagedFilters(prev => ({ ...prev, [key]: value }));
-  };
+  }, []);
   
-  const handleTypeChange = (type: string) => {
+  const handleTypeChange = useCallback((type: string) => {
     const newSelectedTypes = stagedFilters.selectedTypes.includes(type)
       ? stagedFilters.selectedTypes.filter(t => t !== type)
       : [...stagedFilters.selectedTypes, type];
     handleFilterChange('selectedTypes', newSelectedTypes);
-  };
+  }, [stagedFilters.selectedTypes, handleFilterChange]);
 
-  const handleBrandChange = (brand: string) => {
+  const handleBrandChange = useCallback((brand: string) => {
     const newSelectedBrands = stagedFilters.selectedBrands.includes(brand)
       ? stagedFilters.selectedBrands.filter(b => b !== brand)
       : [...stagedFilters.selectedBrands, brand];
     handleFilterChange('selectedBrands', newSelectedBrands);
-  };
+  }, [stagedFilters.selectedBrands, handleFilterChange]);
   
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     setAppliedFilters(stagedFilters);
     setIsSheetOpen(false);
-  };
+  }, [stagedFilters]);
   
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setStagedFilters(initialFilterState);
     setAppliedFilters(initialFilterState);
     setIsSheetOpen(false);
-  };
+  }, [initialFilterState]);
 
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = products.filter(product => {
@@ -265,7 +265,6 @@ function ProductsPageComponent() {
                   value={stagedFilters.searchQuery}
                   onChange={e => {
                     handleFilterChange('searchQuery', e.target.value);
-                    applyFilters();
                   }}
                   onBlur={applyFilters}
                   onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
@@ -273,8 +272,6 @@ function ProductsPageComponent() {
                 />
                 <div className="flex items-center gap-4 w-full md:w-auto">
                   <Select value={appliedFilters.sortOption} onValueChange={(value) => {
-                      handleFilterChange('sortOption', value);
-                      // Apply sort immediately
                       setAppliedFilters(prev => ({...prev, sortOption: value}));
                   }}>
                     <SelectTrigger className="w-full md:w-[180px]">
