@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -40,6 +39,7 @@ import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Product, ProductType } from '@/lib/types';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from './ui/scroll-area';
+import Image from 'next/image';
 
 const productTypes: ProductType[] = ['Power Flex', 'Charging Flex', 'Screen', 'Backglass', 'Glass', 'Tools'];
 
@@ -51,7 +51,7 @@ const formSchema = z.object({
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative.'),
   description: z.string().min(10, 'Description must be at least 10 characters long.'),
   longDescription: z.string().min(20, 'Long description must be at least 20 characters long.'),
-  images: z.array(z.object({ value: z.string().url('Please enter a valid URL.') })).min(1, "At least one image is required.").max(5, "You can add a maximum of 5 images."),
+  images: z.array(z.string().url('Please enter a valid URL.')).min(1, "At least one image is required.").max(5, "You can add a maximum of 5 images."),
   data_ai_hint: z.string().min(1, 'AI hint is required.'),
   isFeatured: z.boolean().default(false),
 });
@@ -72,7 +72,7 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
     resolver: zodResolver(formSchema),
     defaultValues: {
       ...product,
-      images: product.images.map(url => ({ value: url })),
+      images: product.images,
     },
   });
 
@@ -84,14 +84,14 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
   useEffect(() => {
     form.reset({
       ...product,
-      images: product.images.map(url => ({ value: url })),
+      images: product.images,
     });
   }, [product, form, isOpen]);
 
   const onSubmit = async (data: ProductFormValues) => {
     const submissionData = {
         ...data,
-        images: data.images.map(img => img.value)
+        images: data.images
     };
     await editProduct(product.id, submissionData);
     toast({
@@ -100,6 +100,8 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
     });
     setIsOpen(false);
   };
+  
+  const currentImages = form.watch('images');
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -257,11 +259,20 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
 
               <div className="space-y-4">
                 <Label>Product Images (up to 5)</Label>
+                {currentImages && currentImages.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                        {currentImages.map((imgSrc, index) => (
+                        <div key={index} className="relative aspect-square">
+                            <Image src={imgSrc} alt={`Preview ${index + 1}`} layout="fill" className="rounded-md object-cover" />
+                        </div>
+                        ))}
+                    </div>
+                )}
                 <div className="space-y-2">
                     {fields.map((field, index) => (
                         <div key={field.id} className="flex items-center gap-2">
                             <Input
-                                {...form.register(`images.${index}.value`)}
+                                {...form.register(`images.${index}`)}
                                 placeholder="https://..."
                             />
                             <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length === 1}>
@@ -271,8 +282,8 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
                     ))}
                 </div>
                 {fields.length < 5 && (
-                    <Button type="button" variant="outline" size="sm" onClick={() => append({ value: "" })}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Image
+                    <Button type="button" variant="outline" size="sm" onClick={() => append("")}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Image URL
                     </Button>
                 )}
                 <FormField name="images" render={() => <FormMessage />} />
@@ -295,3 +306,5 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
     </Dialog>
   );
 }
+
+    

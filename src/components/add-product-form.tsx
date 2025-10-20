@@ -36,7 +36,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, Loader2, Upload, Trash2 } from 'lucide-react';
 import { ProductType } from '@/lib/types';
 import Image from 'next/image';
@@ -53,7 +52,7 @@ const formSchema = z.object({
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative.'),
   description: z.string().min(10, 'Description must be at least 10 characters long.'),
   longDescription: z.string().min(20, 'Long description must be at least 20 characters long.'),
-  images: z.array(z.object({ value: z.string().url('Please enter a valid URL.') })).min(1, "At least one image is required.").max(5, "You can add a maximum of 5 images."),
+  images: z.array(z.string().url('Invalid URL or data URI')).min(1, "At least one image is required.").max(5, "You can add a maximum of 5 images."),
   data_ai_hint: z.string().min(1, 'AI hint is required.'),
   isFeatured: z.boolean().default(false),
 });
@@ -75,36 +74,52 @@ export function AddProductForm() {
       stock: 0,
       description: '',
       longDescription: '',
-      images: [{ value: 'https://placehold.co/600x600.png' }],
+      images: [],
       data_ai_hint: '',
       isFeatured: false,
     },
   });
 
-  const { fields, append, remove, update } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name: "images"
   });
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUri = reader.result as string;
-        update(index, { value: dataUri });
-      };
-      reader.readAsDataURL(file);
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const fileArray = Array.from(files).slice(0, 5);
+      const dataUris: string[] = [];
+
+      if (fileArray.length > 5) {
+        toast({
+          variant: "destructive",
+          title: "Too many files",
+          description: "You can only upload a maximum of 5 images.",
+        });
+        return;
+      }
+      
+      let filesProcessed = 0;
+      fileArray.forEach(file => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+              dataUris.push(reader.result as string);
+              filesProcessed++;
+              if (filesProcessed === fileArray.length) {
+                  form.setValue('images', dataUris, { shouldValidate: true });
+              }
+          };
+          reader.readAsDataURL(file);
+      });
     }
   };
 
   const onSubmit = async (data: ProductFormValues) => {
-    const submissionData = {
-        ...data,
-        images: data.images.map(img => img.value)
-    };
-    // @ts-ignore
-    await addProduct(submissionData);
+    // Note: The 'data.images' are base64 data URIs.
+    // The server-side /api/products endpoint needs to be updated
+    // to handle these, upload them to Cloudinary, and save the resulting URLs.
+    await addProduct(data);
     toast({
       title: 'Product Added',
       description: `The product "${data.name}" has been successfully added.`,
@@ -112,6 +127,8 @@ export function AddProductForm() {
     form.reset();
     setIsOpen(false);
   };
+  
+  const currentImages = form.watch('images');
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
@@ -279,24 +296,30 @@ export function AddProductForm() {
               </div>
 
               <div className="space-y-4">
-                <Label>Product Images (up to 5)</Label>
-                <div className="space-y-2">
-                    {fields.map((field, index) => (
-                        <div key={field.id} className="flex items-center gap-2">
-                            <Input
-                                {...form.register(`images.${index}.value`)}
-                                placeholder="https://... or upload"
-                            />
-                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length === 1}>
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
+                <Label>Product Images</Label>
+                <FormControl>
+                    <Input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleFileChange} 
+                        multiple 
+                        accept="image/*"
+                        className="hidden" 
+                        id="image-upload"
+                    />
+                </FormControl>
+                <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                    <Upload className="mr-2 h-4 w-4" /> Select up to 5 Images
+                </Button>
+                
+                {currentImages && currentImages.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {currentImages.map((imgSrc, index) => (
+                      <div key={index} className="relative aspect-square">
+                        <Image src={imgSrc} alt={`Preview ${index + 1}`} layout="fill" className="rounded-md object-cover" />
+                      </div>
                     ))}
-                </div>
-                {fields.length < 5 && (
-                    <Button type="button" variant="outline" size="sm" onClick={() => append({ value: "" })}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Image
-                    </Button>
+                  </div>
                 )}
                 <FormField name="images" render={() => <FormMessage />} />
               </div>
@@ -318,3 +341,5 @@ export function AddProductForm() {
     </Dialog>
   );
 }
+
+    
