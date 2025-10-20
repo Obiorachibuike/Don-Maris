@@ -21,8 +21,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ message: "If a user with that email exists, a password reset link has been sent.", success: true });
         }
 
-        const baseUrl = new URL(request.url).origin;
-        await sendEmail({ email, emailType: 'RESET', userId: user._id, baseUrl });
+        await sendEmail({ request, email, emailType: 'RESET', userId: user._id });
 
         return NextResponse.json({ message: "If a user with that email exists, a password reset link has been sent.", success: true });
     } catch (error: any) {

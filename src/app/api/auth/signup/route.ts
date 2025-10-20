@@ -72,8 +72,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (!isAdmin) {
-            const baseUrl = new URL(request.url).origin;
-            await sendEmail({ email, emailType: 'VERIFY', userId: savedUser._id, baseUrl });
+            await sendEmail({ request, email, emailType: 'VERIFY', userId: savedUser._id });
         }
 
         return NextResponse.json({

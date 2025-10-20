@@ -3,6 +3,7 @@
 import nodemailer from 'nodemailer';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
+import { NextRequest } from 'next/server';
 
 const emailTemplate = (name: string, title: string, content: string, ctaLink: string, ctaText: string) => `
 <!DOCTYPE html>
@@ -48,7 +49,7 @@ const emailTemplate = (name: string, title: string, content: string, ctaLink: st
 `;
 
 
-export const sendEmail = async ({ email, emailType, userId, baseUrl }: { email: string, emailType: 'VERIFY' | 'RESET', userId: string, baseUrl: string }) => {
+export const sendEmail = async ({ request, email, emailType, userId }: { request: NextRequest, email: string, emailType: 'VERIFY' | 'RESET', userId: string }) => {
     try {
         const hashedToken = await bcrypt.hash(userId.toString(), 10);
 
@@ -77,6 +78,8 @@ export const sendEmail = async ({ email, emailType, userId, baseUrl }: { email: 
         let ctaLink = '';
         let ctaText = '';
         let title = '';
+
+        const baseUrl = new URL(request.url).origin;
 
         if (emailType === 'VERIFY') {
             subject = 'Verify your email address';
