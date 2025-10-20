@@ -46,10 +46,11 @@ export function Header() {
     return baseNavLinks.filter(link => {
         if (link.show === 'always') return true;
         if (link.show === 'loggedIn' && user) return true;
-        if (link.show === 'adminOnly' && user && user.role !== 'customer') return true;
+        // This line was the issue and has been removed:
+        // if (link.show === 'adminOnly' && user && user.role !== 'customer') return true; 
         return false;
     });
-  }, [user, baseNavLinks]);
+  }, [user]);
 
 
   const totalItems = items.length;
