@@ -55,7 +55,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </CardContent>
         <CardFooter className="p-4 pt-0 flex justify-between items-center">
           <p className="text-2xl font-semibold font-headline text-accent">
-            ${product.price.toFixed(2)}
+            ₦{product.price.toFixed(2)}
           </p>
           <Button size="icon" variant="outline" onClick={handleAddToCart} title="Add to cart">
              <ShoppingCart className="h-5 w-5" />

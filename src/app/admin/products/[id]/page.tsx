@@ -158,7 +158,7 @@ export default function AdminProductDetailsPage() {
                                         <DollarSign className="h-5 w-5 text-muted-foreground" />
                                         <div>
                                             <p className="text-sm text-muted-foreground">Price</p>
-                                            <p className="font-medium">${product.price.toFixed(2)}</p>
+                                            <p className="font-medium">₦{product.price.toFixed(2)}</p>
                                         </div>
                                     </div>
                                      <div className="flex items-center gap-3">
@@ -225,7 +225,7 @@ export default function AdminProductDetailsPage() {
                                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
+                                <div className="text-2xl font-bold">₦{totalRevenue.toFixed(2)}</div>
                                 <p className="text-xs text-muted-foreground">from all-time sales</p>
                             </CardContent>
                         </Card>
@@ -320,7 +320,7 @@ export default function AdminProductDetailsPage() {
                                                 </TableCell>
                                                 <TableCell>{new Date(purchase.date).toLocaleDateString()}</TableCell>
                                                 <TableCell className="text-center">{purchase.quantity}</TableCell>
-                                                <TableCell className="text-right font-medium">${(purchase.quantity * purchase.pricePerUnit).toFixed(2)}</TableCell>
+                                                <TableCell className="text-right font-medium">₦{(purchase.quantity * purchase.pricePerUnit).toFixed(2)}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>

@@ -176,8 +176,8 @@ export function EditOrderForm({ isOpen, setIsOpen, order, onOrderUpdate }: EditO
                                                 min={1}
                                             />
                                         </TableCell>
-                                        <TableCell className="text-right">${item.product.price.toFixed(2)}</TableCell>
-                                        <TableCell className="text-right">${(item.product.price * item.quantity).toFixed(2)}</TableCell>
+                                        <TableCell className="text-right">₦{item.product.price.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right">₦{(item.product.price * item.quantity).toFixed(2)}</TableCell>
                                         <TableCell>
                                             <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.productId)}>
                                                 <X className="h-4 w-4" />

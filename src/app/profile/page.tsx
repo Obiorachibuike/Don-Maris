@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useSession } from '@/contexts/SessionProvider';
@@ -88,7 +89,7 @@ export default function ProfilePage() {
                             <DollarSign className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">${totalSpent.toFixed(2)}</div>
+                            <div className="text-2xl font-bold">₦{totalSpent.toFixed(2)}</div>
                         </CardContent>
                     </Card>
                     <Card>
@@ -107,7 +108,7 @@ export default function ProfilePage() {
                         </CardHeader>
                         <CardContent>
                             <div className={`text-2xl font-bold ${displayUser.ledgerBalance && displayUser.ledgerBalance > 0 ? 'text-destructive' : ''}`}>
-                                ${displayUser.ledgerBalance?.toFixed(2) || '0.00'}
+                                ₦{displayUser.ledgerBalance?.toFixed(2) || '0.00'}
                             </div>
                         </CardContent>
                     </Card>
@@ -152,7 +153,7 @@ export default function ProfilePage() {
                                                     {order.status}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-right">${order.amount.toFixed(2)}</TableCell>
+                                            <TableCell className="text-right">₦{order.amount.toFixed(2)}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>

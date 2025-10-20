@@ -228,8 +228,8 @@ export default function OrderDetailsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-center">{item.quantity}</TableCell>
-                                            <TableCell className="text-right">${item.product.price.toFixed(2)}</TableCell>
-                                            <TableCell className="text-right">${(item.product.price * item.quantity).toFixed(2)}</TableCell>
+                                            <TableCell className="text-right">₦{item.product.price.toFixed(2)}</TableCell>
+                                            <TableCell className="text-right">₦{(item.product.price * item.quantity).toFixed(2)}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -275,16 +275,16 @@ export default function OrderDetailsPage() {
                                 <Separator className="my-2" />
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Subtotal</span>
-                                    <span>${subtotal.toFixed(2)}</span>
+                                    <span>₦{subtotal.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Shipping</span>
-                                    <span>${shipping.toFixed(2)}</span>
+                                    <span>₦{shipping.toFixed(2)}</span>
                                 </div>
                                 <Separator className="my-2" />
                                 <div className="flex justify-between font-bold text-lg">
                                     <span>Total</span>
-                                    <span>${total.toFixed(2)}</span>
+                                    <span>₦{total.toFixed(2)}</span>
                                 </div>
                             </CardContent>
                         </Card>

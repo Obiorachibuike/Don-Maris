@@ -252,7 +252,7 @@ export default function ProductsAdminPage() {
                                         <TableCell>
                                             <Badge variant="outline">{formatProductType(product.type)}</Badge>
                                         </TableCell>
-                                        <TableCell>${product.price.toFixed(2)}</TableCell>
+                                        <TableCell>₦{product.price.toFixed(2)}</TableCell>
                                         <TableCell>{product.stock}</TableCell>
                                         <TableCell>{product.rating.toFixed(1)}</TableCell>
                                         <TableCell>

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
@@ -65,7 +66,7 @@ export default function UserDetailsPage() {
                             <ShoppingBag className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">${totalSpent.toFixed(2)}</div>
+                            <div className="text-2xl font-bold">₦{totalSpent.toFixed(2)}</div>
                         </CardContent>
                     </Card>
                     <Card>
@@ -118,7 +119,7 @@ export default function UserDetailsPage() {
                                                     {order.status}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-right">${order.amount.toFixed(2)}</TableCell>
+                                            <TableCell className="text-right">₦{order.amount.toFixed(2)}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>

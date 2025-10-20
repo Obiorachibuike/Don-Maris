@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from "react";
@@ -129,7 +130,7 @@ export default function OrdersPage() {
                                 <TableRow key={order.id}>
                                     <TableCell className="font-medium">{order.id}</TableCell>
                                     <TableCell>{order.customer}</TableCell>
-                                    <TableCell>${order.amount.toFixed(2)}</TableCell>
+                                    <TableCell>₦{order.amount.toFixed(2)}</TableCell>
                                     <TableCell>
                                         <Badge variant={
                                             order.status === 'Fulfilled' ? 'default' :

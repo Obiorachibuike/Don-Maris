@@ -122,7 +122,7 @@ export default function ProductPage() {
               <span className="text-sm text-muted-foreground">({product.reviews.length} reviews)</span>
             </div>
             
-            <p className="text-4xl font-bold text-accent mb-6">${product.price.toFixed(2)}</p>
+            <p className="text-4xl font-bold text-accent mb-6">₦{product.price.toFixed(2)}</p>
 
             <p className="text-foreground/80 leading-relaxed mb-6">{product.longDescription}</p>
 

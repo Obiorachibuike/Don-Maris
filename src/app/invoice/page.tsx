@@ -111,9 +111,9 @@ export default function InvoicePage() {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">${item.product.price.toFixed(2)}</td>
+                                                <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">₦{item.product.price.toFixed(2)}</td>
                                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground text-center">{item.quantity}</td>
-                                                <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground text-right">${(item.product.price * item.quantity).toFixed(2)}</td>
+                                                <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground text-right">₦{(item.product.price * item.quantity).toFixed(2)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -128,7 +128,7 @@ export default function InvoicePage() {
                         <div className="w-full max-w-sm space-y-4">
                              <div className="flex justify-between">
                                 <span className="text-muted-foreground">Subtotal</span>
-                                <span className="font-medium">${total.toFixed(2)}</span>
+                                <span className="font-medium">₦{total.toFixed(2)}</span>
                             </div>
                              <div className="flex justify-between">
                                 <span className="text-muted-foreground">Shipping</span>
@@ -136,12 +136,12 @@ export default function InvoicePage() {
                             </div>
                              <div className="flex justify-between">
                                 <span className="text-muted-foreground">Total Paid</span>
-                                <span className="font-medium">${paymentStatus === 'paid' ? total.toFixed(2) : (0).toFixed(2)}</span>
+                                <span className="font-medium">₦{paymentStatus === 'paid' ? total.toFixed(2) : (0).toFixed(2)}</span>
                             </div>
                             <Separator />
                             <div className="flex justify-between font-bold text-lg">
                                 <span>Amount Due</span>
-                                <span className={amountDue > 0 ? 'text-destructive' : ''}>${amountDue.toFixed(2)}</span>
+                                <span className={amountDue > 0 ? 'text-destructive' : ''}>₦{amountDue.toFixed(2)}</span>
                             </div>
                         </div>
                     </div>

@@ -86,7 +86,7 @@ export default function CartPage() {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">${item.product.price.toFixed(2)}</td>
+                                            <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">₦{item.product.price.toFixed(2)}</td>
                                             <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">
                                                 <Input
                                                     type="number"
@@ -96,7 +96,7 @@ export default function CartPage() {
                                                     className="w-20"
                                                 />
                                             </td>
-                                            <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">${(item.product.price * item.quantity).toFixed(2)}</td>
+                                            <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">₦{(item.product.price * item.quantity).toFixed(2)}</td>
                                             <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
                                                 <Button variant="ghost" size="icon" onClick={() => removeItem(item.id)}>
                                                     <Trash2 className="h-4 w-4" />
@@ -116,7 +116,7 @@ export default function CartPage() {
                     <div className="w-full max-w-sm space-y-4">
                          <div className="flex justify-between">
                             <span className="text-muted-foreground">Subtotal</span>
-                            <span className="font-medium">${total.toFixed(2)}</span>
+                            <span className="font-medium">₦{total.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Shipping</span>
@@ -125,7 +125,7 @@ export default function CartPage() {
                         <Separator />
                         <div className="flex justify-between font-bold text-lg">
                             <span>Total</span>
-                            <span>${total.toFixed(2)}</span>
+                            <span>₦{total.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>

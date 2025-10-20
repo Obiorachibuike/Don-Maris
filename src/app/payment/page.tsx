@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -266,13 +267,13 @@ export default function PaymentPage() {
                                             <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                                         </div>
                                     </div>
-                                    <p className="font-medium">${(item.product.price * item.quantity).toFixed(2)}</p>
+                                    <p className="font-medium">₦{(item.product.price * item.quantity).toFixed(2)}</p>
                                 </div>
                             ))}
                             <Separator />
                             <div className="flex justify-between font-bold text-xl">
                                 <p>Total</p>
-                                <p>${total.toFixed(2)}</p>
+                                <p>₦{total.toFixed(2)}</p>
                             </div>
                         </CardContent>
                     </Card>

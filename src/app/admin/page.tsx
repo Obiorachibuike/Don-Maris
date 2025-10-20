@@ -74,7 +74,7 @@ export default function AdminDashboard() {
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">$45,231.89</div>
+                    <div className="text-2xl font-bold">₦45,231.89</div>
                     <p className="text-xs text-muted-foreground">+20.1% from last month</p>
                 </CardContent>
             </Card>
@@ -222,7 +222,7 @@ export default function AdminDashboard() {
                             <TableRow key={order.invoiceId}>
                                 <TableCell className="font-medium">{order.invoiceId}</TableCell>
                                 <TableCell>{order.customer}</TableCell>
-                                <TableCell>${order.amount.toFixed(2)}</TableCell>
+                                <TableCell>₦{order.amount.toFixed(2)}</TableCell>
                                 <TableCell>
                                     <Badge variant={
                                         order.status === 'Fulfilled' ? 'default' :
