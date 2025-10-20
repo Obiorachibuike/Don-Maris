@@ -56,7 +56,17 @@ export default function ContactPage() {
                       <div className="flex items-center gap-4">
                           <Phone className="h-6 w-6 text-primary" />
                           <div>
-                              <h3 className="font-semibold">Phone</h3>
+                              <h3 className="font-semibold">WhatsApp</h3>
+                              <a href="tel:+1234567891" className="text-muted-foreground hover:text-primary">
+                                  +1 (234) 567-891
+                              </a>
+                              <p className="text-xs text-muted-foreground">For complaints or more information.</p>
+                          </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                          <Phone className="h-6 w-6 text-primary" />
+                          <div>
+                              <h3 className="font-semibold">Office Phone</h3>
                               <p className="text-muted-foreground">(123) 456-7890</p>
                           </div>
                       </div>
