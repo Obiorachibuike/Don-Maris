@@ -125,6 +125,12 @@ export const useProductStore = create<ProductState>((set, get) => ({
             ...derived
         };
       });
+
+      toast({
+          title: "Product Added",
+          description: `"${newProductFromServer.name}" has been successfully added.`,
+      });
+
     } catch (error: any) {
        const errorMessage = error.message || 'Failed to add product. Please try again.';
         console.error("Failed to add product:", error);

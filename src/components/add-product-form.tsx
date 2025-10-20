@@ -47,7 +47,6 @@ const productTypes: ProductType[] = ['Power Flex', 'Charging Flex', 'Screen', 'B
 
 const formSchema = z.object({
   name: z.string().min(3, 'Product name must be at least 3 characters long.'),
-  brand: z.string().min(1, 'Brand is required.'),
   type: z.enum(productTypes, { required_error: 'Please select a product type.' }),
   price: z.coerce.number().min(0.01, 'Price must be greater than 0.'),
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative.'),
@@ -62,7 +61,6 @@ type ProductFormValues = z.infer<typeof formSchema>;
 
 const defaultFormValues: ProductFormValues = {
   name: '',
-  brand: '',
   type: 'Screen',
   price: 0,
   stock: 0,
@@ -122,8 +120,10 @@ export function AddProductForm() {
 
   const onSubmit = async (data: ProductFormValues) => {
     await addProduct(data);
-    form.reset(defaultFormValues);
-    setIsOpen(false);
+    if (!form.formState.errors || Object.keys(form.formState.errors).length === 0) {
+      form.reset(defaultFormValues);
+      setIsOpen(false);
+    }
   };
   
   const currentImages = form.watch('images');
@@ -168,7 +168,7 @@ export function AddProductForm() {
                   />
                   <FormField
                     control={form.control}
-                    name="brand"
+                    name="type"
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Brand</FormLabel>
