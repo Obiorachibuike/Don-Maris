@@ -7,7 +7,7 @@ dotenv.config();
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
-    serverActions: true,
+    serverActions: {},
   },
   typescript: {
     ignoreBuildErrors: true,
@@ -48,6 +48,10 @@ const nextConfig: NextConfig = {
     PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,
     FLW_SECRET_KEY: process.env.FLW_SECRET_KEY,
     FLW_PUBLIC_KEY: process.env.FLW_PUBLIC_KEY,
+    CLOUDINARY_URL: process.env.CLOUDINARY_URL,
+    CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET
   }
 };
 
