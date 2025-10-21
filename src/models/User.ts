@@ -24,6 +24,10 @@ const UserSchema = new mongoose.Schema<UserType>({
     enum: ['admin', 'sales', 'accountant', 'supplier', 'customer'],
     default: 'customer',
   },
+  address: String,
+  city: String,
+  state: String,
+  zip: String,
   country: {
       type: String,
   },

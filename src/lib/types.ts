@@ -68,6 +68,10 @@ export interface User {
   role: 'admin' | 'sales' | 'accountant' | 'supplier' | 'customer';
   dateJoined: string;
   avatar: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
   ledgerBalance?: number;
   lifetimeValue?: number;
   isVerified?: boolean;

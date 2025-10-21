@@ -13,28 +13,53 @@ import { FormEvent, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useSession } from '@/contexts/SessionProvider';
+import axios from 'axios';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CheckoutPage() {
     const { items, total } = useCart();
+    const { user } = useSession();
     const router = useRouter();
+    const { toast } = useToast();
     const [shouldSaveInfo, setShouldSaveInfo] = useState(true);
 
     useEffect(() => {
-        const savedDetails = localStorage.getItem('don_maris_shipping_details');
-        if (savedDetails) {
-            const details = JSON.parse(savedDetails);
-            const form = document.getElementById('checkout-form') as HTMLFormElement;
-            if (form) {
-                (form.elements.namedItem('name') as HTMLInputElement).value = `${details.firstName} ${details.lastName}`;
-                (form.elements.namedItem('email') as HTMLInputElement).value = details.email;
-                (form.elements.namedItem('phone') as HTMLInputElement).value = details.phone;
-                (form.elements.namedItem('address') as HTMLInputElement).value = details.address;
-                (form.elements.namedItem('city') as HTMLInputElement).value = details.city;
-                (form.elements.namedItem('state') as HTMLInputElement).value = details.state;
-                (form.elements.namedItem('zip') as HTMLInputElement).value = details.zip;
+        let detailsToLoad: any = null;
+
+        if (user) {
+            // If user is logged in, prioritize their saved address
+            detailsToLoad = {
+                firstName: user.name.split(' ')[0],
+                lastName: user.name.split(' ').slice(1).join(' '),
+                email: user.email,
+                phone: (user as any).phone || '', // Assuming phone might be a field
+                address: (user as any).address || '',
+                city: (user as any).city || '',
+                state: (user as any).state || '',
+                zip: (user as any).zip || '',
+            };
+        } else {
+            // Fallback to localStorage for guest users
+            const savedDetails = localStorage.getItem('don_maris_shipping_details');
+            if (savedDetails) {
+                detailsToLoad = JSON.parse(savedDetails);
             }
         }
-    }, []);
+
+        if (detailsToLoad) {
+            const form = document.getElementById('checkout-form') as HTMLFormElement;
+            if (form) {
+                (form.elements.namedItem('name') as HTMLInputElement).value = `${detailsToLoad.firstName} ${detailsToLoad.lastName}`.trim();
+                (form.elements.namedItem('email') as HTMLInputElement).value = detailsToLoad.email || '';
+                (form.elements.namedItem('phone') as HTMLInputElement).value = detailsToLoad.phone || '';
+                (form.elements.namedItem('address') as HTMLInputElement).value = detailsToLoad.address || '';
+                (form.elements.namedItem('city') as HTMLInputElement).value = detailsToLoad.city || '';
+                (form.elements.namedItem('state') as HTMLInputElement).value = detailsToLoad.state || '';
+                (form.elements.namedItem('zip') as HTMLInputElement).value = detailsToLoad.zip || '';
+            }
+        }
+    }, [user]);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -51,9 +76,17 @@ export default function CheckoutPage() {
             zip: formData.get('zip') as string,
         };
 
-        if (shouldSaveInfo) {
+        if (user && shouldSaveInfo) {
+            try {
+                await axios.post('/api/user/update-address', customerDetails);
+                 toast({ title: "Address Saved", description: "Your shipping address has been updated." });
+            } catch (error) {
+                console.error("Failed to save address:", error);
+                toast({ variant: 'destructive', title: "Save Failed", description: "Could not save your address." });
+            }
+        } else if (!user && shouldSaveInfo) {
             localStorage.setItem('don_maris_shipping_details', JSON.stringify(customerDetails));
-        } else {
+        } else if (!shouldSaveInfo) {
             localStorage.removeItem('don_maris_shipping_details');
         }
 
@@ -127,7 +160,7 @@ export default function CheckoutPage() {
                                             onCheckedChange={(checked) => setShouldSaveInfo(Boolean(checked))}
                                         />
                                         <Label htmlFor="save-info" className="cursor-pointer">
-                                            Save my information for a faster checkout
+                                            {user ? "Update my saved shipping address" : "Save my information for a faster checkout"}
                                         </Label>
                                     </div>
                                 </div>
