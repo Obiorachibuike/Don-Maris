@@ -39,7 +39,7 @@ export function Header() {
     { href: '/about', label: 'About', icon: Info, show: 'always' },
     { href: '/contact', label: 'Contact', icon: Mail, show: 'always' },
     { href: '/profile', label: 'Profile', icon: UserIcon, show: 'loggedIn' },
-    { href: '/admin', label: 'Admin', icon: LayoutDashboard, show: 'adminOnly' },
+    { href: '/admin', label: 'Admin', icon: LayoutDashboard, show: 'always' },
   ];
 
   const visibleNavLinks = useMemo(() => {
