@@ -5,6 +5,7 @@ import User from "@/models/User";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { sendEmail, createPaystackVirtualAccount, createFlutterwaveVirtualAccount } from "@/lib/mailer";
+import { getDataFromToken } from "@/lib/get-data-from-token";
 
 const DEVELOPER_EMAIL = 'obiorachibuike22@gmail.com';
 
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const { name, email, password } = await request.json();
+        const { name, email, password, role: requestedRole } = await request.json();
 
         const existingUser = await User.findOne({ email });
 
@@ -28,8 +29,20 @@ export async function POST(request: NextRequest) {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const isAdmin = email === DEVELOPER_EMAIL;
-        const role = isAdmin ? 'admin' : 'customer';
+        // Determine user role
+        const loggedInUserId = await getDataFromToken(request);
+        const loggedInUser = loggedInUserId ? await User.findById(loggedInUserId) : null;
+        let role = 'customer'; // Default role
+        let isVerified = false;
+
+        // If a role is explicitly provided in the request (e.g., by an admin)
+        if (requestedRole && loggedInUser && loggedInUser.role === 'admin') {
+            role = requestedRole;
+            isVerified = true; // Users created by admin are auto-verified
+        } else if (email === DEVELOPER_EMAIL) {
+            role = 'admin';
+            isVerified = true;
+        }
 
         let country = 'Nigeria';
         let countryCode = 'NG';
@@ -55,7 +68,7 @@ export async function POST(request: NextRequest) {
             country,
             countryCode,
             currency,
-            isVerified: isAdmin,
+            isVerified,
         });
 
         const savedUser = await newUser.save();
@@ -74,12 +87,13 @@ export async function POST(request: NextRequest) {
             await savedUser.save();
         }
 
-        if (!isAdmin) {
+        // Only send verification email if user is not pre-verified
+        if (!isVerified) {
             await sendEmail({ request, email, emailType: 'VERIFY', userId: savedUser._id });
         }
 
         return NextResponse.json({
-            message: isAdmin ? "Admin user registered and verified." : "User registered successfully. Please verify your email.",
+            message: isVerified ? "User registered and verified." : "User registered successfully. Please verify your email.",
             success: true,
             user: { id: savedUser._id, name: savedUser.name, email: savedUser.email, role: savedUser.role }
         }, { status: 201 });

@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, PlusCircle } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { useUserStore } from "@/store/user-store";
@@ -25,6 +25,7 @@ import { ChangeRoleDialog } from "@/components/change-role-dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AddUserForm } from "@/components/add-user-form";
 
 export default function EmployeesPage() {
     const { users, isLoading, fetchUsers, deleteUser } = useUserStore();
@@ -105,10 +106,7 @@ export default function EmployeesPage() {
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
-                                <Button>
-                                    <PlusCircle className="mr-2 h-4 w-4" />
-                                    Add Employee
-                                </Button>
+                                <AddUserForm />
                             </div>
                         </div>
                     </CardHeader>

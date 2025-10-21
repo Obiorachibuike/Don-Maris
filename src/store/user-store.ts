@@ -11,6 +11,7 @@ interface UserState {
   isLoading: boolean;
   error: string | null;
   fetchUsers: () => Promise<void>;
+  addUser: (newUserData: Omit<User, '_id' | 'id' | 'dateJoined'>) => Promise<void>;
   updateUser: (userId: string, updatedData: Partial<User>) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
 }
@@ -36,6 +37,27 @@ export const useUserStore = create<UserState>((set, get) => ({
         title: 'Error',
         description: errorMessage,
       });
+    }
+  },
+  addUser: async (newUserData) => {
+    try {
+      const response = await axios.post('/api/auth/signup', newUserData);
+      const newUser = response.data.user;
+       set(state => ({
+        users: [newUser, ...state.users],
+      }));
+       toast({
+          title: "User Added",
+          description: `User "${newUser.name}" has been created.`,
+      });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Failed to add user.';
+      toast({
+        variant: 'destructive',
+        title: 'Add User Failed',
+        description: errorMessage,
+      });
+      throw new Error(errorMessage);
     }
   },
   updateUser: async (userId, updatedData) => {
