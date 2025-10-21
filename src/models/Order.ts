@@ -27,7 +27,7 @@ const OrderSchema = new mongoose.Schema<OrderType>({
   amount: { type: Number, required: true },
   status: {
     type: String,
-    enum: ['Fulfilled', 'Processing', 'Pending', 'Cancelled', 'unpaid', 'partial', 'paid', 'failed'],
+    enum: ['Fulfilled', 'Processing', 'Pending', 'Cancelled'],
     required: true,
   },
   date: { type: String, required: true },
@@ -45,7 +45,8 @@ const OrderSchema = new mongoose.Schema<OrderType>({
   },
   amountPaid: {
       type: Number,
-      required: true
+      required: true,
+      default: 0
   },
   printHistory: [PrintHistoryEntrySchema],
 });

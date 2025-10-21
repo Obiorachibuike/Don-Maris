@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { Product } from './types';
+import type { Product, Order } from './types';
 import { dummyProducts } from './dummy-products';
 
 /**
@@ -33,7 +33,7 @@ export async function getProductById(id: string): Promise<Product | null> {
  * @param orderDetails - The details of the order to be submitted.
  * @returns A promise that resolves to the server's response.
  */
-export async function submitOrder(orderDetails: any) {
+export async function submitOrder(orderDetails: Omit<Order, 'id'>) {
   try {
     const response = await fetch('/api/orders', {
       method: 'POST',

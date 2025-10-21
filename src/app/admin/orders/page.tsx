@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import {
   Table,
@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
+import { MoreHorizontal, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { 
     AlertDialog, 
@@ -30,47 +30,52 @@ import {
 } from "@/components/ui/alert-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { dummyOrders } from "@/lib/dummy-orders";
+import { updateOrder } from "@/lib/dummy-orders";
 import type { Order } from "@/lib/types";
-
-// Flatten order data for the main table view
-const allOrdersData = dummyOrders.map(order => ({
-    id: order.id,
-    customer: order.customer.name,
-    amount: order.amount,
-    status: order.status,
-    date: order.date,
-}));
-
-type DisplayOrder = typeof allOrdersData[0];
 
 export default function OrdersPage() {
     
-    const [orders, setOrders] = useState<DisplayOrder[]>(allOrdersData);
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedOrder, setSelectedOrder] = useState<DisplayOrder | null>(null);
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [newStatus, setNewStatus] = useState<Order['status'] | ''>('');
     const [currentPage, setCurrentPage] = useState(1);
     const ordersPerPage = 10;
 
-    const handleUpdateStatus = (order: DisplayOrder) => {
+    useEffect(() => {
+        const fetchOrders = async () => {
+            setIsLoading(true);
+            try {
+                const response = await fetch('/api/orders');
+                if (!response.ok) throw new Error('Failed to fetch');
+                const data = await response.json();
+                setOrders(data);
+            } catch (error) {
+                console.error("Could not fetch orders:", error);
+                // In a real app, you might show a toast notification here
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchOrders();
+    }, []);
+
+    const handleUpdateStatus = (order: Order) => {
         setSelectedOrder(order);
         setNewStatus(order.status);
     };
 
-    const handleConfirmUpdate = () => {
+    const handleConfirmUpdate = async () => {
         if (selectedOrder && newStatus) {
-            setOrders(currentOrders =>
-                currentOrders.map(o => 
-                    o.id === selectedOrder.id ? { ...o, status: newStatus as Order['status'] } : o
-                )
-            );
-            // In a real app, you'd also update the master dummyOrders array or call an API
-            const orderInMaster = dummyOrders.find(o => o.id === selectedOrder.id);
-            if(orderInMaster) {
-                orderInMaster.status = newStatus as Order['status'];
+            const updatedOrder = await updateOrder(selectedOrder.id, { status: newStatus as Order['status'] });
+            if (updatedOrder) {
+                 setOrders(currentOrders =>
+                    currentOrders.map(o => 
+                        o.id === selectedOrder.id ? updatedOrder : o
+                    )
+                );
             }
-
             setSelectedOrder(null);
             setNewStatus('');
         }
@@ -78,7 +83,7 @@ export default function OrdersPage() {
 
     const filteredOrders = orders.filter(order => 
         String(order.id).toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customer.toLowerCase().includes(searchTerm.toLowerCase())
+        order.customer.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const indexOfLastOrder = currentPage * ordersPerPage;
@@ -126,10 +131,16 @@ export default function OrdersPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {currentOrders.map(order => (
+                            {isLoading ? (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="h-24 text-center">
+                                        <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                                    </TableCell>
+                                </TableRow>
+                            ) : currentOrders.map(order => (
                                 <TableRow key={order.id}>
                                     <TableCell className="font-medium">{order.id}</TableCell>
-                                    <TableCell>{order.customer}</TableCell>
+                                    <TableCell>{order.customer.name}</TableCell>
                                     <TableCell>₦{order.amount.toFixed(2)}</TableCell>
                                     <TableCell>
                                         <Badge variant={

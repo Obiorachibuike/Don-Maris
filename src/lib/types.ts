@@ -98,7 +98,7 @@ export interface Order {
   customer: Customer;
   shippingAddress: string;
   amount: number;
-  status: 'Fulfilled' | 'Processing' | 'Pending' | 'Cancelled' | 'unpaid' | 'partial' | 'paid' | 'failed';
+  status: 'Fulfilled' | 'Processing' | 'Pending' | 'Cancelled';
   date: string;
   paymentMethod: string;
   items: OrderItem[];

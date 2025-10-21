@@ -41,3 +41,30 @@ export async function GET(
         return NextResponse.json({ error: `Failed to fetch order: ${error.message}` }, { status: 500 });
     }
 }
+
+export async function PUT(
+    request: Request,
+    { params }: { params: { id: string } }
+) {
+    const { id } = params;
+    try {
+        await connectDB();
+        const updatedData: Partial<Order> = await request.json();
+
+        const updatedOrder = await OrderModel.findOneAndUpdate(
+            { id: id },
+            { $set: updatedData },
+            { new: true, runValidators: true }
+        ).lean();
+        
+        if (!updatedOrder) {
+            return new NextResponse('Order not found', { status: 404 });
+        }
+
+        return NextResponse.json(JSON.parse(JSON.stringify(updatedOrder)));
+
+    } catch (error: any) {
+        console.error(`Failed to update order ${id}:`, error);
+        return NextResponse.json({ error: `Failed to update order: ${error.message}` }, { status: 500 });
+    }
+}

@@ -16,7 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { dummyOrders } from '@/lib/dummy-orders';
+import { updateOrder } from '@/lib/dummy-orders';
 import { useProductStore } from '@/store/product-store';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -27,12 +27,6 @@ import { EditOrderForm } from '@/components/edit-order-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PrintConfirmationDialog } from '@/components/print-confirmation-dialog';
 import { useSession } from '@/contexts/SessionProvider';
-
-const getOrderDetails = (id: string): Order | undefined => {
-    // Return a copy to prevent direct mutation
-    const order = dummyOrders.find(order => order.id === id);
-    return order ? { ...order, items: [...order.items], printHistory: [...(order.printHistory || [])] } : undefined;
-}
 
 export default function OrderDetailsPage() {
     const params = useParams();
@@ -59,12 +53,11 @@ export default function OrderDetailsPage() {
                         const data = await response.json();
                         setOrder(data);
                     } else {
-                        // Fallback to dummy data if API fails
-                        setOrder(getOrderDetails(orderId));
+                       setOrder(undefined);
                     }
                 } catch (error) {
-                    console.error("Failed to fetch order, using fallback.", error);
-                    setOrder(getOrderDetails(orderId));
+                    console.error("Failed to fetch order", error);
+                    setOrder(undefined);
                 }
             }
         }
