@@ -41,8 +41,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
         // Allow admin to edit any user, or user to edit their own profile
         const loggedInUser = await User.findById(loggedInUserId);
-        if (!loggedInUser || (loggedInUser.role === 'customer' && loggedInUserId !== id)) {
-             return NextResponse.json({ error: "Not authorized to perform this action." }, { status: 403 });
+        
+        if (!loggedInUser || loggedInUser.role === 'customer') {
+             return NextResponse.json({ error: "Not authorized" }, { status: 403 });
         }
         
         const body = await request.json();
@@ -104,10 +105,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
         const { id } = params;
 
         const loggedInUser = await User.findById(loggedInUserId);
-
-        // User can delete themselves, or an admin can delete anyone.
-        if (!loggedInUser || (loggedInUser.role === 'customer' && loggedInUserId !== id)) {
-             return NextResponse.json({ error: "Not authorized to perform this action" }, { status: 403 });
+        
+        if (!loggedInUser || loggedInUser.role === 'customer') {
+             return NextResponse.json({ error: "Not authorized" }, { status: 403 });
         }
 
         const deletedUser = await User.findByIdAndDelete(id);
