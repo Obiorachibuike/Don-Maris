@@ -6,6 +6,7 @@ import axios from 'axios';
 import { usePathname } from 'next/navigation';
 
 interface User {
+    _id: string;
     id: string;
     name: string;
     email: string;
