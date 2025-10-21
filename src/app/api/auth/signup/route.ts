@@ -34,11 +34,13 @@ export async function POST(request: NextRequest) {
         const loggedInUser = loggedInUserId ? await User.findById(loggedInUserId) : null;
         let role = 'customer'; // Default role
         let isVerified = false;
+        let createdByAdmin = false;
 
         // If a role is explicitly provided in the request (e.g., by an admin)
         if (requestedRole && loggedInUser && loggedInUser.role === 'admin') {
             role = requestedRole;
             isVerified = true; // Users created by admin are auto-verified
+            createdByAdmin = true;
         } else if (email === DEVELOPER_EMAIL) {
             role = 'admin';
             isVerified = true;
@@ -87,13 +89,15 @@ export async function POST(request: NextRequest) {
             await savedUser.save();
         }
 
-        // Only send verification email if user is not pre-verified
-        if (!isVerified) {
+        // Send appropriate email
+        if (createdByAdmin) {
+            await sendEmail({ request, email, emailType: 'ADMIN_CREATED', userId: savedUser._id, password: password });
+        } else if (!isVerified) {
             await sendEmail({ request, email, emailType: 'VERIFY', userId: savedUser._id });
         }
 
         return NextResponse.json({
-            message: isVerified ? "User registered and verified." : "User registered successfully. Please verify your email.",
+            message: createdByAdmin ? "User created successfully. A welcome email has been sent." : "User registered successfully. Please verify your email.",
             success: true,
             user: { id: savedUser._id, name: savedUser.name, email: savedUser.email, role: savedUser.role }
         }, { status: 201 });

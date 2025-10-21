@@ -19,6 +19,9 @@ const emailTemplate = (name: string, title: string, content: string, ctaLink: st
         .header h1 { color: #FFD54A; margin: 0; font-family: 'Poppins', sans-serif; }
         .content { padding: 30px; color: #333; line-height: 1.6; }
         .content h2 { font-family: 'Poppins', sans-serif; color: #0F172A; }
+        .credentials { background-color: #f9f9f9; border: 1px solid #eaeaea; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .credentials p { margin: 5px 0; }
+        .credentials strong { color: #0F172A; }
         .button-container { text-align: center; margin: 30px 0; }
         .button { background-color: #6D5DF6; color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; }
         .footer { background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #eaeaea; }
@@ -49,14 +52,46 @@ const emailTemplate = (name: string, title: string, content: string, ctaLink: st
 `;
 
 
-export const sendEmail = async ({ request, email, emailType, userId }: { request: NextRequest, email: string, emailType: 'VERIFY' | 'RESET', userId: string }) => {
+export const sendEmail = async ({ request, email, emailType, userId, password }: { request: NextRequest, email: string, emailType: 'VERIFY' | 'RESET' | 'ADMIN_CREATED', userId: string, password?: string }) => {
     try {
         const hashedToken = await bcrypt.hash(userId.toString(), 10);
+        let subject = '';
+        let content = '';
+        let ctaLink = '';
+        let ctaText = '';
+        let title = '';
 
+        const baseUrl = new URL(request.url).origin;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new Error("User not found to send email.");
+        }
+        const userName = user.name;
+        
         if (emailType === "VERIFY") {
             await User.findByIdAndUpdate(userId, { verifyToken: hashedToken, verifyTokenExpiry: Date.now() + 3600000 });
+            subject = 'Verify your email address';
+            title = 'Email Verification';
+            content = 'Welcome to Don Maris Accessories! We\'re excited to have you. Please verify your email address to complete your registration by clicking the button below.';
+            ctaLink = `${baseUrl}/verify-email?token=${hashedToken}`;
+            ctaText = 'Verify Email';
         } else if (emailType === 'RESET') {
             await User.findByIdAndUpdate(userId, { forgotPasswordToken: hashedToken, forgotPasswordTokenExpiry: Date.now() + 3600000 });
+            subject = 'Reset your password';
+            title = 'Password Reset';
+            content = 'You requested a password reset. Click the button below to set a new password. This link will expire in 1 hour.';
+            ctaLink = `${baseUrl}/reset-password?token=${hashedToken}`;
+            ctaText = 'Reset Password';
+        } else if (emailType === 'ADMIN_CREATED') {
+            if (!password) {
+                throw new Error("Password is required for ADMIN_CREATED email type.");
+            }
+            subject = 'Your Account has been created';
+            title = 'Welcome to Don Maris';
+            content = `An administrator has created an account for you. You can log in using the credentials below. We recommend changing your password after your first login.<br><br><div class="credentials"><p><strong>Email:</strong> ${email}</p><p><strong>Password:</strong> ${password}</p></div>`;
+            ctaLink = `${baseUrl}/login`;
+            ctaText = 'Login Now';
         }
 
         const transport = nodemailer.createTransport({
@@ -66,34 +101,6 @@ export const sendEmail = async ({ request, email, emailType, userId }: { request
                 pass: process.env.EMAIL_SERVER_PASSWORD,
             }
         });
-
-        const user = await User.findById(userId);
-        if (!user) {
-            throw new Error("User not found to send email.");
-        }
-        const userName = user.name;
-        
-        let subject = '';
-        let content = '';
-        let ctaLink = '';
-        let ctaText = '';
-        let title = '';
-
-        const baseUrl = new URL(request.url).origin;
-
-        if (emailType === 'VERIFY') {
-            subject = 'Verify your email address';
-            title = 'Email Verification';
-            content = 'Welcome to Don Maris Accessories! We\'re excited to have you. Please verify your email address to complete your registration by clicking the button below.';
-            ctaLink = `${baseUrl}/verify-email?token=${hashedToken}`;
-            ctaText = 'Verify Email';
-        } else if (emailType === 'RESET') {
-            subject = 'Reset your password';
-            title = 'Password Reset';
-            content = 'You requested a password reset. Click the button below to set a new password. This link will expire in 1 hour.';
-            ctaLink = `${baseUrl}/reset-password?token=${hashedToken}`;
-            ctaText = 'Reset Password';
-        }
 
         const mailOptions = {
             from: `"Don Maris" <${process.env.EMAIL_FROM}>`,
