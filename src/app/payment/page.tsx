@@ -54,7 +54,7 @@ export default function PaymentPage() {
     const [isPayLaterLoading, setIsPayLaterLoading] = useState(false);
     const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null);
     const { toast } = useToast();
-    const { decreaseStock } = useProductStore();
+    const { decreaseStock, products } = useProductStore();
     
     const isNigeria = user?.countryCode === 'NG';
     
@@ -67,6 +67,29 @@ export default function PaymentPage() {
             router.push('/checkout');
         }
     }, [router]);
+
+    const updateStockInDatabase = async (productId: string, quantitySold: number) => {
+        const product = products.find(p => p.id === productId);
+        if (!product) return;
+        
+        const newStock = product.stock - quantitySold;
+        
+        try {
+            await fetch(`/api/products/${productId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    stock: newStock,
+                    stockChangeReason: 'Sale',
+                    stockChangeUser: user?.name || shippingDetails?.customer.firstName || 'Customer'
+                }),
+            });
+            decreaseStock(productId, quantitySold); // Update client state
+        } catch (error) {
+            console.error(`Failed to update stock for product ${productId}`, error);
+        }
+    };
+
 
     const handleCardCheckout = async () => {
         if (!user || !shippingDetails) return;
@@ -82,6 +105,11 @@ export default function PaymentPage() {
         }
 
         try {
+            // Update stock before redirecting to payment
+            for (const item of shippingDetails.items) {
+                await updateStockInDatabase(item.product.id, item.quantity);
+            }
+
             const res = await fetch("/api/checkout", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -94,8 +122,6 @@ export default function PaymentPage() {
 
             const data = await res.json();
             if (data.checkoutUrl) {
-                // Pre-emptively decrease stock
-                shippingDetails.items.forEach(item => decreaseStock(item.product.id, item.quantity));
                 clearCart();
                 window.location.href = data.checkoutUrl;
             } else {
@@ -140,7 +166,11 @@ export default function PaymentPage() {
         const result = await submitOrder(orderDetails);
         
         if (result.status === 'success' || result.id) {
-            shippingDetails.items.forEach(item => decreaseStock(item.product.id, item.quantity));
+            // Update stock for each item sold
+            for (const item of shippingDetails.items) {
+                await updateStockInDatabase(item.product.id, item.quantity);
+            }
+
             const finalOrder = { ...orderDetails, invoiceId: result.id || `DM-${Date.now()}`, date: new Date(orderDetails.date).toLocaleDateString(), customer: { ...orderDetails.customer, name: `${shippingDetails.customer.firstName} ${shippingDetails.customer.lastName}`.trim() } };
             sessionStorage.setItem('don_maris_order', JSON.stringify(finalOrder));
             

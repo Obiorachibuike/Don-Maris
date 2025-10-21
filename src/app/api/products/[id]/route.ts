@@ -55,14 +55,15 @@ export async function PUT(
     }
     
     try {
-        const updatedData: Partial<Product> = await request.json();
+        const updatedData: Partial<Product> & { stockChangeReason?: StockHistoryEntry['type'], stockChangeUser?: string } = await request.json();
         const existingProduct = await ProductModel.findOne({ id: id }).lean();
 
         if (!existingProduct) {
             return new NextResponse('Product not found', { status: 404 });
         }
-
-        const newStockHistory = existingProduct.stockHistory ? [...existingProduct.stockHistory] : [];
+        
+        // Ensure stockHistory is an array
+        const newStockHistory = Array.isArray(existingProduct.stockHistory) ? [...existingProduct.stockHistory] : [];
 
         // Check if stock has been updated
         if (updatedData.stock !== undefined && updatedData.stock !== existingProduct.stock) {
@@ -70,15 +71,22 @@ export async function PUT(
                 date: new Date().toISOString(),
                 quantityChange: updatedData.stock - existingProduct.stock,
                 newStockLevel: updatedData.stock,
-                type: 'Admin Update',
-                updatedBy: 'Admin', // In a real app, get this from session
+                type: updatedData.stockChangeReason || 'Admin Update',
+                updatedBy: updatedData.stockChangeUser || 'Admin', // In a real app, get this from session
             };
             newStockHistory.push(stockChange);
         }
 
+        const { stockChangeReason, stockChangeUser, ...productUpdateData } = updatedData;
+
+        const finalUpdateData = {
+            ...productUpdateData,
+            stockHistory: newStockHistory,
+        };
+
         const updatedProduct = await ProductModel.findOneAndUpdate(
             { id: id },
-            { $set: { ...updatedData, stockHistory: newStockHistory } },
+            { $set: finalUpdateData },
             { new: true, runValidators: true }
         ).lean();
 

@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { submitOrder } from '@/lib/client-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useSession } from '@/contexts/SessionProvider';
 
 interface SupplyItem {
     id: string; // Changed to product ID for consistency
@@ -49,6 +50,7 @@ export default function SourcingPage() {
     const [quantityToAdd, setQuantityToAdd] = useState(1);
     const [isPurchasing, setIsPurchasing] = useState(false);
     const { products, fetchProducts, decreaseStock } = useProductStore();
+    const { user } = useSession();
     const { toast } = useToast();
     const router = useRouter();
 
@@ -160,6 +162,35 @@ export default function SourcingPage() {
     
     const totalCost = currentSubtotal + previousBalance;
 
+    const updateStockInDatabase = async (productId: string, quantitySold: number) => {
+        const product = products.find(p => p.id === productId);
+        if (!product) return;
+        
+        const newStock = product.stock - quantitySold;
+        
+        try {
+            await fetch(`/api/products/${productId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    stock: newStock,
+                    stockChangeReason: 'Sale',
+                    stockChangeUser: user?.name || 'Sourcing Dept.'
+                }),
+            });
+            // Also update local Zustand store state
+            decreaseStock(productId, quantitySold);
+        } catch (error) {
+            console.error(`Failed to update stock for product ${productId}`, error);
+            toast({
+                variant: 'destructive',
+                title: `Stock Update Failed`,
+                description: `Could not update stock for ${product.name}.`,
+            });
+        }
+    };
+
+
     const processSubmission = async (action: 'preview' | 'purchase') => {
          if (!selectedCustomer || !address || !deliveryMethod) {
             toast({
@@ -177,7 +208,6 @@ export default function SourcingPage() {
             });
             return;
         }
-
 
         const customerName = selectedCustomer.name;
         const [firstName, ...lastNameParts] = customerName.split(' ');
@@ -226,17 +256,19 @@ export default function SourcingPage() {
                 paymentStatus: 'unpaid' as PaymentStatus,
             };
             const result = await submitOrder(orderDetails);
-            setIsPurchasing(false);
-
+            
             if (result.status === 'success' || result.id) {
-                cartItems.forEach(item => {
-                    decreaseStock(item.product.id, item.quantity);
-                });
+                 // Update stock for each item sold
+                for (const item of cartItems) {
+                    await updateStockInDatabase(item.product.id, item.quantity);
+                }
+
                 toast({
                     title: "Purchase Recorded!",
-                    description: "The order has been successfully created.",
+                    description: "The order has been successfully created and stock has been updated.",
                 });
-                // Optionally reset form
+
+                // Reset form
                 setSupplyItems([]);
                 setSelectedCustomer(null);
                 setAddress('');
@@ -252,6 +284,7 @@ export default function SourcingPage() {
                     description: "There was a problem recording the purchase. Please try again.",
                 });
             }
+            setIsPurchasing(false);
         }
     }
     

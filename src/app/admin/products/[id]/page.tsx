@@ -256,7 +256,7 @@ export default function AdminProductDetailsPage() {
                                             <TableRow key={index}>
                                                 <TableCell>{format(new Date(entry.date), "MMM d, yyyy 'at' h:mm a")}</TableCell>
                                                 <TableCell>
-                                                    <Badge variant={entry.type === 'Initial' ? 'secondary' : 'default'} className={cn(entry.type === 'Admin Update' && 'bg-blue-100 text-blue-800')}>{entry.type}</Badge>
+                                                    <Badge variant={entry.type === 'Initial' ? 'secondary' : (entry.type === 'Sale' ? 'destructive' : 'default')} className={cn(entry.type === 'Admin Update' && 'bg-blue-100 text-blue-800')}>{entry.type}</Badge>
                                                 </TableCell>
                                                 <TableCell>{entry.updatedBy}</TableCell>
                                                 <TableCell className={cn("text-center font-medium", entry.quantityChange > 0 ? 'text-green-600' : 'text-destructive')}>
