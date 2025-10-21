@@ -24,6 +24,14 @@ const UserSchema = new mongoose.Schema<UserType>({
     enum: ['admin', 'sales', 'accountant', 'supplier', 'customer'],
     default: 'customer',
   },
+  status: {
+    type: String,
+    enum: ['active', 'inactive'],
+    default: 'active'
+  },
+  forceLogoutBefore: {
+    type: Date,
+  },
   address: String,
   city: String,
   state: String,
@@ -67,6 +75,15 @@ const UserSchema = new mongoose.Schema<UserType>({
   age: {
       type: Number,
   }
+});
+
+// Add a pre-hook for find operations to exclude inactive users by default, unless specified
+UserSchema.pre(/^find/, function(next) {
+    if ((this as any).getOptions().includeInactive !== true) {
+      // @ts-ignore
+      this.where({ status: { $ne: 'inactive' } });
+    }
+    next();
 });
 
 export default mongoose.models.User || mongoose.model<UserType>('User', UserSchema);

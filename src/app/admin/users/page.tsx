@@ -14,8 +14,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { useUserStore } from "@/store/user-store";
@@ -26,14 +26,17 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AddUserForm } from "@/components/add-user-form";
+import { cn } from "@/lib/utils";
 
 export default function UsersPage() {
-    const { users, isLoading, fetchUsers, deleteUser } = useUserStore();
+    const { users, isLoading, fetchUsers, updateUser, deleteUser } = useUserStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<User | null>(null);
     const [userToDeactivate, setUserToDeactivate] = useState<User | null>(null);
+    const [userToLogout, setUserToLogout] = useState<User | null>(null);
     
     useEffect(() => {
         fetchUsers();
@@ -48,26 +51,57 @@ export default function UsersPage() {
         setSelectedUser(user);
         setIsRoleModalOpen(true);
     };
-
+    
     const handleDeactivate = (user: User) => {
         setUserToDeactivate(user);
     };
 
+    const handleDelete = (user: User) => {
+        setUserToDelete(user);
+    };
+    
+    const handleLogoutUser = (user: User) => {
+        setUserToLogout(user);
+    };
+
     const confirmDeactivate = async () => {
         if (userToDeactivate) {
-            await deleteUser(userToDeactivate._id);
+            await updateUser(userToDeactivate._id, { status: 'inactive' });
             toast({
                 title: "User Deactivated",
-                description: `${userToDeactivate.name} has been removed from the system.`,
+                description: `${userToDeactivate.name} has been deactivated.`,
             });
             setUserToDeactivate(null);
         }
     };
+    
+    const confirmDelete = async () => {
+        if (userToDelete) {
+            await deleteUser(userToDelete._id);
+            toast({
+                title: "User Deleted",
+                description: `${userToDelete.name} has been permanently deleted.`,
+            });
+            setUserToDelete(null);
+        }
+    };
+    
+     const confirmLogout = async () => {
+        if (userToLogout) {
+            await updateUser(userToLogout._id, { forceLogoutBefore: new Date(Date.now() + 5000) });
+            toast({
+                title: "User Logout Initiated",
+                description: `${userToLogout.name} will be logged out shortly.`,
+            });
+            setUserToLogout(null);
+        }
+    };
 
     const filteredUsers = users.filter(user => 
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.role.toLowerCase().includes(searchTerm.toLowerCase())
+        user.role.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        user.status !== 'inactive'
     );
 
     const TableSkeleton = () => (
@@ -120,7 +154,7 @@ export default function UsersPage() {
                             </TableHeader>
                             <TableBody>
                                 {isLoading ? <TableSkeleton /> : filteredUsers.map(user => (
-                                    <TableRow key={user._id}>
+                                    <TableRow key={user._id} className={cn(user.status === 'inactive' && 'opacity-50')}>
                                         <TableCell className="font-medium">
                                             <Link href={`/admin/users/${user._id}`} className="flex items-center gap-3 group">
                                                 <Avatar>
@@ -152,7 +186,15 @@ export default function UsersPage() {
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem onSelect={() => handleEdit(user)}>Edit User</DropdownMenuItem>
                                                     <DropdownMenuItem onSelect={() => handleChangeRole(user)}>Change Role</DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-red-500" onSelect={() => handleDeactivate(user)}>Deactivate User</DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    {user.role !== 'customer' && user.role !== 'admin' && (
+                                                        <DropdownMenuItem onSelect={() => handleLogoutUser(user)}>
+                                                            <LogOut className="mr-2 h-4 w-4" />
+                                                            Force Logout
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                    <DropdownMenuItem onSelect={() => handleDeactivate(user)}>Deactivate User</DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-red-500" onSelect={() => handleDelete(user)}>Permanently Delete</DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
@@ -180,15 +222,47 @@ export default function UsersPage() {
             <AlertDialog open={!!userToDeactivate} onOpenChange={(isOpen) => !isOpen && setUserToDeactivate(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogTitle>Deactivate {userToDeactivate?.name}?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will deactivate the user "{userToDeactivate?.name}". This action can be reversed by an administrator, but the user will lose access immediately.
+                            This will prevent the user from logging in. Their data will be preserved. You can reactivate them later.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel onClick={() => setUserToDeactivate(null)}>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={confirmDeactivate} className="bg-destructive hover:bg-destructive/90">
-                            Yes, deactivate user
+                            Yes, deactivate
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            <AlertDialog open={!!userToDelete} onOpenChange={(isOpen) => !isOpen && setUserToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Permanently delete {userToDelete?.name}?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                           This action is irreversible and will permanently delete the user and all associated data.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setUserToDelete(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
+                            Yes, permanently delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+             <AlertDialog open={!!userToLogout} onOpenChange={(isOpen) => !isOpen && setUserToLogout(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Force logout for {userToLogout?.name}?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will log the user out of their current session. They will be able to log back in.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setUserToLogout(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmLogout}>
+                            Yes, force logout
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

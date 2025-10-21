@@ -1,4 +1,5 @@
 
+
 import { connectDB } from "@/lib/dbConnect";
 import User from "@/models/User";
 import { NextRequest, NextResponse } from "next/server";
@@ -16,9 +17,14 @@ export async function POST(request: NextRequest) {
     try {
         const { email, password } = await request.json();
         
-        const user = await User.findOne({ email });
+        // Find user, including inactive ones for login attempt
+        const user = await User.findOne({ email }).setOptions({ includeInactive: true });
         if (!user) {
             return NextResponse.json({ error: "No user found with that email address." }, { status: 404 });
+        }
+        
+        if (user.status === 'inactive') {
+            return NextResponse.json({ error: "Your account has been deactivated. Please contact support." }, { status: 403 });
         }
         
         const isPasswordCorrect = await bcrypt.compare(password, user.password);

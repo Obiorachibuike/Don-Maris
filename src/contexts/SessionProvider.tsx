@@ -11,6 +11,8 @@ interface User {
     name: string;
     email: string;
     role: string;
+    status?: 'active' | 'inactive';
+    forceLogoutBefore?: Date;
     ledgerBalance?: number;
     countryCode?: string;
 }
@@ -29,30 +31,39 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
 
-  const fetchUser = useCallback(async () => {
-    // No need to set loading to true here on every fetch, only on initial load.
-    try {
-      const res = await axios.get('/api/auth/me');
-      setUser(res.data.data);
-    } catch (error) {
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser, pathname]);
-
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await axios.get('/api/auth/logout');
       setUser(null);
     } catch (error) {
       console.error("Logout failed", error);
     }
-  };
+  }, []);
+
+  const fetchUser = useCallback(async () => {
+    try {
+      const res = await axios.get('/api/auth/me');
+      const fetchedUser = res.data.data as User;
+
+      // Forced logout check
+      if (fetchedUser.forceLogoutBefore && new Date(fetchedUser.forceLogoutBefore) > new Date()) {
+          console.log("Forced logout triggered.");
+          await logout();
+          return;
+      }
+      setUser(fetchedUser);
+
+    } catch (error) {
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [logout]);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser, pathname]);
+
 
   return (
     <SessionContext.Provider value={{ user, isLoading, logout, refetchUser: fetchUser }}>

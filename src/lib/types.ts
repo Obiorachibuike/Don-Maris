@@ -1,4 +1,5 @@
 
+
 export type ProductType = 'Power Flex' | 'Charging Flex' | 'Screen' | 'Backglass' | 'Glass' | 'Tools' | 'Machine';
 
 export type Review = {
@@ -66,6 +67,8 @@ export interface User {
   email: string;
   password?: string;
   role: 'admin' | 'sales' | 'accountant' | 'supplier' | 'customer';
+  status?: 'active' | 'inactive';
+  forceLogoutBefore?: Date;
   dateJoined: string;
   avatar: string;
   address?: string;

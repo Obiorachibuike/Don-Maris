@@ -21,13 +21,10 @@ export const useUserStore = create<UserState>((set, get) => ({
   isLoading: true,
   error: null,
   fetchUsers: async () => {
-    if (get().users.length > 0 && !get().isLoading) {
-      // Data is already fresh, no need to fetch again
-      return;
-    }
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get('/api/users');
+      // Pass a param to include inactive users for admin views
+      const response = await axios.get('/api/users?includeInactive=true');
       set({ users: response.data, isLoading: false });
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Failed to fetch users.';
@@ -65,7 +62,7 @@ export const useUserStore = create<UserState>((set, get) => ({
       const response = await axios.put(`/api/users/${userId}`, updatedData);
       const updatedUser = response.data;
       set(state => ({
-        users: state.users.map(user => (user._id === userId ? updatedUser : user)),
+        users: state.users.map(user => (user._id === userId ? { ...user, ...updatedUser } : user)),
       }));
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Failed to update user.';
@@ -84,10 +81,10 @@ export const useUserStore = create<UserState>((set, get) => ({
         users: state.users.filter(user => user._id !== userId),
       }));
     } catch (error: any) {
-       const errorMessage = error.response?.data?.error || 'Failed to deactivate user.';
+       const errorMessage = error.response?.data?.error || 'Failed to delete user.';
        toast({
         variant: 'destructive',
-        title: 'Deactivation Failed',
+        title: 'Delete Failed',
         description: errorMessage,
       });
       throw new Error(errorMessage);
