@@ -1,44 +1,79 @@
 
-
 'use client';
 
 import { useSession } from '@/contexts/SessionProvider';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+<<<<<<< HEAD
 import { Mail, Calendar, ShoppingBag, DollarSign, Wallet, Loader2, Pencil } from 'lucide-react';
+=======
+import { Mail, Calendar, ShoppingBag, DollarSign, Wallet, Loader2, CreditCard } from 'lucide-react';
+>>>>>>> 6824bef (I want  that when users place an order without payment or partial paymen)
 import { getOrdersByUserId } from '@/lib/dummy-users';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { Order } from '@/lib/types';
+<<<<<<< HEAD
 import { Button } from '@/components/ui/button';
 import { EditUserProfileForm } from '@/components/edit-user-profile-form';
+=======
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import axios from 'axios';
+>>>>>>> 6824bef (I want  that when users place an order without payment or partial paymen)
 
 export default function ProfilePage() {
     const { user, isLoading, refetchUser } = useSession();
     const [userOrders, setUserOrders] = useState<Order[]>([]);
+<<<<<<< HEAD
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+=======
+    const [isPaying, setIsPaying] = useState<string | null>(null); // Store paying orderId
+    const router = useRouter();
+    const { toast } = useToast();
+>>>>>>> 6824bef (I want  that when users place an order without payment or partial paymen)
 
-    const mockUser = {
-        id: 'CUST_MOCK',
-        name: 'Test User',
-        email: 'test@example.com',
-        role: 'customer',
-        dateJoined: new Date().toISOString(),
-        avatar: 'https://placehold.co/100x100.png',
-        ledgerBalance: 42.50,
-    };
-    
-    const displayUser = user || mockUser;
+    const displayUser = user;
 
     useEffect(() => {
+        if (!isLoading && !user) {
+            router.push('/login');
+        }
         if (displayUser && displayUser.role === 'customer') {
             setUserOrders(getOrdersByUserId(displayUser.id));
         }
-    }, [displayUser]);
+    }, [displayUser, isLoading, user, router]);
 
-    if (isLoading && !user) {
+    const handlePayNow = async (order: Order) => {
+        if (!user) return;
+        setIsPaying(order.id);
+
+        const amountToPay = order.amount - order.amountPaid;
+
+        try {
+            const res = await axios.post("/api/checkout", {
+                userId: user.id, // The User model might use `_id`
+                amount: amountToPay,
+                orderId: order.id
+            });
+
+            const data = res.data;
+            if (data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+            } else {
+                toast({ variant: 'destructive', title: 'Error', description: data.error || "Error initializing payment" });
+                setIsPaying(null);
+            }
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: "Could not initialize payment. Please try again." });
+            setIsPaying(null);
+        }
+    };
+
+    if (isLoading || !displayUser) {
         return (
             <div className="container mx-auto flex min-h-[80vh] items-center justify-center">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -79,6 +114,7 @@ export default function ProfilePage() {
                             )}
                         </div>
                     </CardHeader>
+<<<<<<< HEAD
                     <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-muted-foreground">
                             <div className="flex items-center gap-3">
@@ -99,6 +135,69 @@ export default function ProfilePage() {
                             )}
                         </div>
                     </CardContent>
+=======
+                    {userOrders.length > 0 && (
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Order ID</TableHead>
+                                        <TableHead>Date</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Payment</TableHead>
+                                        <TableHead className="text-right">Amount</TableHead>
+                                        <TableHead className="text-right">Action</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {userOrders.map(order => (
+                                        <TableRow key={order.id}>
+                                            <TableCell>
+                                                <Link href={`/admin/orders/${order.id}`} className="text-primary hover:underline font-medium">
+                                                    {order.id}
+                                                </Link>
+                                            </TableCell>
+                                            <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={
+                                                    order.status === 'Fulfilled' ? 'default' :
+                                                    order.status === 'Processing' ? 'secondary' :
+                                                    'destructive'
+                                                } className={order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : order.status === 'Cancelled' ? 'bg-gray-500/20 text-gray-700 border-gray-500/20' : ''}>
+                                                    {order.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={
+                                                    order.paymentStatus === 'Paid' ? 'default' :
+                                                    order.paymentStatus === 'Not Paid' ? 'destructive' :
+                                                    'secondary'
+                                                } className={order.paymentStatus === 'Incomplete' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : ''}>
+                                                    {order.paymentStatus}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">₦{order.amount.toFixed(2)}</TableCell>
+                                             <TableCell className="text-right">
+                                                {order.paymentStatus !== 'Paid' ? (
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => handlePayNow(order)}
+                                                        disabled={isPaying === order.id}
+                                                    >
+                                                        {isPaying === order.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
+                                                        Pay Now
+                                                    </Button>
+                                                ) : (
+                                                    <span className="text-sm text-muted-foreground">Paid</span>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    )}
+>>>>>>> 6824bef (I want  that when users place an order without payment or partial paymen)
                 </Card>
                 
                 {isCustomer && (

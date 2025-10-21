@@ -13,18 +13,27 @@ let allUsers: User[] = [
     { _id: 'CUST001', id: 'CUST001', name: 'Olivia Martin', email: 'olivia.martin@email.com', role: 'customer', dateJoined: '2023-11-23', avatar: 'https://placehold.co/100x100.png', ledgerBalance: 0, lifetimeValue: 219.95 },
     { _id: 'CUST002', id: 'CUST002', name: 'Jackson Lee', email: 'jackson.lee@email.com', role: 'customer', dateJoined: '2023-11-23', avatar: 'https://placehold.co/100x100.png', ledgerBalance: 0, lifetimeValue: 145.00 },
     { _id: 'CUST003', id: 'CUST003', name: 'Isabella Nguyen', email: 'isabella.nguyen@email.com', role: 'customer', dateJoined: '2023-11-22', avatar: 'https://placehold.co/100x100.png', ledgerBalance: 0, lifetimeValue: 92.48 },
-    { _id: 'CUST004', id: 'CUST004', name: 'William Kim', email: 'william.kim@email.com', role: 'customer', dateJoined: '2023-11-22', avatar: 'https://placehold.co/100x100.png', ledgerBalance: 24.99, lifetimeValue: 24.99 },
+    { _id: 'CUST004', id: 'CUST004', name: 'William Kim', email: 'william.kim@email.com', role: 'customer', dateJoined: '2023-11-22', avatar: 'https://placehold.co/100x100.png', ledgerBalance: 0, lifetimeValue: 0 },
     { _id: 'CUST005', id: 'CUST005', name: 'Sophia Davis', email: 'sophia.davis@email.com', role: 'customer', dateJoined: '2023-11-21', avatar: 'https://placehold.co/100x100.png', ledgerBalance: 0, lifetimeValue: 189.99 },
 ];
 
-// Add ledger balances for mock customers based on their orders
+// Initialize ledger balances and lifetime values to 0 for all customers
+allUsers.filter(u => u.role === 'customer').forEach(customer => {
+    customer.ledgerBalance = 0;
+    customer.lifetimeValue = 0;
+});
+
+// Calculate ledger balances and lifetime values based on all orders
 dummyOrders.forEach(order => {
     const customer = allUsers.find(u => u.id === order.customer.id && u.role === 'customer');
     if (customer) {
+        // Initialize if not present
         if (customer.ledgerBalance === undefined) customer.ledgerBalance = 0;
         if (customer.lifetimeValue === undefined) customer.lifetimeValue = 0;
         
+        // Add the outstanding balance of this order to the ledger
         customer.ledgerBalance += (order.amount - order.amountPaid);
+        // Add the paid amount of this order to the lifetime value
         customer.lifetimeValue += order.amountPaid;
     }
 });
@@ -43,9 +52,10 @@ export function getOrdersByUserId(userId: string): Order[] {
 }
 
 export function addUser(userData: { name: string; email?: string }): User {
+    const newId = `CUST${Date.now()}${Math.floor(Math.random() * 1000)}`;
     const newUser: User = {
-        _id: `CUST${Date.now()}${Math.floor(Math.random() * 1000)}`,
-        id: `CUST${Date.now()}${Math.floor(Math.random() * 1000)}`,
+        _id: newId,
+        id: newId,
         name: userData.name,
         email: userData.email || '',
         role: 'customer',

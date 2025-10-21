@@ -4,6 +4,7 @@ import Flutterwave from "flutterwave-node-v3";
 import { connectDB } from '@/lib/dbConnect';
 import User from '@/models/User';
 import Payment from '@/models/Payment'; // Import the new Payment model
+import Order from '@/models/Order'; // Import the Order model
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +14,16 @@ export async function POST(req: NextRequest) {
 
     const user = await User.findById(userId);
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      // Find by backup ID if user is from dummy data
+      const backupUser = await User.findOne({ id: userId });
+      if (!backupUser) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+    }
+
+    const order = await Order.findOne({ id: orderId });
+    if (!order) {
+       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
     const baseUrl = `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get("host")}`;
@@ -33,7 +43,7 @@ export async function POST(req: NextRequest) {
       },
       customizations: {
         title: "Don Maris Accessories Payment",
-        description: "Payment for your order",
+        description: `Payment for Order #${orderId}`,
         logo: `${baseUrl}/logo.png`,
       },
       meta: {
@@ -51,7 +61,7 @@ export async function POST(req: NextRequest) {
     // Save a pending payment record to the database
     await Payment.create({
       userId,
-      orderId,
+      orderId: order._id,
       tx_ref,
       amount,
       currency: user.currency || "USD",
