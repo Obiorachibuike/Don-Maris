@@ -21,6 +21,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { submitOrder } from '@/lib/client-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSession } from '@/contexts/SessionProvider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { OrdersPlaced } from '@/components/orders-placed';
 
 interface SupplyItem {
     id: string; // Changed to product ID for consistency
@@ -34,7 +36,7 @@ const initialSupplyItems: SupplyItem[] = [];
 
 const MAX_ITEMS = 25;
 
-export default function SourcingPage() {
+function CreateInvoiceTab() {
     const [supplyItems, setSupplyItems] = useState<SupplyItem[]>(initialSupplyItems);
     const [allUsers, setAllUsers] = useState<User[]>([]);
     const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
@@ -292,14 +294,14 @@ export default function SourcingPage() {
     const isFormSubmittable = selectedCustomer && address && deliveryMethod && supplyItems.length > 0;
 
     return (
-        <form onSubmit={(e) => e.preventDefault()}>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Posting Department</CardTitle>
-                    <CardDescription>
-                        Create and manage invoices for customer orders.
-                    </CardDescription>
-                </CardHeader>
+         <Card>
+            <CardHeader>
+                <CardTitle>Create Invoice</CardTitle>
+                <CardDescription>
+                    Create and manage invoices for customer orders.
+                </CardDescription>
+            </CardHeader>
+            <form onSubmit={(e) => e.preventDefault()}>
                 <CardContent>
                     <div className="grid md:grid-cols-3 gap-8 mb-8">
                         <div className="space-y-4">
@@ -551,7 +553,25 @@ export default function SourcingPage() {
                         </Button>
                     </div>
                 </CardFooter>
-            </Card>
-        </form>
-    );
+            </form>
+        </Card>
+    )
+}
+
+
+export default function SourcingPage() {
+    return (
+        <Tabs defaultValue="create-invoice" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="create-invoice">Create Invoice</TabsTrigger>
+                <TabsTrigger value="orders-placed">Orders Placed</TabsTrigger>
+            </TabsList>
+            <TabsContent value="create-invoice" className="mt-6">
+                <CreateInvoiceTab />
+            </TabsContent>
+            <TabsContent value="orders-placed" className="mt-6">
+                <OrdersPlaced />
+            </TabsContent>
+        </Tabs>
+    )
 }
