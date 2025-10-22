@@ -1,4 +1,5 @@
 
+
 import type { User, Order, Product } from './types';
 import { dummyOrders } from './dummy-orders';
 import { dummyProducts } from './dummy-products';
@@ -38,10 +39,6 @@ dummyOrders.forEach(order => {
     }
 });
 
-
-export function getAllUsers(): User[] {
-    return allUsers;
-}
 
 export function getUserById(id: string): User | undefined {
     return allUsers.find(user => user.id === id);

@@ -5,7 +5,7 @@
 import { useState, useMemo, FormEvent, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { getAllUsers, addUser, getOrdersByUserId } from '@/lib/dummy-users';
+import { addUser, getOrdersByUserId } from '@/lib/dummy-users';
 import type { User, CartItem, Product, PaymentStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,7 +62,18 @@ function CreateInvoiceTab() {
     const router = useRouter();
 
     useEffect(() => {
-        setAllUsers(getAllUsers());
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/users');
+                if (response.ok) {
+                    const data = await response.json();
+                    setAllUsers(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch users", error);
+            }
+        }
+        loadUsers();
         if (products.length === 0) {
             fetchProducts();
         }
@@ -84,7 +95,7 @@ function CreateInvoiceTab() {
 
     const handleSelectCustomer = (customer: User) => {
         setSelectedCustomer(customer);
-        setCustomerEmail(customer.email);
+        setCustomerEmail(customer.email || '');
 
         const userOrders = getOrdersByUserId(customer.id);
         const unpaidOrders = userOrders.filter(o => o.paymentStatus !== 'Paid');
@@ -366,14 +377,14 @@ function CreateInvoiceTab() {
                                                     <CommandGroup>
                                                         {filteredCustomers.map((customer) => (
                                                             <CommandItem
-                                                                key={customer.id}
+                                                                key={customer._id}
                                                                 value={customer.name}
                                                                 onSelect={() => handleSelectCustomer(customer)}
                                                             >
                                                                 <Check
                                                                     className={cn(
                                                                         "mr-2 h-4 w-4",
-                                                                        selectedCustomer?.id === customer.id ? "opacity-100" : "opacity-0"
+                                                                        selectedCustomer?._id === customer._id ? "opacity-100" : "opacity-0"
                                                                     )}
                                                                 />
                                                                 {customer.name}
