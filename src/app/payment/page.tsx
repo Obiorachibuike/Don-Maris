@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -11,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Banknote, CreditCard, Copy, Forward } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { submitOrder } from '@/lib/client-data';
-import type { PaymentStatus, CartItem } from '@/lib/types';
+import type { PaymentStatus, CartItem, Order } from '@/lib/types';
 import axios, { AxiosError } from 'axios';
 import { useProductStore } from '@/store/product-store';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -159,20 +158,56 @@ export default function PaymentPage() {
     };
 
     const handlePayLater = async () => {
-        if (!shippingDetails) return;
+        if (!shippingDetails || !user) return;
 
         setIsPayLaterLoading(true);
-        const orderDetails = { ...shippingDetails, date: new Date().toISOString(), paymentStatus: 'unpaid' as PaymentStatus };
+        
+        const customerDetails = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatar: user.avatar,
+        };
+
+        const orderDate = new Date();
+
+        const orderDetails: Omit<Order, 'id'> = {
+            customer: customerDetails,
+            shippingAddress: `${shippingDetails.customer.address}, ${shippingDetails.customer.city}, ${shippingDetails.customer.state} ${shippingDetails.customer.zip}`,
+            amount: shippingDetails.total,
+            status: 'Pending',
+            date: orderDate.toISOString(),
+            paymentMethod: 'Pay on Delivery',
+            items: shippingDetails.items.map(item => ({ productId: item.id, quantity: item.quantity })),
+            deliveryMethod: 'Waybill', // Default or choose one
+            paymentStatus: 'Not Paid',
+            amountPaid: 0
+        };
+
         const result = await submitOrder(orderDetails);
         
         if (result.status === 'success' || result.id) {
-            // Update stock for each item sold
             for (const item of shippingDetails.items) {
                 await updateStockInDatabase(item.product.id, item.quantity);
             }
 
-            const finalOrder = { ...orderDetails, invoiceId: result.id || `DM-${Date.now()}`, date: new Date(orderDetails.date).toLocaleDateString(), customer: { ...orderDetails.customer, name: `${shippingDetails.customer.firstName} ${shippingDetails.customer.lastName}`.trim() } };
-            sessionStorage.setItem('don_maris_order', JSON.stringify(finalOrder));
+            const invoiceData = {
+                items: shippingDetails.items,
+                total: shippingDetails.total,
+                invoiceId: result.id || `DM-${Date.now()}`,
+                date: orderDate.toLocaleDateString(),
+                customer: {
+                    ...customerDetails,
+                    name: `${shippingDetails.customer.firstName} ${shippingDetails.customer.lastName}`.trim(),
+                    address: shippingDetails.customer.address,
+                    city: shippingDetails.customer.city,
+                    state: shippingDetails.customer.state,
+                    zip: shippingDetails.customer.zip,
+                },
+                paymentStatus: 'unpaid' as PaymentStatus,
+            };
+
+            sessionStorage.setItem('don_maris_order', JSON.stringify(invoiceData));
             
             toast({
                 title: "Order Placed!",

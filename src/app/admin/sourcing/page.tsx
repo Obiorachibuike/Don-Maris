@@ -4,7 +4,7 @@
 import { useState, useMemo, FormEvent, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import type { User, CartItem, Product, PaymentStatus } from '@/lib/types';
+import type { User, CartItem, Product, PaymentStatus, Order } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -321,11 +321,14 @@ function CreateInvoiceTab() {
             };
         });
 
+        const invoiceId = `INV-${Date.now()}`;
+        const orderDate = new Date();
+
         const invoiceData = {
             items: cartItems,
             total: currentSubtotal,
-            invoiceId: `INV-${Date.now()}`,
-            date: new Date().toLocaleDateString(),
+            invoiceId: invoiceId,
+            date: orderDate.toLocaleDateString(),
             customer: customerDetails,
             paymentStatus: 'unpaid' as PaymentStatus,
             previousBalance: previousBalance,
@@ -339,19 +342,19 @@ function CreateInvoiceTab() {
         } else {
             setIsPurchasing(true);
             setIsPurchaseConfirmOpen(false);
-            const orderDetails = {
-                id: invoiceData.invoiceId,
+            const orderDetails: Omit<Order, 'id'> = {
                 items: cartItems.map(ci => ({ productId: ci.id, quantity: ci.quantity })),
                 amount: currentSubtotal,
                 customer: customerDetails,
                 shippingAddress: address,
-                date: new Date().toISOString(),
-                status: 'Pending' as const,
+                date: orderDate.toISOString(),
+                status: 'Pending',
                 paymentMethod: 'Pay on Delivery',
                 deliveryMethod: deliveryMethod,
-                paymentStatus: 'Not Paid' as const,
+                paymentStatus: 'Not Paid',
                 amountPaid: 0,
             };
+
             const result = await submitOrder(orderDetails);
             
             if (result.status === 'success' || result.id) {

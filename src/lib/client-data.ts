@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { Product, Order } from './types';
