@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, FormEvent, useEffect, useCallback } from 'react';
@@ -23,6 +24,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useSession } from '@/contexts/SessionProvider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OrdersPlaced } from '@/components/orders-placed';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
 
 interface SupplyItem {
     id: string; // Changed to product ID for consistency
@@ -51,6 +54,8 @@ function CreateInvoiceTab() {
     const [productToAdd, setProductToAdd] = useState<string | null>(null);
     const [quantityToAdd, setQuantityToAdd] = useState(1);
     const [isPurchasing, setIsPurchasing] = useState(false);
+    const [isPurchaseConfirmOpen, setIsPurchaseConfirmOpen] = useState(false);
+
     const { products, fetchProducts, decreaseStock } = useProductStore();
     const { user } = useSession();
     const { toast } = useToast();
@@ -192,6 +197,18 @@ function CreateInvoiceTab() {
         }
     };
 
+    const handlePurchase = () => {
+        if (!selectedCustomer || !address || !deliveryMethod || supplyItems.length === 0) {
+            toast({
+                variant: 'destructive',
+                title: 'Missing Information',
+                description: 'Please select a customer, provide an address, choose a delivery method and add items.',
+            });
+            return;
+        }
+        setIsPurchaseConfirmOpen(true);
+    };
+
 
     const processSubmission = async (action: 'preview' | 'purchase') => {
          if (!selectedCustomer || !address || !deliveryMethod) {
@@ -250,6 +267,7 @@ function CreateInvoiceTab() {
             router.push(`/admin/sourcing/invoice`);
         } else {
             setIsPurchasing(true);
+            setIsPurchaseConfirmOpen(false);
             const orderDetails = {
                 items: cartItems,
                 total: currentSubtotal,
@@ -294,267 +312,286 @@ function CreateInvoiceTab() {
     const isFormSubmittable = selectedCustomer && address && deliveryMethod && supplyItems.length > 0;
 
     return (
-         <Card>
-            <CardHeader>
-                <CardTitle>Create Invoice</CardTitle>
-                <CardDescription>
-                    Create and manage invoices for customer orders.
-                </CardDescription>
-            </CardHeader>
-            <form onSubmit={(e) => e.preventDefault()}>
-                <CardContent>
-                    <div className="grid md:grid-cols-3 gap-8 mb-8">
-                        <div className="space-y-4">
-                            <h3 className="text-lg font-semibold">Customer Details</h3>
-                            <div className="space-y-2">
-                                <Label htmlFor="customer-name">Customer Name</Label>
-                                <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            role="combobox"
-                                            aria-expanded={customerPopoverOpen}
-                                            className="w-full justify-between"
-                                        >
-                                            {selectedCustomer
-                                                ? selectedCustomer.name
-                                                : "Select customer..."}
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                        <Command>
-                                            <CommandInput
-                                                placeholder="Search customer..."
-                                                value={customerSearch}
-                                                onValueChange={setCustomerSearch}
-                                            />
-                                            <CommandList>
-                                                <CommandEmpty>
-                                                    <div className="p-4 text-sm text-center">
-                                                        No customer found.
-                                                        {customerSearch && (
-                                                            <Button
-                                                                variant="link"
-                                                                className="p-0 h-auto"
-                                                                onClick={handleCreateCustomer}
+        <>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Create Invoice</CardTitle>
+                    <CardDescription>
+                        Create and manage invoices for customer orders.
+                    </CardDescription>
+                </CardHeader>
+                <form onSubmit={(e) => e.preventDefault()}>
+                    <CardContent>
+                        <div className="grid md:grid-cols-3 gap-8 mb-8">
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold">Customer Details</h3>
+                                <div className="space-y-2">
+                                    <Label htmlFor="customer-name">Customer Name</Label>
+                                    <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                aria-expanded={customerPopoverOpen}
+                                                className="w-full justify-between"
+                                            >
+                                                {selectedCustomer
+                                                    ? selectedCustomer.name
+                                                    : "Select customer..."}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                            <Command>
+                                                <CommandInput
+                                                    placeholder="Search customer..."
+                                                    value={customerSearch}
+                                                    onValueChange={setCustomerSearch}
+                                                />
+                                                <CommandList>
+                                                    <CommandEmpty>
+                                                        <div className="p-4 text-sm text-center">
+                                                            No customer found.
+                                                            {customerSearch && (
+                                                                <Button
+                                                                    variant="link"
+                                                                    className="p-0 h-auto"
+                                                                    onClick={handleCreateCustomer}
+                                                                >
+                                                                    Create "{customerSearch}"
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    </CommandEmpty>
+                                                    <CommandGroup>
+                                                        {filteredCustomers.map((customer) => (
+                                                            <CommandItem
+                                                                key={customer.id}
+                                                                value={customer.name}
+                                                                onSelect={() => handleSelectCustomer(customer)}
                                                             >
-                                                                Create "{customerSearch}"
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                </CommandEmpty>
-                                                <CommandGroup>
-                                                    {filteredCustomers.map((customer) => (
-                                                        <CommandItem
-                                                            key={customer.id}
-                                                            value={customer.name}
-                                                            onSelect={() => handleSelectCustomer(customer)}
-                                                        >
-                                                            <Check
-                                                                className={cn(
-                                                                    "mr-2 h-4 w-4",
-                                                                    selectedCustomer?.id === customer.id ? "opacity-100" : "opacity-0"
-                                                                )}
-                                                            />
-                                                            {customer.name}
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="customer-email">Customer Email</Label>
-                                <Input
-                                    id="customer-email"
-                                    value={customerEmail}
-                                    onChange={(e) => setCustomerEmail(e.target.value)}
-                                    placeholder="customer@example.com"
-                                />
-                            </div>
-                        </div>
-
-                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold">Shipping & Delivery</h3>
-                             <div className="space-y-2">
-                                <Label htmlFor="address">Address</Label>
-                                <Textarea
-                                    id="address"
-                                    value={address}
-                                    onChange={(e) => setAddress(e.target.value)}
-                                    placeholder="123 Main St&#10;Anytown, CA 12345"
-                                />
-                            </div>
-                             <div className="space-y-2">
-                                <Label>Delivery Method</Label>
-                                <Select value={deliveryMethod} onValueChange={setDeliveryMethod}>
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Select delivery method" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Come Market">Come Market</SelectItem>
-                                        <SelectItem value="Waybill">Waybill</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4 pt-4 border-t">
-                        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                            <div className="space-y-2">
-                                <Label>Product to Add</Label>
-                                 <Popover open={productPopoverOpen} onOpenChange={setProductPopoverOpen}>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            role="combobox"
-                                            aria-expanded={productPopoverOpen}
-                                            className="w-full justify-between"
-                                            disabled={isItemLimitReached}
-                                        >
-                                            {selectedProductForAdding
-                                                ? selectedProductForAdding.name
-                                                : "Select product..."}
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                        <Command>
-                                            <CommandInput
-                                                placeholder="Search product..."
-                                                value={productSearch}
-                                                onValueChange={setProductSearch}
-                                            />
-                                            <CommandList>
-                                                <CommandEmpty>No product found.</CommandEmpty>
-                                                <CommandGroup>
-                                                    {availableProducts.map((p) => (
-                                                        <CommandItem
-                                                            key={p.id}
-                                                            value={p.name}
-                                                            onSelect={() => handleSelectProduct(p.id)}
-                                                        >
-                                                            <Check
-                                                                className={cn(
-                                                                    "mr-2 h-4 w-4",
-                                                                    productToAdd === p.id ? "opacity-100" : "opacity-0"
-                                                                )}
-                                                            />
-                                                            {p.name}
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                            <div className='grid grid-cols-2 gap-2'>
-                                <div className="space-y-2">
-                                    <Label>Available</Label>
-                                    <Input
-                                        type="number"
-                                        value={selectedProductForAdding?.stock ?? ''}
-                                        readOnly
-                                        className="bg-muted"
-                                    />
+                                                                <Check
+                                                                    className={cn(
+                                                                        "mr-2 h-4 w-4",
+                                                                        selectedCustomer?.id === customer.id ? "opacity-100" : "opacity-0"
+                                                                    )}
+                                                                />
+                                                                {customer.name}
+                                                            </CommandItem>
+                                                        ))}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="quantity-to-add">Quantity</Label>
+                                    <Label htmlFor="customer-email">Customer Email</Label>
                                     <Input
-                                        id="quantity-to-add"
-                                        type="number"
-                                        min="1"
-                                        value={quantityToAdd}
-                                        onChange={(e) => setQuantityToAdd(parseInt(e.target.value, 10))}
-                                        disabled={!productToAdd || isItemLimitReached}
+                                        id="customer-email"
+                                        value={customerEmail}
+                                        onChange={(e) => setCustomerEmail(e.target.value)}
+                                        placeholder="customer@example.com"
                                     />
                                 </div>
                             </div>
-                        </div>
-                         <Button
-                            type="button"
-                            onClick={handleAddProduct}
-                            disabled={!productToAdd || quantityToAdd < 1 || quantityToAdd > (selectedProductForAdding?.stock ?? 0) || isItemLimitReached}
-                            className="w-full md:w-auto"
-                        >
-                            <PlusCircle className="mr-2 h-4 w-4" /> Add Product to Invoice
-                        </Button>
-                         {isItemLimitReached && (
-                            <p className="text-sm text-destructive text-center">
-                                You have reached the maximum of {MAX_ITEMS} items per invoice.
-                            </p>
-                        )}
-                    </div>
 
-                    <ScrollArea className="h-72 mt-4">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[50px]">S/N</TableHead>
-                                    <TableHead>Item</TableHead>
-                                    <TableHead className="text-center">Quantity</TableHead>
-                                    <TableHead className="text-right">Unit Cost (₦)</TableHead>
-                                    <TableHead className="text-right">Discount</TableHead>
-                                    <TableHead className="text-right">Price (₦)</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {supplyItems.map((item, index) => {
-                                    const itemTotal = item.quantity * item.unitCost;
-                                    const discountAmount = itemTotal * item.discount;
-                                    const price = itemTotal - discountAmount;
-                                    return (
-                                        <TableRow key={item.id}>
-                                            <TableCell>{index + 1}</TableCell>
-                                            <TableCell className="font-medium">{item.itemName}</TableCell>
-                                            <TableCell className="text-center">{item.quantity}</TableCell>
-                                            <TableCell className="text-right">{item.unitCost.toLocaleString()}</TableCell>
-                                            <TableCell className="text-right">{(item.discount * 100).toFixed(0)}%</TableCell>
-                                            <TableCell className="text-right">{price.toLocaleString()}</TableCell>
-                                        </TableRow>
-                                    )
-                                })}
-                            </TableBody>
-                        </Table>
-                    </ScrollArea>
-                </CardContent>
-                <CardFooter className="flex flex-col md:flex-row justify-between items-start gap-6 pt-6">
-                    <div className="w-full max-w-sm space-y-2">
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Subtotal:</span>
-                            <span>₦{currentSubtotal.toLocaleString()}</span>
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold">Shipping & Delivery</h3>
+                                <div className="space-y-2">
+                                    <Label htmlFor="address">Address</Label>
+                                    <Textarea
+                                        id="address"
+                                        value={address}
+                                        onChange={(e) => setAddress(e.target.value)}
+                                        placeholder="123 Main St&#10;Anytown, CA 12345"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Delivery Method</Label>
+                                    <Select value={deliveryMethod} onValueChange={setDeliveryMethod}>
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Select delivery method" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Come Market">Come Market</SelectItem>
+                                            <SelectItem value="Waybill">Waybill</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
                         </div>
-                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Previous Balance:</span>
-                            <span className="font-medium text-destructive">₦{previousBalance.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-lg font-bold">
-                            <span>Total Amount:</span>
-                            <span>₦{totalCost.toLocaleString()}</span>
-                        </div>
-                    </div>
-                     <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-                        <Button type="button" variant="outline" className="w-full" onClick={() => processSubmission('preview')} disabled={!isFormSubmittable || isPurchasing}>
-                            <Printer className="mr-2 h-4 w-4" />
-                            Preview Invoice
-                        </Button>
-                         <Button type="button" className="w-full" onClick={() => processSubmission('purchase')} disabled={!isFormSubmittable || isPurchasing}>
-                            {isPurchasing ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                                <ShoppingCart className="mr-2 h-4 w-4" />
+
+                        <div className="space-y-4 pt-4 border-t">
+                            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                                <div className="space-y-2">
+                                    <Label>Product to Add</Label>
+                                    <Popover open={productPopoverOpen} onOpenChange={setProductPopoverOpen}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                aria-expanded={productPopoverOpen}
+                                                className="w-full justify-between"
+                                                disabled={isItemLimitReached}
+                                            >
+                                                {selectedProductForAdding
+                                                    ? selectedProductForAdding.name
+                                                    : "Select product..."}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                            <Command>
+                                                <CommandInput
+                                                    placeholder="Search product..."
+                                                    value={productSearch}
+                                                    onValueChange={setProductSearch}
+                                                />
+                                                <CommandList>
+                                                    <CommandEmpty>No product found.</CommandEmpty>
+                                                    <CommandGroup>
+                                                        {availableProducts.map((p) => (
+                                                            <CommandItem
+                                                                key={p.id}
+                                                                value={p.name}
+                                                                onSelect={() => handleSelectProduct(p.id)}
+                                                            >
+                                                                <Check
+                                                                    className={cn(
+                                                                        "mr-2 h-4 w-4",
+                                                                        productToAdd === p.id ? "opacity-100" : "opacity-0"
+                                                                    )}
+                                                                />
+                                                                {p.name}
+                                                            </CommandItem>
+                                                        ))}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                                <div className='grid grid-cols-2 gap-2'>
+                                    <div className="space-y-2">
+                                        <Label>Available</Label>
+                                        <Input
+                                            type="number"
+                                            value={selectedProductForAdding?.stock ?? ''}
+                                            readOnly
+                                            className="bg-muted"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="quantity-to-add">Quantity</Label>
+                                        <Input
+                                            id="quantity-to-add"
+                                            type="number"
+                                            min="1"
+                                            value={quantityToAdd}
+                                            onChange={(e) => setQuantityToAdd(parseInt(e.target.value, 10))}
+                                            disabled={!productToAdd || isItemLimitReached}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <Button
+                                type="button"
+                                onClick={handleAddProduct}
+                                disabled={!productToAdd || quantityToAdd < 1 || quantityToAdd > (selectedProductForAdding?.stock ?? 0) || isItemLimitReached}
+                                className="w-full md:w-auto"
+                            >
+                                <PlusCircle className="mr-2 h-4 w-4" /> Add Product to Invoice
+                            </Button>
+                            {isItemLimitReached && (
+                                <p className="text-sm text-destructive text-center">
+                                    You have reached the maximum of {MAX_ITEMS} items per invoice.
+                                </p>
                             )}
-                            {isPurchasing ? 'Purchasing...' : 'Purchase'}
-                        </Button>
-                    </div>
-                </CardFooter>
-            </form>
-        </Card>
+                        </div>
+
+                        <ScrollArea className="h-72 mt-4">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-[50px]">S/N</TableHead>
+                                        <TableHead>Item</TableHead>
+                                        <TableHead className="text-center">Quantity</TableHead>
+                                        <TableHead className="text-right">Unit Cost (₦)</TableHead>
+                                        <TableHead className="text-right">Discount</TableHead>
+                                        <TableHead className="text-right">Price (₦)</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {supplyItems.map((item, index) => {
+                                        const itemTotal = item.quantity * item.unitCost;
+                                        const discountAmount = itemTotal * item.discount;
+                                        const price = itemTotal - discountAmount;
+                                        return (
+                                            <TableRow key={item.id}>
+                                                <TableCell>{index + 1}</TableCell>
+                                                <TableCell className="font-medium">{item.itemName}</TableCell>
+                                                <TableCell className="text-center">{item.quantity}</TableCell>
+                                                <TableCell className="text-right">{item.unitCost.toLocaleString()}</TableCell>
+                                                <TableCell className="text-right">{(item.discount * 100).toFixed(0)}%</TableCell>
+                                                <TableCell className="text-right">{price.toLocaleString()}</TableCell>
+                                            </TableRow>
+                                        )
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </ScrollArea>
+                    </CardContent>
+                    <CardFooter className="flex flex-col md:flex-row justify-between items-start gap-6 pt-6">
+                        <div className="w-full max-w-sm space-y-2">
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Subtotal:</span>
+                                <span>₦{currentSubtotal.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Previous Balance:</span>
+                                <span className="font-medium text-destructive">₦{previousBalance.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-lg font-bold">
+                                <span>Total Amount:</span>
+                                <span>₦{totalCost.toLocaleString()}</span>
+                            </div>
+                        </div>
+                        <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                            <Button type="button" variant="outline" className="w-full" onClick={() => processSubmission('preview')} disabled={!isFormSubmittable || isPurchasing}>
+                                <Printer className="mr-2 h-4 w-4" />
+                                Preview Invoice
+                            </Button>
+                            <Button type="button" className="w-full" onClick={handlePurchase} disabled={!isFormSubmittable || isPurchasing}>
+                                {isPurchasing ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                    <ShoppingCart className="mr-2 h-4 w-4" />
+                                )}
+                                {isPurchasing ? 'Purchasing...' : 'Purchase'}
+                            </Button>
+                        </div>
+                    </CardFooter>
+                </form>
+            </Card>
+
+            <AlertDialog open={isPurchaseConfirmOpen} onOpenChange={setIsPurchaseConfirmOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Confirm Purchase</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to finalize this purchase? This will create an order and deduct the items from stock. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => processSubmission('purchase')}>
+                            Yes, confirm purchase
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     )
 }
 
