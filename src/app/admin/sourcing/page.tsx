@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, FormEvent, useEffect, useCallback } from 'react';
@@ -500,7 +499,7 @@ function CreateInvoiceTab() {
                                             type="number"
                                             min="1"
                                             value={quantityToAdd}
-                                            onChange={(e) => setQuantityToAdd(parseInt(e.target.value, 10))}
+                                            onChange={(e) => setQuantityToAdd(parseInt(e.target.value) || 1)}
                                             disabled={!productToAdd || isItemLimitReached}
                                         />
                                     </div>
@@ -623,3 +622,5 @@ export default function SourcingPage() {
         </Tabs>
     )
 }
+
+    
