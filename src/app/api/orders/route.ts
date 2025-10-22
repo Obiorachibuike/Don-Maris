@@ -7,7 +7,15 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
     try {
         await connectDB();
-        const orders = await Order.find({}).sort({ date: -1 }).lean();
+        const { searchParams } = new URL(request.url);
+        const createdBy = searchParams.get('createdBy');
+
+        const query: any = {};
+        if (createdBy) {
+            query.createdBy = createdBy;
+        }
+
+        const orders = await Order.find(query).sort({ date: -1 }).lean();
         return NextResponse.json(JSON.parse(JSON.stringify(orders)));
     } catch (error: any) {
         console.error("Failed to fetch orders:", error);

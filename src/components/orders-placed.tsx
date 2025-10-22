@@ -8,95 +8,78 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { dummyOrders } from '@/lib/dummy-orders';
-import type { Order, OrderPaymentStatus } from '@/lib/types';
+import type { Order } from '@/lib/types';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, ArrowUpDown, Loader2 } from 'lucide-react';
-
-type SortKey = keyof Order | 'balance';
+import { ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon } from 'lucide-react';
+import { useSession } from '@/contexts/SessionProvider';
+import { DateRange } from 'react-day-picker';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Calendar } from './ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export function OrdersPlaced() {
+    const { user, isLoading: isUserLoading } = useSession();
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const [sortConfig, setSortConfig] = useState<{ key: SortKey | null; direction: 'ascending' | 'descending' | null }>({ key: 'date', direction: 'descending' });
+    const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const ordersPerPage = 10;
     
     useEffect(() => {
         const fetchOrders = async () => {
+            if (!user?._id) return;
+
             setIsLoading(true);
             try {
-                const response = await fetch('/api/orders');
-                if (!response.ok) throw new Error('Failed to fetch');
+                const response = await fetch(`/api/orders?createdBy=${user._id}`);
+                if (!response.ok) throw new Error('Failed to fetch orders');
                 let data: Order[] = await response.json();
-                // Filter for supply department relevant orders
-                data = data.filter(order => order.status === 'Processing' || order.status === 'Pending');
                 setOrders(data);
             } catch (error) {
                 console.error("Could not fetch orders:", error);
-                // Fallback for UI demo
-                setOrders(dummyOrders.filter(order => order.status === 'Processing' || order.status === 'Pending'));
+                setOrders([]);
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchOrders();
-    }, []);
-
-    const filteredOrders = useMemo(() => orders.filter(order => 
-        order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (order.deliveryMethod && order.deliveryMethod.toLowerCase().includes(searchTerm.toLowerCase()))
-    ), [orders, searchTerm]);
-
-    const requestSort = (key: SortKey) => {
-        let direction: 'ascending' | 'descending' | null = 'ascending';
-        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-            direction = 'descending';
-        } else if (sortConfig.key === key && sortConfig.direction === 'descending') {
-            direction = null;
-            key = null;
+        
+        if (!isUserLoading) {
+            fetchOrders();
         }
-        setSortConfig({ key, direction });
-        setCurrentPage(1);
-    };
 
-    const sortedOrders = useMemo(() => {
-        let sortableItems = [...filteredOrders];
-        if (sortConfig.key && sortConfig.direction) {
-            sortableItems.sort((a, b) => {
-                let aValue, bValue;
+    }, [user, isUserLoading]);
 
-                if (sortConfig.key === 'balance') {
-                    aValue = a.amount - a.amountPaid;
-                    bValue = b.amount - b.amountPaid;
-                } else if (sortConfig.key === 'paymentStatus') {
-                    const orderMap = ['Paid', 'Incomplete', 'Not Paid'];
-                    aValue = orderMap.indexOf(a.paymentStatus);
-                    bValue = orderMap.indexOf(b.paymentStatus);
-                }
-                else {
-                    aValue = a[sortConfig.key!];
-                    bValue = b[sortConfig.key!];
-                }
+    const filteredOrders = useMemo(() => {
+        let filtered = orders;
 
-                if (aValue < bValue) {
-                    return sortConfig.direction === 'ascending' ? -1 : 1;
-                }
-                if (aValue > bValue) {
-                    return sortConfig.direction === 'ascending' ? 1 : -1;
-                }
-                return 0;
-            });
+        if (searchTerm) {
+            filtered = filtered.filter(order => 
+                order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (order.deliveryMethod && order.deliveryMethod.toLowerCase().includes(searchTerm.toLowerCase()))
+            );
         }
-        return sortableItems;
-    }, [filteredOrders, sortConfig]);
+
+        if (dateRange?.from) {
+             filtered = filtered.filter(order => new Date(order.date) >= dateRange.from!);
+        }
+        if (dateRange?.to) {
+            // Include the whole day of 'to'
+            const toDate = new Date(dateRange.to);
+            toDate.setHours(23, 59, 59, 999);
+            filtered = filtered.filter(order => new Date(order.date) <= toDate);
+        }
+
+        return filtered;
+    }, [orders, searchTerm, dateRange]);
+
 
     const indexOfLastOrder = currentPage * ordersPerPage;
     const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-    const currentOrders = sortedOrders.slice(indexOfFirstOrder, indexOfLastOrder);
-
-    const totalPages = Math.ceil(sortedOrders.length / ordersPerPage);
+    const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+    const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
 
     const handlePreviousPage = () => {
         setCurrentPage(prev => Math.max(prev - 1, 1));
@@ -106,32 +89,61 @@ export function OrdersPlaced() {
         setCurrentPage(prev => Math.min(prev + 1, totalPages));
     };
 
-    const SortableHeader = ({ sortKey, label, className }: { sortKey: SortKey, label: string, className?: string }) => (
-        <TableHead className={className}>
-            <Button variant="ghost" onClick={() => requestSort(sortKey)} className="px-0">
-                {label}
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-        </TableHead>
-    );
-
     return (
         <div className="w-full">
             <Card>
                 <CardHeader>
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                         <div>
-                            <CardTitle>Orders Placed</CardTitle>
+                            <CardTitle>My Placed Orders</CardTitle>
                             <CardDescription>
-                                A list of all orders that have been created and are awaiting fulfillment.
+                                A list of all orders you have created.
                             </CardDescription>
                         </div>
-                        <Input 
-                            placeholder="Search orders..." 
-                            className="w-full md:max-w-sm"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                        <div className="flex items-center gap-2 w-full md:w-auto">
+                            <Input 
+                                placeholder="Search orders..." 
+                                className="w-full md:max-w-sm"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                <Button
+                                    id="date"
+                                    variant={"outline"}
+                                    className={cn(
+                                    "w-[300px] justify-start text-left font-normal",
+                                    !dateRange && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {dateRange?.from ? (
+                                    dateRange.to ? (
+                                        <>
+                                        {format(dateRange.from, "LLL dd, y")} -{" "}
+                                        {format(dateRange.to, "LLL dd, y")}
+                                        </>
+                                    ) : (
+                                        format(dateRange.from, "LLL dd, y")
+                                    )
+                                    ) : (
+                                    <span>Pick a date range</span>
+                                    )}
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="end">
+                                    <Calendar
+                                        initialFocus
+                                        mode="range"
+                                        defaultMonth={dateRange?.from}
+                                        selected={dateRange}
+                                        onSelect={setDateRange}
+                                        numberOfMonths={2}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -139,14 +151,14 @@ export function OrdersPlaced() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <SortableHeader sortKey="id" label="Invoice ID" />
+                                    <TableHead>Invoice ID</TableHead>
                                     <TableHead>Customer</TableHead>
-                                    <SortableHeader sortKey="deliveryMethod" label="Delivery Method" />
-                                    <SortableHeader sortKey="status" label="Fulfillment" />
-                                    <SortableHeader sortKey="paymentStatus" label="Payment" />
-                                    <SortableHeader sortKey="amount" label="Total Amount" className="text-right" />
-                                    <SortableHeader sortKey="amountPaid" label="Amount Paid" className="text-right" />
-                                    <SortableHeader sortKey="balance" label="Balance" className="text-right" />
+                                    <TableHead>Delivery Method</TableHead>
+                                    <TableHead>Fulfillment</TableHead>
+                                    <TableHead>Payment</TableHead>
+                                    <TableHead className="text-right">Total Amount</TableHead>
+                                    <TableHead className="text-right">Amount Paid</TableHead>
+                                    <TableHead className="text-right">Balance</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -168,7 +180,7 @@ export function OrdersPlaced() {
                                         <TableCell>{order.customer.name}</TableCell>
                                         <TableCell>{order.deliveryMethod}</TableCell>
                                         <TableCell>
-                                            <Badge variant={order.status === 'Processing' ? 'secondary' : 'destructive'} className={order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : ''}>{order.status}</Badge>
+                                            <Badge variant={order.status === 'Fulfilled' ? 'default' : order.status === 'Processing' ? 'secondary' : 'destructive'} className={order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : ''}>{order.status}</Badge>
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant={
@@ -192,7 +204,7 @@ export function OrdersPlaced() {
                 <CardFooter>
                     <div className="flex flex-col md:flex-row items-center justify-between w-full gap-4">
                         <div className="text-sm text-muted-foreground">
-                            Showing {Math.min(indexOfFirstOrder + 1, sortedOrders.length)} to {Math.min(indexOfLastOrder, sortedOrders.length)} of {sortedOrders.length} orders.
+                            Showing {Math.min(indexOfFirstOrder + 1, filteredOrders.length)} to {Math.min(indexOfLastOrder, filteredOrders.length)} of {filteredOrders.length} orders.
                         </div>
                         <div className="flex items-center gap-2">
                             <Button

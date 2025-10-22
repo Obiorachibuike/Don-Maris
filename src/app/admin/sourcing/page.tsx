@@ -50,7 +50,7 @@ function formatAddress(user: User): string {
 
 function CreateInvoiceTab() {
     const [supplyItems, setSupplyItems] = useState<SupplyItem[]>(initialSupplyItems);
-    const { users: allUsers, fetchUsers, addUser, updateUser } = useUserStore();
+    const { users: allUsers, fetchUsers } = useUserStore();
     const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
     const [productPopoverOpen, setProductPopoverOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
@@ -67,7 +67,7 @@ function CreateInvoiceTab() {
     const [isPurchaseConfirmOpen, setIsPurchaseConfirmOpen] = useState(false);
 
     const { products, fetchProducts, decreaseStock } = useProductStore();
-    const { user } = useSession();
+    const { user, isLoading: isUserLoading } = useSession();
     const { toast } = useToast();
     const router = useRouter();
 
@@ -96,11 +96,9 @@ function CreateInvoiceTab() {
     }, [supplyItems]);
 
     useEffect(() => {
-        fetchUsers();
-        if (products.length === 0) {
-            fetchProducts();
-        }
-    }, [products, fetchProducts, fetchUsers]);
+        if(allUsers.length === 0) fetchUsers();
+        if (products.length === 0) fetchProducts();
+    }, [products.length, fetchProducts, allUsers.length, fetchUsers]);
 
     const customers = useMemo(() => allUsers.filter(u => u.role === 'customer'), [allUsers]);
 
@@ -120,11 +118,7 @@ function CreateInvoiceTab() {
         setSelectedCustomer(customer);
         setCustomerEmail(customer.email || '');
         setAddress(formatAddress(customer));
-
-        // Note: The logic for previous balance from dummy data is removed.
-        // This would need to be fetched from your database based on the customer's orders.
         setPreviousBalance(customer.ledgerBalance || 0);
-
         setCustomerPopoverOpen(false);
         setCustomerSearch("");
     };
@@ -142,12 +136,23 @@ function CreateInvoiceTab() {
         const zip = stateZip[1] || '';
     
         try {
-            // Use the general purpose updateUser which requires admin/supplier rights
-            await updateUser(selectedCustomer._id, { address: street, city, state, zip });
+            const response = await fetch(`/api/users/${selectedCustomer._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address: street, city, state, zip }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to update address');
+            }
+            
             toast({ title: "Address Saved", description: "Customer's address has been updated." });
-        } catch (error) {
-            // Error is already toasted by the store
+            // Optionally refetch users to update the local store
+            fetchUsers();
+        } catch (error: any) {
             console.error("Could not update customer address:", error);
+            toast({ variant: 'destructive', title: "Save Failed", description: error.message || "Could not save your address." });
         } finally {
             setIsSavingAddress(false);
         }
@@ -213,19 +218,6 @@ function CreateInvoiceTab() {
     }, [products, supplyItems, productSearch]);
 
 
-    const handleCreateCustomer = async () => {
-        try {
-            // A simple password, user should be prompted to change it.
-            await addUser({ name: customerSearch, email: '', password: 'password123', role: 'customer' });
-            // The user list will be refetched by the store, which will trigger a re-render
-            toast({ title: 'Customer Created', description: `"${customerSearch}" has been added. You can now select them.`});
-            setCustomerSearch('');
-        } catch (error) {
-            console.error("Failed to create user:", error);
-            // Toast is handled in the store
-        }
-    };
-
     const currentSubtotal = supplyItems.reduce((acc, item) => {
         const itemTotal = item.quantity * item.unitCost;
         const discountAmount = itemTotal * item.discount;
@@ -275,11 +267,11 @@ function CreateInvoiceTab() {
 
 
     const processSubmission = async (action: 'preview' | 'purchase') => {
-         if (!selectedCustomer || !address || !deliveryMethod) {
+         if (!selectedCustomer || !address || !deliveryMethod || !user) {
             toast({
                 variant: 'destructive',
                 title: 'Missing Information',
-                description: 'Please select a customer, provide an address, and choose a delivery method.',
+                description: 'Please select a customer, provide an address, choose a delivery method, and be logged in.',
             });
             return;
         }
@@ -301,7 +293,7 @@ function CreateInvoiceTab() {
         const zip = stateZip[1] || '';
 
 
-        const customerDetails = {
+        const customerDetailsForInvoice = {
             id: selectedCustomer._id,
             name: selectedCustomer.name,
             email: customerEmail,
@@ -309,6 +301,13 @@ function CreateInvoiceTab() {
             city: city,
             state: state,
             zip: zip,
+            avatar: selectedCustomer.avatar,
+        };
+        
+         const customerDetailsForOrder = {
+            id: selectedCustomer._id,
+            name: selectedCustomer.name,
+            email: customerEmail,
             avatar: selectedCustomer.avatar,
         };
 
@@ -329,7 +328,7 @@ function CreateInvoiceTab() {
             total: currentSubtotal,
             invoiceId: invoiceId,
             date: orderDate.toLocaleDateString(),
-            customer: customerDetails,
+            customer: customerDetailsForInvoice,
             paymentStatus: 'unpaid' as PaymentStatus,
             previousBalance: previousBalance,
             deliveryMethod: deliveryMethod
@@ -345,7 +344,7 @@ function CreateInvoiceTab() {
             const orderDetails: Omit<Order, 'id'> = {
                 items: cartItems.map(ci => ({ productId: ci.id, quantity: ci.quantity })),
                 amount: currentSubtotal,
-                customer: customerDetails,
+                customer: customerDetailsForOrder,
                 shippingAddress: address,
                 date: orderDate.toISOString(),
                 status: 'Pending',
@@ -353,6 +352,7 @@ function CreateInvoiceTab() {
                 deliveryMethod: deliveryMethod,
                 paymentStatus: 'Not Paid',
                 amountPaid: 0,
+                createdBy: user._id
             };
 
             const result = await submitOrder(orderDetails);
@@ -428,20 +428,7 @@ function CreateInvoiceTab() {
                                                     onValueChange={setCustomerSearch}
                                                 />
                                                 <CommandList>
-                                                    <CommandEmpty>
-                                                        <div className="p-4 text-sm text-center">
-                                                            No customer found.
-                                                            {customerSearch && (
-                                                                <Button
-                                                                    variant="link"
-                                                                    className="p-0 h-auto"
-                                                                    onClick={handleCreateCustomer}
-                                                                >
-                                                                    Create "{customerSearch}"
-                                                                </Button>
-                                                            )}
-                                                        </div>
-                                                    </CommandEmpty>
+                                                    <CommandEmpty>No customer found.</CommandEmpty>
                                                     <CommandGroup>
                                                         {filteredCustomers.map((customer) => (
                                                             <CommandItem

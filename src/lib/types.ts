@@ -109,6 +109,7 @@ export interface Order {
   paymentStatus: OrderPaymentStatus;
   amountPaid: number;
   printHistory?: PrintHistoryEntry[];
+  createdBy?: string;
 }
 
 export interface Brand {
