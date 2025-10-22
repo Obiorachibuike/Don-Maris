@@ -47,20 +47,3 @@ export function getUserById(id: string): User | undefined {
 export function getOrdersByUserId(userId: string): Order[] {
     return dummyOrders.filter(order => order.customer.id === userId);
 }
-
-export function addUser(userData: { name: string; email?: string }): User {
-    const newId = `CUST${Date.now()}${Math.floor(Math.random() * 1000)}`;
-    const newUser: User = {
-        _id: newId,
-        id: newId,
-        name: userData.name,
-        email: userData.email || '',
-        role: 'customer',
-        dateJoined: new Date().toISOString(),
-        avatar: 'https://placehold.co/100x100.png',
-        ledgerBalance: 0,
-        lifetimeValue: 0
-    };
-    allUsers.push(newUser);
-    return newUser;
-}

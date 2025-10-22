@@ -4,14 +4,13 @@
 import { useState, useMemo, FormEvent, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { addUser, getOrdersByUserId } from '@/lib/dummy-users';
 import type { User, CartItem, Product, PaymentStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Check, ChevronsUpDown, PlusCircle, Printer, ShoppingCart, Loader2 } from 'lucide-react';
+import { Check, ChevronsUpDown, PlusCircle, Printer, ShoppingCart, Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
@@ -24,6 +23,7 @@ import { useSession } from '@/contexts/SessionProvider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OrdersPlaced } from '@/components/orders-placed';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useUserStore } from '@/store/user-store';
 
 
 interface SupplyItem {
@@ -39,15 +39,25 @@ const initialSupplyItems: SupplyItem[] = [];
 const MAX_ITEMS = 25;
 const LOCAL_STORAGE_KEY = 'don_maris_sourcing_invoice';
 
+function formatAddress(user: User): string {
+    if (!user.address && !user.city && !user.state && !user.zip) return '';
+    const street = user.address || '';
+    const city = user.city || '';
+    const state = user.state || '';
+    const zip = user.zip || '';
+    return `${street}\n${city}, ${state} ${zip}`.trim();
+}
+
 function CreateInvoiceTab() {
     const [supplyItems, setSupplyItems] = useState<SupplyItem[]>(initialSupplyItems);
-    const [allUsers, setAllUsers] = useState<User[]>([]);
+    const { users: allUsers, fetchUsers, addUser, updateUser } = useUserStore();
     const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
     const [productPopoverOpen, setProductPopoverOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
     const [customerSearch, setCustomerSearch] = useState("");
     const [productSearch, setProductSearch] = useState("");
     const [address, setAddress] = useState("");
+    const [isSavingAddress, setIsSavingAddress] = useState(false);
     const [customerEmail, setCustomerEmail] = useState("");
     const [deliveryMethod, setDeliveryMethod] = useState('');
     const [previousBalance, setPreviousBalance] = useState(0);
@@ -86,22 +96,11 @@ function CreateInvoiceTab() {
     }, [supplyItems]);
 
     useEffect(() => {
-        async function loadUsers() {
-            try {
-                const response = await fetch('/api/users');
-                if (response.ok) {
-                    const data = await response.json();
-                    setAllUsers(data);
-                }
-            } catch (error) {
-                console.error("Failed to fetch users", error);
-            }
-        }
-        loadUsers();
+        fetchUsers();
         if (products.length === 0) {
             fetchProducts();
         }
-    }, [products, fetchProducts]);
+    }, [products, fetchProducts, fetchUsers]);
 
     const customers = useMemo(() => allUsers.filter(u => u.role === 'customer'), [allUsers]);
 
@@ -120,20 +119,36 @@ function CreateInvoiceTab() {
     const handleSelectCustomer = (customer: User) => {
         setSelectedCustomer(customer);
         setCustomerEmail(customer.email || '');
+        setAddress(formatAddress(customer));
 
-        const userOrders = getOrdersByUserId(customer.id);
-        const unpaidOrders = userOrders.filter(o => o.paymentStatus !== 'Paid');
-        const balance = unpaidOrders.reduce((acc, order) => acc + (order.amount - order.amountPaid), 0);
-        setPreviousBalance(balance);
-
-        if (userOrders.length > 0 && userOrders[0].shippingAddress) {
-            setAddress(userOrders[0].shippingAddress);
-        } else {
-            setAddress('');
-        }
+        // Note: The logic for previous balance from dummy data is removed.
+        // This would need to be fetched from your database based on the customer's orders.
+        setPreviousBalance(customer.ledgerBalance || 0);
 
         setCustomerPopoverOpen(false);
         setCustomerSearch("");
+    };
+    
+    const handleSaveAddress = async () => {
+        if (!selectedCustomer) return;
+        setIsSavingAddress(true);
+
+        const addressParts = address.split('\n');
+        const street = addressParts[0] || '';
+        const cityStateZip = (addressParts[1] || '').split(',');
+        const city = cityStateZip[0]?.trim() || '';
+        const stateZip = (cityStateZip[1] || '').trim().split(' ');
+        const state = stateZip[0] || '';
+        const zip = stateZip[1] || '';
+
+        try {
+            await updateUser(selectedCustomer._id, { address: street, city, state, zip });
+            toast({ title: "Address Saved", description: "Customer's address has been updated." });
+        } catch (error) {
+            toast({ variant: 'destructive', title: "Save Failed", description: "Could not update customer's address." });
+        } finally {
+            setIsSavingAddress(false);
+        }
     };
 
     const handleSelectProduct = (productId: string) => {
@@ -187,13 +202,17 @@ function CreateInvoiceTab() {
     }, [products, supplyItems, productSearch]);
 
 
-    const handleCreateCustomer = () => {
-        const newUser = addUser({ name: customerSearch });
-        setAllUsers(prev => [...prev, newUser]);
-        handleSelectCustomer(newUser);
-        setCustomerEmail("");
-        setAddress("");
-        setPreviousBalance(0);
+    const handleCreateCustomer = async () => {
+        try {
+            // A simple password, user should be prompted to change it.
+            await addUser({ name: customerSearch, email: '', password: 'password123', role: 'customer' });
+            // The user list will be refetched by the store, which will trigger a re-render
+            toast({ title: 'Customer Created', description: `"${customerSearch}" has been added. You can now select them.`});
+            setCustomerSearch('');
+        } catch (error) {
+            console.error("Failed to create user:", error);
+            // Toast is handled in the store
+        }
     };
 
     const currentSubtotal = supplyItems.reduce((acc, item) => {
@@ -220,7 +239,6 @@ function CreateInvoiceTab() {
                     stockChangeUser: user?.name || 'Sourcing Dept.'
                 }),
             });
-            // Also update local Zustand store state
             decreaseStock(productId, quantitySold);
         } catch (error) {
             console.error(`Failed to update stock for product ${productId}`, error);
@@ -263,17 +281,24 @@ function CreateInvoiceTab() {
             return;
         }
 
-        const customerName = selectedCustomer.name;
-        const [firstName, ...lastNameParts] = customerName.split(' ');
+        const addressParts = address.split('\n');
+        const street = addressParts[0] || '';
+        const cityStateZip = (addressParts[1] || '').split(',');
+        const city = cityStateZip[0]?.trim() || '';
+        const stateZip = (cityStateZip[1] || '').trim().split(' ');
+        const state = stateZip[0] || '';
+        const zip = stateZip[1] || '';
+
+
         const customerDetails = {
-            name: customerName,
-            firstName,
-            lastName: lastNameParts.join(' '),
+            id: selectedCustomer._id,
+            name: selectedCustomer.name,
             email: customerEmail,
-            address: address.split('\\n')[0] || '',
-            city: address.split('\\n')[1]?.split(',')[0] || '',
-            state: address.split('\\n')[1]?.split(',')[1]?.trim().split(' ')[0] || '',
-            zip: address.split('\\n')[1]?.split(',')[1]?.trim().split(' ')[1] || '',
+            address: street,
+            city: city,
+            state: state,
+            zip: zip,
+            avatar: selectedCustomer.avatar,
         };
 
         const cartItems: CartItem[] = supplyItems.map(supplyItem => {
@@ -304,16 +329,21 @@ function CreateInvoiceTab() {
             setIsPurchasing(true);
             setIsPurchaseConfirmOpen(false);
             const orderDetails = {
-                items: cartItems,
-                total: currentSubtotal,
+                id: invoiceData.invoiceId,
+                items: cartItems.map(ci => ({ productId: ci.id, quantity: ci.quantity })),
+                amount: currentSubtotal,
                 customer: customerDetails,
+                shippingAddress: address,
                 date: new Date().toISOString(),
-                paymentStatus: 'unpaid' as PaymentStatus,
+                status: 'Pending' as const,
+                paymentMethod: 'Pay on Delivery',
+                deliveryMethod: deliveryMethod,
+                paymentStatus: 'Not Paid' as const,
+                amountPaid: 0,
             };
             const result = await submitOrder(orderDetails);
             
             if (result.status === 'success' || result.id) {
-                 // Update stock for each item sold
                 for (const item of cartItems) {
                     await updateStockInDatabase(item.product.id, item.quantity);
                 }
@@ -323,7 +353,6 @@ function CreateInvoiceTab() {
                     description: "The order has been successfully created and stock has been updated.",
                 });
 
-                // Reset form and clear local storage
                 setSupplyItems([]);
                 setSelectedCustomer(null);
                 setAddress('');
@@ -442,6 +471,19 @@ function CreateInvoiceTab() {
                                         onChange={(e) => setAddress(e.target.value)}
                                         placeholder="123 Main St&#10;Anytown, CA 12345"
                                     />
+                                    {selectedCustomer && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="mt-2"
+                                            onClick={handleSaveAddress}
+                                            disabled={isSavingAddress}
+                                        >
+                                            {isSavingAddress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                            Save Address
+                                        </Button>
+                                    )}
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Delivery Method</Label>
@@ -525,7 +567,7 @@ function CreateInvoiceTab() {
                                             type="number"
                                             min="1"
                                             value={quantityToAdd}
-                                            onChange={(e) => setQuantityToAdd(parseInt(e.target.value) || 1)}
+                                            onChange={(e) => setQuantityToAdd(Math.max(1, parseInt(e.target.value) || 1))}
                                             disabled={!productToAdd || isItemLimitReached}
                                         />
                                     </div>
@@ -648,5 +690,3 @@ export default function SourcingPage() {
         </Tabs>
     )
 }
-
-    
