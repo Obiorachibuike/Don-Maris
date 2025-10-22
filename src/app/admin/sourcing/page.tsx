@@ -132,7 +132,7 @@ function CreateInvoiceTab() {
     const handleSaveAddress = async () => {
         if (!selectedCustomer) return;
         setIsSavingAddress(true);
-
+    
         const addressParts = address.split('\n');
         const street = addressParts[0] || '';
         const cityStateZip = (addressParts[1] || '').split(',');
@@ -140,12 +140,14 @@ function CreateInvoiceTab() {
         const stateZip = (cityStateZip[1] || '').trim().split(' ');
         const state = stateZip[0] || '';
         const zip = stateZip[1] || '';
-
+    
         try {
+            // Use the general purpose updateUser which requires admin rights
             await updateUser(selectedCustomer._id, { address: street, city, state, zip });
             toast({ title: "Address Saved", description: "Customer's address has been updated." });
         } catch (error) {
-            toast({ variant: 'destructive', title: "Save Failed", description: "Could not update customer's address." });
+            // Error is already toasted by the store
+            console.error("Could not update customer address:", error);
         } finally {
             setIsSavingAddress(false);
         }
@@ -171,6 +173,15 @@ function CreateInvoiceTab() {
         
         const product = products.find(p => p.id === productToAdd);
         if (!product) return;
+
+        if (quantityToAdd > product.stock) {
+            toast({
+                variant: 'destructive',
+                title: 'Insufficient Stock',
+                description: `Only ${product.stock} units of ${product.name} are available.`,
+            });
+            return;
+        }
 
         const existingItemIndex = supplyItems.findIndex(item => item.id === product.id);
 
@@ -567,7 +578,7 @@ function CreateInvoiceTab() {
                                             type="number"
                                             min="1"
                                             value={quantityToAdd}
-                                            onChange={(e) => setQuantityToAdd(Math.max(1, parseInt(e.target.value) || 1))}
+                                            onChange={(e) => setQuantityToAdd(Math.max(1, parseInt(e.target.value, 10) || 1))}
                                             disabled={!productToAdd || isItemLimitReached}
                                         />
                                     </div>
@@ -690,3 +701,5 @@ export default function SourcingPage() {
         </Tabs>
     )
 }
+
+    
