@@ -37,6 +37,7 @@ interface SupplyItem {
 const initialSupplyItems: SupplyItem[] = [];
 
 const MAX_ITEMS = 25;
+const LOCAL_STORAGE_KEY = 'don_maris_sourcing_invoice';
 
 function CreateInvoiceTab() {
     const [supplyItems, setSupplyItems] = useState<SupplyItem[]>(initialSupplyItems);
@@ -59,6 +60,30 @@ function CreateInvoiceTab() {
     const { user } = useSession();
     const { toast } = useToast();
     const router = useRouter();
+
+    useEffect(() => {
+        try {
+            const savedItems = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedItems) {
+                setSupplyItems(JSON.parse(savedItems));
+            }
+        } catch (error) {
+            console.error("Failed to parse saved invoice items:", error);
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+        }
+    }, []);
+
+    useEffect(() => {
+        try {
+            if (supplyItems.length > 0) {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(supplyItems));
+            } else {
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+            }
+        } catch (error) {
+            console.error("Failed to save invoice items:", error);
+        }
+    }, [supplyItems]);
 
     useEffect(() => {
         async function loadUsers() {
@@ -298,13 +323,14 @@ function CreateInvoiceTab() {
                     description: "The order has been successfully created and stock has been updated.",
                 });
 
-                // Reset form
+                // Reset form and clear local storage
                 setSupplyItems([]);
                 setSelectedCustomer(null);
                 setAddress('');
                 setCustomerEmail('');
                 setPreviousBalance(0);
                 setDeliveryMethod('');
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
 
                 router.push(`/admin/sourcing/invoice`);
             } else {
