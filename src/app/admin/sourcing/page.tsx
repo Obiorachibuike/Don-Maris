@@ -34,7 +34,13 @@ interface SupplyItem {
     discount: number;
 }
 
-const initialSupplyItems: SupplyItem[] = [];
+interface SavedInvoiceState {
+    items: SupplyItem[];
+    customerId: string | null;
+    customerEmail: string;
+    address: string;
+    deliveryMethod: string;
+}
 
 const MAX_ITEMS = 25;
 const LOCAL_STORAGE_KEY = 'don_maris_sourcing_invoice';
@@ -49,7 +55,7 @@ function formatAddress(user: User): string {
 }
 
 function CreateInvoiceTab() {
-    const [supplyItems, setSupplyItems] = useState<SupplyItem[]>(initialSupplyItems);
+    const [supplyItems, setSupplyItems] = useState<SupplyItem[]>([]);
     const { users: allUsers, fetchUsers } = useUserStore();
     const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
     const [productPopoverOpen, setProductPopoverOpen] = useState(false);
@@ -72,33 +78,48 @@ function CreateInvoiceTab() {
     const router = useRouter();
 
     useEffect(() => {
-        try {
-            const savedItems = localStorage.getItem(LOCAL_STORAGE_KEY);
-            if (savedItems) {
-                setSupplyItems(JSON.parse(savedItems));
-            }
-        } catch (error) {
-            console.error("Failed to parse saved invoice items:", error);
-            localStorage.removeItem(LOCAL_STORAGE_KEY);
-        }
-    }, []);
-
-    useEffect(() => {
-        try {
-            if (supplyItems.length > 0) {
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(supplyItems));
-            } else {
-                localStorage.removeItem(LOCAL_STORAGE_KEY);
-            }
-        } catch (error) {
-            console.error("Failed to save invoice items:", error);
-        }
-    }, [supplyItems]);
-
-    useEffect(() => {
         if(allUsers.length === 0) fetchUsers();
         if (products.length === 0) fetchProducts();
     }, [products.length, fetchProducts, allUsers.length, fetchUsers]);
+
+    useEffect(() => {
+        try {
+            const savedStateJSON = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedStateJSON) {
+                const savedState: SavedInvoiceState = JSON.parse(savedStateJSON);
+                setSupplyItems(savedState.items || []);
+                setCustomerEmail(savedState.customerEmail || '');
+                setAddress(savedState.address || '');
+                setDeliveryMethod(savedState.deliveryMethod || '');
+                if (savedState.customerId && allUsers.length > 0) {
+                    const customer = allUsers.find(u => u._id === savedState.customerId);
+                    if (customer) {
+                        setSelectedCustomer(customer);
+                        setPreviousBalance(customer.ledgerBalance || 0);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Failed to parse saved invoice state:", error);
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+        }
+    }, [allUsers]);
+
+    useEffect(() => {
+        try {
+            const stateToSave: SavedInvoiceState = {
+                items: supplyItems,
+                customerId: selectedCustomer?._id || null,
+                customerEmail,
+                address,
+                deliveryMethod,
+            };
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(stateToSave));
+
+        } catch (error) {
+            console.error("Failed to save invoice state:", error);
+        }
+    }, [supplyItems, selectedCustomer, customerEmail, address, deliveryMethod]);
 
     const customers = useMemo(() => allUsers.filter(u => u.role === 'customer'), [allUsers]);
 
@@ -389,6 +410,7 @@ function CreateInvoiceTab() {
     
     const isItemLimitReached = supplyItems.length >= MAX_ITEMS;
     const isFormSubmittable = selectedCustomer && address && deliveryMethod && supplyItems.length > 0;
+    const canAddProducts = !!selectedCustomer;
 
     return (
         <>
@@ -501,7 +523,7 @@ function CreateInvoiceTab() {
                             </div>
                         </div>
 
-                        <div className="space-y-4 pt-4 border-t">
+                        <div className={cn("space-y-4 pt-4 border-t", !canAddProducts && "opacity-50 pointer-events-none")}>
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                                 <div className="space-y-2">
                                     <Label>Product to Add</Label>
@@ -512,7 +534,7 @@ function CreateInvoiceTab() {
                                                 role="combobox"
                                                 aria-expanded={productPopoverOpen}
                                                 className="w-full justify-between"
-                                                disabled={isItemLimitReached}
+                                                disabled={isItemLimitReached || !canAddProducts}
                                             >
                                                 {selectedProductForAdding
                                                     ? selectedProductForAdding.name
@@ -578,7 +600,7 @@ function CreateInvoiceTab() {
                                             min="1"
                                             value={quantityToAdd}
                                             onChange={(e) => setQuantityToAdd(Math.max(1, parseInt(e.target.value) || 1))}
-                                            disabled={!productToAdd || isItemLimitReached}
+                                            disabled={!productToAdd || isItemLimitReached || !canAddProducts}
                                         />
                                     </div>
                                 </div>
@@ -586,7 +608,7 @@ function CreateInvoiceTab() {
                             <Button
                                 type="button"
                                 onClick={handleAddProduct}
-                                disabled={!productToAdd || quantityToAdd < 1 || quantityToAdd > (selectedProductForAdding?.stock ?? 0) || isItemLimitReached}
+                                disabled={!productToAdd || quantityToAdd < 1 || quantityToAdd > (selectedProductForAdding?.stock ?? 0) || isItemLimitReached || !canAddProducts}
                                 className="w-full md:w-auto"
                             >
                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Product to Invoice
@@ -700,3 +722,5 @@ export default function SourcingPage() {
         </Tabs>
     )
 }
+
+    
