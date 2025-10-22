@@ -551,7 +551,16 @@ function CreateInvoiceTab() {
                                         </PopoverContent>
                                     </Popover>
                                 </div>
-                                <div className='grid grid-cols-2 gap-2'>
+                                <div className='grid grid-cols-3 gap-2'>
+                                    <div className="space-y-2">
+                                        <Label>Price (₦)</Label>
+                                        <Input
+                                            type="number"
+                                            value={selectedProductForAdding?.price ?? ''}
+                                            readOnly
+                                            className="bg-muted"
+                                        />
+                                    </div>
                                     <div className="space-y-2">
                                         <Label>Available</Label>
                                         <Input
