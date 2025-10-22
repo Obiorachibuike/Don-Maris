@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Check, ChevronsUpDown, PlusCircle, Printer, ShoppingCart, Loader2, Save } from 'lucide-react';
+import { Check, ChevronsUpDown, PlusCircle, Printer, ShoppingCart, Loader2, Save, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
@@ -227,6 +227,10 @@ function CreateInvoiceTab() {
         }
         setProductToAdd(null);
         setQuantityToAdd(1);
+    };
+
+    const handleRemoveItem = (productId: string) => {
+        setSupplyItems(currentItems => currentItems.filter(item => item.id !== productId));
     };
 
     const availableProducts = useMemo(() => {
@@ -628,8 +632,8 @@ function CreateInvoiceTab() {
                                         <TableHead>Item</TableHead>
                                         <TableHead className="text-center">Quantity</TableHead>
                                         <TableHead className="text-right">Unit Cost (₦)</TableHead>
-                                        <TableHead className="text-right">Discount</TableHead>
                                         <TableHead className="text-right">Price (₦)</TableHead>
+                                        <TableHead className="text-center w-[50px]"><span className="sr-only">Remove</span></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -643,8 +647,12 @@ function CreateInvoiceTab() {
                                                 <TableCell className="font-medium">{item.itemName}</TableCell>
                                                 <TableCell className="text-center">{item.quantity}</TableCell>
                                                 <TableCell className="text-right">{item.unitCost.toLocaleString()}</TableCell>
-                                                <TableCell className="text-right">{(item.discount * 100).toFixed(0)}%</TableCell>
                                                 <TableCell className="text-right">{price.toLocaleString()}</TableCell>
+                                                <TableCell className="text-center">
+                                                    <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)}>
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </Button>
+                                                </TableCell>
                                             </TableRow>
                                         )
                                     })}
