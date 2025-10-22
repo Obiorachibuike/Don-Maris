@@ -45,6 +45,12 @@ export async function POST(request: NextRequest) {
     try {
         const productData: Omit<Product, 'id'> = await request.json();
         
+        // Check for uniqueness of product name (case-insensitive)
+        const existingProduct = await ProductModel.findOne({ name: { $regex: new RegExp(`^${productData.name}$`, 'i') } });
+        if (existingProduct) {
+            return NextResponse.json({ error: `A product with the name "${productData.name}" already exists.` }, { status: 409 });
+        }
+
         if (!productData.images || productData.images.length === 0) {
             return NextResponse.json({ error: "At least one image is required." }, { status: 400 });
         }
