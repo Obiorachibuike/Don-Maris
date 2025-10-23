@@ -19,7 +19,7 @@ interface ProductState {
   addProduct: (product: Omit<Product, 'id' | 'rating' | 'reviews' | 'dateAdded' | 'totalSales'>) => Promise<void>;
   editProduct: (productId: string, updatedData: Partial<Omit<Product, 'id' | 'rating' | 'reviews' | 'dateAdded'>>) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
-  decreaseStock: (productId: string, quantity: number) => void;
+  updateStock: (productId: string, quantitySold: number, updatedBy: string) => Promise<void>;
 }
 
 const computeDerivedProducts = (products: Product[]) => {
@@ -207,16 +207,46 @@ export const useProductStore = create<ProductState>((set, get) => ({
         });
     }
   },
-  decreaseStock: (productId: string, quantity: number) => {
-    set(state => {
-        const updatedProducts = state.products.map(p => {
-            if (p.id === productId) {
-                return { ...p, stock: p.stock - quantity };
-            }
-            return p;
+  updateStock: async (productId: string, quantitySold: number, updatedBy: string) => {
+    const product = get().products.find(p => p.id === productId);
+    if (!product) {
+        console.error(`Product with ID ${productId} not found in store.`);
+        return;
+    }
+    
+    const newStock = product.stock - quantitySold;
+    
+    try {
+        await fetch(`/api/products/${productId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                stock: newStock,
+                stockChangeReason: 'Sale',
+                stockChangeUser: updatedBy
+            }),
         });
-        // We don't need to recompute derived products here as stock changes don't affect them
-        return { products: updatedProducts };
-    })
-  }
+
+        set(state => {
+            const updatedProducts = state.products.map(p => {
+                if (p.id === productId) {
+                    return { ...p, stock: newStock };
+                }
+                return p;
+            });
+            const derived = computeDerivedProducts(updatedProducts);
+            return { products: updatedProducts, ...derived };
+        });
+
+    } catch (error) {
+        console.error(`Failed to update stock for product ${productId}`, error);
+        toast({
+            variant: 'destructive',
+            title: `Stock Update Failed`,
+            description: `Could not update stock for ${product.name}.`,
+        });
+    }
+  },
 }));
+
+    

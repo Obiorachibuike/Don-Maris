@@ -53,7 +53,7 @@ export default function PaymentPage() {
     const [isPayLaterLoading, setIsPayLaterLoading] = useState(false);
     const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null);
     const { toast } = useToast();
-    const { decreaseStock, products } = useProductStore();
+    const { updateStock } = useProductStore();
     
     const isNigeria = user?.countryCode === 'NG';
     
@@ -67,34 +67,30 @@ export default function PaymentPage() {
         }
     }, [router]);
 
-    const updateStockInDatabase = async (productId: string, quantitySold: number) => {
-        const product = products.find(p => p.id === productId);
-        if (!product) return;
-        
-        const newStock = product.stock - quantitySold;
-        
-        try {
-            await fetch(`/api/products/${productId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    stock: newStock,
-                    stockChangeReason: 'Sale',
-                    stockChangeUser: user?.name || shippingDetails?.customer.firstName || 'Customer'
-                }),
-            });
-            decreaseStock(productId, quantitySold); // Update client state
-        } catch (error) {
-            console.error(`Failed to update stock for product ${productId}`, error);
-        }
-    };
-
-
     const handleCardCheckout = async () => {
         if (!user || !shippingDetails) return;
         setIsCardLoading(true);
 
-        const orderDetails = { ...shippingDetails, date: new Date().toISOString(), paymentStatus: 'unpaid' as PaymentStatus };
+        const customerDetailsForOrder = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatar: user.avatar,
+        };
+
+        const orderDetails: Omit<Order, 'id'> = {
+            customer: customerDetailsForOrder,
+            shippingAddress: `${shippingDetails.customer.address}, ${shippingDetails.customer.city}, ${shippingDetails.customer.state} ${shippingDetails.customer.zip}`,
+            amount: shippingDetails.total,
+            status: 'Pending', // Will be updated by payment verification
+            date: new Date().toISOString(),
+            paymentMethod: 'Card',
+            items: shippingDetails.items.map(item => ({ productId: item.id, quantity: item.quantity })),
+            deliveryMethod: 'Waybill', // Default or choose one
+            paymentStatus: 'Not Paid',
+            amountPaid: 0
+        };
+
         const orderResult = await submitOrder(orderDetails);
 
         if (!orderResult.id) {
@@ -106,7 +102,7 @@ export default function PaymentPage() {
         try {
             // Update stock before redirecting to payment
             for (const item of shippingDetails.items) {
-                await updateStockInDatabase(item.product.id, item.quantity);
+                await updateStock(item.product.id, item.quantity, user.name);
             }
 
             const res = await fetch("/api/checkout", {
@@ -188,7 +184,7 @@ export default function PaymentPage() {
         
         if (result.status === 'success' || result.id) {
             for (const item of shippingDetails.items) {
-                await updateStockInDatabase(item.product.id, item.quantity);
+                await updateStock(item.product.id, item.quantity, user.name);
             }
 
             const invoiceData = {
@@ -347,3 +343,5 @@ export default function PaymentPage() {
         </div>
     );
 }
+
+    

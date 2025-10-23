@@ -72,7 +72,7 @@ function CreateInvoiceTab() {
     const [isPurchasing, setIsPurchasing] = useState(false);
     const [isPurchaseConfirmOpen, setIsPurchaseConfirmOpen] = useState(false);
 
-    const { products, fetchProducts, decreaseStock } = useProductStore();
+    const { products, fetchProducts, updateStock } = useProductStore();
     const { user, isLoading: isUserLoading } = useSession();
     const { toast } = useToast();
     const router = useRouter();
@@ -251,33 +251,6 @@ function CreateInvoiceTab() {
     
     const totalCost = currentSubtotal + previousBalance;
 
-    const updateStockInDatabase = async (productId: string, quantitySold: number) => {
-        const product = products.find(p => p.id === productId);
-        if (!product) return;
-        
-        const newStock = product.stock - quantitySold;
-        
-        try {
-            await fetch(`/api/products/${productId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    stock: newStock,
-                    stockChangeReason: 'Sale',
-                    stockChangeUser: user?.name || 'Sourcing Dept.'
-                }),
-            });
-            decreaseStock(productId, quantitySold);
-        } catch (error) {
-            console.error(`Failed to update stock for product ${productId}`, error);
-            toast({
-                variant: 'destructive',
-                title: `Stock Update Failed`,
-                description: `Could not update stock for ${product.name}.`,
-            });
-        }
-    };
-
     const handlePurchase = () => {
         if (!selectedCustomer || !address || !deliveryMethod || supplyItems.length === 0) {
             toast({
@@ -384,7 +357,7 @@ function CreateInvoiceTab() {
             
             if (result.status === 'success' || result.id) {
                 for (const item of cartItems) {
-                    await updateStockInDatabase(item.product.id, item.quantity);
+                    await updateStock(item.product.id, item.quantity, user?.name || 'Sourcing Dept.');
                 }
 
                 toast({
@@ -538,7 +511,7 @@ function CreateInvoiceTab() {
                                                 role="combobox"
                                                 aria-expanded={productPopoverOpen}
                                                 className="w-full justify-between"
-                                                disabled={isItemLimitReached}
+                                                disabled={isItemLimitReached || !canAddItem}
                                             >
                                                 {selectedProductForAdding
                                                     ? selectedProductForAdding.name
@@ -730,3 +703,5 @@ export default function SourcingPage() {
         </Tabs>
     )
 }
+
+    
