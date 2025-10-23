@@ -413,8 +413,8 @@ function CreateInvoiceTab() {
     }
     
     const isItemLimitReached = supplyItems.length >= MAX_ITEMS;
+    const canAddItem = !!selectedCustomer;
     const isFormSubmittable = selectedCustomer && address && deliveryMethod && supplyItems.length > 0;
-    const canAddProducts = !!selectedCustomer;
 
     return (
         <>
@@ -527,7 +527,7 @@ function CreateInvoiceTab() {
                             </div>
                         </div>
 
-                        <div className={cn("space-y-4 pt-4 border-t", !canAddProducts && "opacity-50 pointer-events-none")}>
+                        <div className="space-y-4 pt-4 border-t">
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                                 <div className="space-y-2">
                                     <Label>Product to Add</Label>
@@ -538,7 +538,7 @@ function CreateInvoiceTab() {
                                                 role="combobox"
                                                 aria-expanded={productPopoverOpen}
                                                 className="w-full justify-between"
-                                                disabled={isItemLimitReached || !canAddProducts}
+                                                disabled={isItemLimitReached}
                                             >
                                                 {selectedProductForAdding
                                                     ? selectedProductForAdding.name
@@ -604,7 +604,7 @@ function CreateInvoiceTab() {
                                             min="1"
                                             value={quantityToAdd}
                                             onChange={(e) => setQuantityToAdd(Math.max(1, parseInt(e.target.value) || 1))}
-                                            disabled={!productToAdd || isItemLimitReached || !canAddProducts}
+                                            disabled={!productToAdd || isItemLimitReached || !canAddItem}
                                         />
                                     </div>
                                 </div>
@@ -612,7 +612,7 @@ function CreateInvoiceTab() {
                             <Button
                                 type="button"
                                 onClick={handleAddProduct}
-                                disabled={!productToAdd || quantityToAdd < 1 || quantityToAdd > (selectedProductForAdding?.stock ?? 0) || isItemLimitReached || !canAddProducts}
+                                disabled={!productToAdd || !canAddItem || quantityToAdd < 1 || quantityToAdd > (selectedProductForAdding?.stock ?? 0) || isItemLimitReached}
                                 className="w-full md:w-auto"
                             >
                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Product to Invoice
@@ -730,5 +730,3 @@ export default function SourcingPage() {
         </Tabs>
     )
 }
-
-    
