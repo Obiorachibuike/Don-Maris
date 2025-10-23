@@ -32,9 +32,9 @@ dummyOrders.forEach(order => {
         if (customer.ledgerBalance === undefined) customer.ledgerBalance = 0;
         if (customer.lifetimeValue === undefined) customer.lifetimeValue = 0;
         
-        // Add the outstanding balance of this order to the ledger
-        customer.ledgerBalance += (order.amount - order.amountPaid);
-        // Add the paid amount of this order to the lifetime value
+        if (order.paymentStatus !== 'Paid') {
+            customer.ledgerBalance += (order.amount - order.amountPaid);
+        }
         customer.lifetimeValue += order.amountPaid;
     }
 });
@@ -47,3 +47,4 @@ export function getUserById(id: string): User | undefined {
 export function getOrdersByUserId(userId: string): Order[] {
     return dummyOrders.filter(order => order.customer.id === userId);
 }
+
