@@ -35,11 +35,11 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
 
-    --sidebar-background: 224 71% 4%; /* #0F172A */
-    --sidebar-foreground: 210 40% 98%; /* #F8FAFC */
-    --sidebar-border: 217 33% 17%;
-    --sidebar-accent: 49 100% 65%; /* #FFD54A - Changed to primary yellow */
-    --sidebar-accent-foreground: 224 71% 10%; /* Changed for better contrast on yellow */
+    --sidebar-background: 220 14% 96%;
+    --sidebar-foreground: 224 71% 4%;
+    --sidebar-border: 50 20% 85%;
+    --sidebar-accent: 247 91% 69%;
+    --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-ring: 247 91% 69%;
   }
   .dark {
