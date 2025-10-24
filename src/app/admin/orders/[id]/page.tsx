@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
@@ -16,7 +15,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { updateOrder } from '@/lib/dummy-orders';
 import { useProductStore } from '@/store/product-store';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -64,6 +62,22 @@ export default function OrderDetailsPage() {
         fetchOrder();
     }, [orderId]);
 
+    const handleOrderUpdate = async (updatedData: Partial<Order>) => {
+        if (!order) return;
+        try {
+            const response = await fetch(`/api/orders/${order.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData),
+            });
+            if (!response.ok) throw new Error('Failed to update order');
+            const newOrder = await response.json();
+            setOrder(newOrder);
+        } catch (error) {
+            console.error("Failed to update order", error);
+        }
+    };
+    
     if (order === undefined) {
         return (
             <Card>
@@ -153,10 +167,6 @@ export default function OrderDetailsPage() {
             navigateToInvoice();
         }
     };
-
-    const handleOrderUpdate = (updatedOrder: Order) => {
-        setOrder(updatedOrder);
-    }
     
     const handleForcePrint = () => {
         navigateToInvoice();

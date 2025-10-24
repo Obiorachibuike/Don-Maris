@@ -1,11 +1,9 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import type { Order, OrderItem, Product } from '@/lib/types';
 import { useProductStore } from '@/store/product-store';
-import { updateOrder } from '@/lib/dummy-orders';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -35,7 +33,7 @@ interface EditOrderFormProps {
     isOpen: boolean;
     setIsOpen: (isOpen: boolean) => void;
     order: Order;
-    onOrderUpdate: (updatedOrder: Order) => void;
+    onOrderUpdate: (updatedData: Partial<Order>) => void;
 }
 
 type EditableOrderItem = OrderItem & { product: Product };
@@ -116,21 +114,17 @@ export function EditOrderForm({ isOpen, setIsOpen, order, onOrderUpdate }: EditO
         const newTotal = editableItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
         const updatedOrderItems = editableItems.map(({ productId, quantity }) => ({ productId, quantity }));
         
-        const updatedOrder = updateOrder(order.id, updatedOrderItems, newTotal);
+        const updatedData: Partial<Order> = {
+            items: updatedOrderItems,
+            amount: newTotal,
+        };
+        
+        onOrderUpdate(updatedData);
 
-        if (updatedOrder) {
-            onOrderUpdate(updatedOrder);
-            toast({
-                title: "Order Updated",
-                description: `Order #${order.id} has been successfully updated.`,
-            });
-        } else {
-            toast({
-                variant: 'destructive',
-                title: "Update Failed",
-                description: `Could not update order #${order.id}.`,
-            });
-        }
+        toast({
+            title: "Order Updated",
+            description: `Order #${order.id} has been successfully updated.`,
+        });
         
         setIsSaving(false);
         setIsOpen(false);

@@ -1,7 +1,7 @@
+
 'use client';
 
 import type { Product, Order } from './types';
-import { dummyProducts } from './dummy-products';
 
 /**
  * Fetches a single product by its ID using the API.
@@ -14,15 +14,15 @@ export async function getProductById(id: string): Promise<Product | null> {
         const response = await fetch(`/api/products/${id}`);
         
         if (!response.ok) {
-            console.warn(`API failed for product ${id}, falling back to dummy data.`);
-            return dummyProducts.find(p => p.id === id) || null;
+            console.warn(`API failed for product ${id}. Status: ${response.status}`);
+            return null;
         }
 
         return await response.json();
 
     } catch (apiError) {
-        console.error(`API error fetching product ${id}. Falling back to dummy data.`, apiError);
-        return dummyProducts.find(p => p.id === id) || null;
+        console.error(`API error fetching product ${id}.`, apiError);
+        return null;
     }
 }
 

@@ -9,10 +9,14 @@ export async function GET(request: NextRequest) {
         await connectDB();
         const { searchParams } = new URL(request.url);
         const createdBy = searchParams.get('createdBy');
+        const customerId = searchParams.get('customerId');
 
         const query: any = {};
         if (createdBy) {
             query.createdBy = createdBy;
+        }
+        if (customerId) {
+            query['customer.id'] = customerId;
         }
 
         const orders = await Order.find(query).sort({ date: -1 }).lean();

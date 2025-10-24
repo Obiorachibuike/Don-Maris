@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
@@ -11,7 +10,6 @@ import { StarRating } from '@/components/star-rating';
 import { formatProductType } from '@/lib/display-utils';
 import { Tag, DollarSign, Package, CheckCircle, BarChart2, Calendar, ShoppingCart, TrendingUp, History } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dummyOrders } from '@/lib/dummy-orders';
 import type { Order, Customer, Product, StockHistoryEntry } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -41,25 +39,6 @@ export default function AdminProductDetailsPage() {
         async function loadProductData() {
             const fetchedProduct = await getProductById(productId);
             setProduct(fetchedProduct);
-
-            if (fetchedProduct) {
-                const history: PurchaseHistoryEntry[] = dummyOrders
-                    .map(order => {
-                        const item = order.items.find(item => item.productId === productId);
-                        if (item) {
-                            return {
-                                orderId: order.id,
-                                customer: order.customer,
-                                date: order.date,
-                                quantity: item.quantity,
-                                pricePerUnit: fetchedProduct.price,
-                            };
-                        }
-                        return null;
-                    })
-                    .filter((entry): entry is PurchaseHistoryEntry => entry !== null);
-                setPurchaseHistory(history);
-            }
         }
         
         if(productId) {

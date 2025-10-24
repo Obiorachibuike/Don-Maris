@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Calendar, ShoppingBag, DollarSign, Wallet, Loader2, CreditCard, Pencil } from 'lucide-react';
-import { getOrdersByUserId } from '@/lib/dummy-users';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Link from 'next/link';
 import { useEffect, useState, useMemo } from 'react';
@@ -38,7 +37,17 @@ export default function ProfilePage() {
             router.push('/login');
         }
         if (displayUser && displayUser.role === 'customer') {
-            setUserOrders(getOrdersByUserId(displayUser.id));
+            const fetchOrders = async () => {
+                 try {
+                    const response = await fetch(`/api/orders?customerId=${displayUser.id}`);
+                    if (response.ok) {
+                        setUserOrders(await response.json());
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch user orders", error);
+                }
+            };
+            fetchOrders();
         }
     }, [displayUser, isLoading, user, router]);
 

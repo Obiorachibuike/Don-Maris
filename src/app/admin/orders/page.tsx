@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from "react";
@@ -30,7 +29,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { updateOrder } from "@/lib/dummy-orders";
 import type { Order } from "@/lib/types";
 
 export default function OrdersPage() {
@@ -68,16 +66,27 @@ export default function OrdersPage() {
 
     const handleConfirmUpdate = async () => {
         if (selectedOrder && newStatus) {
-            const updatedOrder = await updateOrder(selectedOrder.id, { status: newStatus as Order['status'] });
-            if (updatedOrder) {
-                 setOrders(currentOrders =>
+            try {
+                const response = await fetch(`/api/orders/${selectedOrder.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus }),
+                });
+
+                if (!response.ok) throw new Error('Failed to update order status.');
+
+                const updatedOrder = await response.json();
+                setOrders(currentOrders =>
                     currentOrders.map(o => 
                         o.id === selectedOrder.id ? updatedOrder : o
                     )
                 );
+            } catch (error) {
+                 console.error("Could not update order:", error);
+            } finally {
+                setSelectedOrder(null);
+                setNewStatus('');
             }
-            setSelectedOrder(null);
-            setNewStatus('');
         }
     };
 
@@ -151,7 +160,7 @@ export default function OrdersPage() {
                                             {order.status}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>{order.date}</TableCell>
+                                    <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
                                     <TableCell>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>

@@ -1,5 +1,4 @@
 
-
 import type { Order, DeliveryMethod, OrderPaymentStatus, PrintHistoryEntry } from './types';
 
 // More detailed mock data for orders, including items.
@@ -149,66 +148,3 @@ export const dummyOrders: Order[] = [
         };
     })
 ];
-
-export async function updateOrder(orderId: string, updatedData: Partial<Order>): Promise<Order | undefined> {
-    try {
-        const response = await fetch(`/api/orders/${orderId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedData),
-        });
-        if (!response.ok) {
-            throw new Error('Failed to update order on server');
-        }
-        const updatedOrderFromServer = await response.json();
-        
-        // Also update local dummy data for fallback
-        const orderIndex = dummyOrders.findIndex(o => o.id === orderId);
-        if (orderIndex !== -1) {
-            dummyOrders[orderIndex] = { ...dummyOrders[orderIndex], ...updatedOrderFromServer };
-        }
-
-        return updatedOrderFromServer;
-
-    } catch (error) {
-        console.error("Error updating order:", error);
-        
-        // Fallback to local update if API fails
-        const orderIndex = dummyOrders.findIndex(o => o.id === orderId);
-        if (orderIndex === -1) {
-            return undefined;
-        }
-        
-        const updatedOrderData: Order = {
-            ...dummyOrders[orderIndex],
-            ...updatedData
-        };
-
-        dummyOrders[orderIndex] = updatedOrderData;
-        return updatedOrderData;
-    }
-}
-
-export function addPrintRecord(orderId: string, printedBy: string): Order | undefined {
-    const orderIndex = dummyOrders.findIndex(o => o.id === orderId);
-    if (orderIndex === -1) {
-        return undefined;
-    }
-
-    const newPrintEntry: PrintHistoryEntry = {
-        printedBy,
-        printedAt: new Date().toISOString(),
-    };
-
-    const currentOrder = dummyOrders[orderIndex];
-    const updatedHistory = [...(currentOrder.printHistory || []), newPrintEntry];
-
-    const updatedOrder = {
-        ...currentOrder,
-        printHistory: updatedHistory,
-    };
-    
-    dummyOrders[orderIndex] = updatedOrder;
-    
-    return updatedOrder;
-}
