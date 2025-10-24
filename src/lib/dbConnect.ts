@@ -24,23 +24,24 @@ export async function connectDB() {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts)
+    cached.promise = mongoose.connect(MONGODB_URI!, opts)
       .then((mongoose) => {
         console.log("✅ MongoDB Connected:", mongoose.connection.host);
         return mongoose;
       })
       .catch((err) => {
         console.error("❌ MongoDB connection failed:", err.message);
+        cached.promise = null; // Reset promise on failure
         throw new Error("Failed to connect to MongoDB: " + err.message);
       });
   }
 
   try {
     cached.conn = await cached.promise;
-    return cached.conn;
-  } catch (error: any) {
-    // If connection fails or URI is invalid, throw the error
-    cached.promise = null; // Reset promise on failure
-    throw new Error("❌ Invalid MongoDB URI or connection failed: " + error.message);
+  } catch (e) {
+    cached.promise = null;
+    throw e;
   }
+  
+  return cached.conn;
 }
