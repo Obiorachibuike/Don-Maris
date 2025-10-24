@@ -142,7 +142,7 @@ function CreateInvoiceTab() {
         const zip = stateZip[1] || '';
     
         try {
-            // Use the general purpose updateUser which requires admin rights
+            // Use the general purpose updateUser which requires admin/supplier rights
             await updateUser(selectedCustomer._id, { address: street, city, state, zip });
             toast({ title: "Address Saved", description: "Customer's address has been updated." });
         } catch (error) {
@@ -578,7 +578,7 @@ function CreateInvoiceTab() {
                                             type="number"
                                             min="1"
                                             value={quantityToAdd}
-                                            onChange={(e) => setQuantityToAdd(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                                            onChange={(e) => setQuantityToAdd(Math.max(1, parseInt(e.target.value) || 1))}
                                             disabled={!productToAdd || isItemLimitReached}
                                         />
                                     </div>
@@ -701,5 +701,3 @@ export default function SourcingPage() {
         </Tabs>
     )
 }
-
-    
