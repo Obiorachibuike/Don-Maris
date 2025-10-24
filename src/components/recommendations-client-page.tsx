@@ -7,12 +7,11 @@ import { getRecommendationsAction, type RecommendationState } from '@/app/action
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Sparkles, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Sparkles, CheckCircle } from 'lucide-react';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import type { Product, ProductType } from '@/lib/types';
-import { ProductCard } from './product-card';
+import type { ProductType } from '@/lib/types';
 
 const initialState: RecommendationState = {};
 
@@ -25,12 +24,12 @@ function SubmitButton() {
       {pending ? (
         <>
           <Sparkles className="mr-2 h-4 w-4 animate-spin" />
-          Finding Products...
+          Finding Recommendations...
         </>
       ) : (
         <>
           <Sparkles className="mr-2 h-4 w-4" />
-          Find Products
+          Get Recommendations
         </>
       )}
     </Button>
@@ -85,24 +84,15 @@ export function RecommendationsClientPage() {
           </div>
         </form>
 
-        {state.recommendations && (
+        {state.recommendationsText && (
            <div className="mt-8">
             <h3 className="text-xl font-bold text-center mb-4 font-headline flex items-center justify-center gap-2">
               <CheckCircle className="text-green-500" />
-              Here's what we found!
+              Here's what our AI suggests!
             </h3>
-            {state.recommendations.length > 0 ? (
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {state.recommendations.map((product) => (
-                        <ProductCard key={product.id} product={product} />
-                    ))}
-                </div>
-            ) : (
-                <div className="text-center py-8">
-                    <p className="text-lg text-muted-foreground">No matching products found in our inventory.</p>
-                    <p className="text-sm text-muted-foreground mt-1">Please try a different model or component type.</p>
-                </div>
-            )}
+            <div className="prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none p-6 bg-muted rounded-md">
+                <p>{state.recommendationsText}</p>
+            </div>
           </div>
         )}
       </CardContent>

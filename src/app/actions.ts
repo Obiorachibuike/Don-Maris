@@ -12,7 +12,7 @@ const recommendationSchema = z.object({
 });
 
 export type RecommendationState = {
-  recommendations?: Product[];
+  recommendationsText?: string;
   error?: string;
 }
 
@@ -38,8 +38,8 @@ export async function getRecommendationsAction(
         productType: validatedFields.data.productType,
     });
     
-    if (result.recommendations && result.recommendations.length >= 0) {
-      return { recommendations: result.recommendations };
+    if (result.recommendationsText) {
+      return { recommendationsText: result.recommendationsText };
     }
     return { error: 'Could not find any recommendations for this model.' };
 
@@ -60,3 +60,4 @@ export async function chatWithProductAI(input: ProductChatInput) {
         return { success: false, error: errorMessage };
     }
 }
+
