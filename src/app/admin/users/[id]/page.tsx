@@ -1,24 +1,65 @@
 
-
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Calendar, User, ShoppingBag } from 'lucide-react';
-import { getUserById, getOrdersByUserId } from '@/lib/dummy-users';
+import { Mail, Calendar, User, ShoppingBag, Loader2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Link from 'next/link';
+import { useUserStore } from '@/store/user-store';
+import { useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function UserDetailsPage() {
     const params = useParams();
     const userId = params.id as string;
-    const user = getUserById(userId);
-    const userOrders = user && user.role === 'customer' ? getOrdersByUserId(userId) : [];
+    const { users, fetchUsers, isLoading: areUsersLoading } = useUserStore();
+    const user = users.find(u => u._id === userId);
+    
+    // In a real app, orders would be fetched from an API based on user ID
+    // For this example, we'll just filter dummy data if the user is a customer
+    const userOrders = user && user.role === 'customer' 
+        ? [] // Placeholder for fetching real orders
+        : [];
+
+    useEffect(() => {
+        if (users.length === 0) {
+            fetchUsers();
+        }
+    }, [users, fetchUsers]);
+
+    if (areUsersLoading) {
+        return (
+            <div className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center gap-4">
+                            <Skeleton className="w-20 h-20 rounded-full" />
+                            <div>
+                                <Skeleton className="h-8 w-48 mb-2" />
+                                <Skeleton className="h-6 w-24" />
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-20 w-full" />
+                    </CardContent>
+                </Card>
+            </div>
+        )
+    }
 
     if (!user) {
-        notFound();
+        return (
+             <Card>
+                <CardHeader>
+                    <CardTitle>User not found</CardTitle>
+                    <CardDescription>Could not find a user with the specified ID.</CardDescription>
+                </CardHeader>
+             </Card>
+        );
     }
     
     const totalSpent = userOrders.reduce((acc, order) => acc + order.amount, 0);
@@ -30,7 +71,7 @@ export default function UserDetailsPage() {
                 <CardHeader>
                     <div className="flex items-center gap-4">
                         <Avatar className="w-20 h-20 border">
-                            <AvatarImage src={user.avatar} alt={user.name} />
+                            <AvatarImage src={(user as any).avatar} alt={user.name} />
                             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
@@ -38,7 +79,7 @@ export default function UserDetailsPage() {
                             <CardDescription className="flex items-center gap-2">
                                 <Badge variant="secondary" className="capitalize">{user.role}</Badge>
                                 <span>-</span>
-                                <span className="text-sm">ID: {user.id}</span>
+                                <span className="text-sm">ID: {user._id}</span>
                             </CardDescription>
                         </div>
                     </div>

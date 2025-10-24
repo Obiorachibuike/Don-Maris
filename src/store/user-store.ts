@@ -1,0 +1,74 @@
+
+'use client';
+
+import { create } from 'zustand';
+import type { User } from '@/lib/types';
+import { toast } from '@/hooks/use-toast';
+import axios from 'axios';
+
+interface UserState {
+  users: User[];
+  isLoading: boolean;
+  error: string | null;
+  fetchUsers: () => Promise<void>;
+  updateUser: (userId: string, updatedData: Partial<User>) => Promise<void>;
+  deleteUser: (userId: string) => Promise<void>;
+}
+
+export const useUserStore = create<UserState>((set, get) => ({
+  users: [],
+  isLoading: true,
+  error: null,
+  fetchUsers: async () => {
+    if (get().users.length > 0 && !get().isLoading) {
+      // Data is already fresh, no need to fetch again
+      return;
+    }
+    set({ isLoading: true, error: null });
+    try {
+      const response = await axios.get('/api/users');
+      set({ users: response.data, isLoading: false });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Failed to fetch users.';
+      set({ isLoading: false, error: errorMessage });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: errorMessage,
+      });
+    }
+  },
+  updateUser: async (userId, updatedData) => {
+    try {
+      const response = await axios.put(`/api/users/${userId}`, updatedData);
+      const updatedUser = response.data;
+      set(state => ({
+        users: state.users.map(user => (user._id === userId ? updatedUser : user)),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Failed to update user.';
+       toast({
+        variant: 'destructive',
+        title: 'Update Failed',
+        description: errorMessage,
+      });
+       throw new Error(errorMessage);
+    }
+  },
+  deleteUser: async (userId) => {
+    try {
+      await axios.delete(`/api/users/${userId}`);
+      set(state => ({
+        users: state.users.filter(user => user._id !== userId),
+      }));
+    } catch (error: any) {
+       const errorMessage = error.response?.data?.error || 'Failed to deactivate user.';
+       toast({
+        variant: 'destructive',
+        title: 'Deactivation Failed',
+        description: errorMessage,
+      });
+      throw new Error(errorMessage);
+    }
+  }
+}));
