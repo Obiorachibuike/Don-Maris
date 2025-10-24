@@ -64,6 +64,7 @@ export const useUserStore = create<UserState>((set, get) => ({
       set(state => ({
         users: state.users.map(user => (user._id === userId ? { ...user, ...updatedUser } : user)),
       }));
+      return updatedUser;
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Failed to update user.';
        toast({

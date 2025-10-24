@@ -1,13 +1,12 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/dbConnect";
 import User from "@/models/User";
 import { v2 as cloudinary } from 'cloudinary';
 import { getDataFromToken } from "@/lib/get-data-from-token";
 
-cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-  api_key: process.env.CLOUDINARY_API_KEY, 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
   secure: true
 });
@@ -26,63 +25,66 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 }
 
-
 // UPDATE a user
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
     try {
-        await connectDB();
-        
-        const loggedInUserId = await getDataFromToken(request as any);
-        const { id } = params;
-
+        const loggedInUserId = await getDataFromToken(request);
         if (!loggedInUserId) {
             return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
         }
-        
+
+        await connectDB();
         const loggedInUser = await User.findById(loggedInUserId);
         
-        // Allow admin or supplier roles to update users, with some restrictions
-        if (!loggedInUser || !['admin', 'supplier'].includes(loggedInUser.role)) {
+        const isSelfUpdate = loggedInUserId === params.id;
+        const isAdmin = loggedInUser && loggedInUser.role === 'admin';
+
+        if (!isSelfUpdate && !isAdmin) {
              return NextResponse.json({ error: "Not authorized to perform this action." }, { status: 403 });
         }
-        
+
         const body = await request.json();
-        const { name, email, age, avatar, role, ...otherData } = body;
         
-        let updateData: Record<string, any> = { ...otherData };
+        let updateData: Record<string, any> = {};
 
-        if (name) updateData.name = name;
-        if (email) updateData.email = email;
-        if (age) updateData.age = age;
-
-        // Handle role update, restricted by updater's permissions
-        if (role) {
-            if(loggedInUser.role !== 'admin' && role === 'admin') {
-                return NextResponse.json({ error: "Only admins can assign the admin role." }, { status: 403 });
-            }
-             if(loggedInUser.role !== 'admin') {
-                // Non-admins cannot change roles
-                 return NextResponse.json({ error: "You are not authorized to change user roles." }, { status: 403 });
-            }
-            updateData.role = role;
+        // A user can always update their own name
+        if (body.name) {
+            updateData.name = body.name;
         }
 
-        // Handle avatar upload to Cloudinary
-        if (avatar && avatar.startsWith('data:image')) {
+        // Handle avatar upload to Cloudinary for any authorized user
+        if (body.avatar && body.avatar.startsWith('data:image')) {
             try {
-                const uploadResult = await cloudinary.uploader.upload(avatar, {
+                const uploadResult = await cloudinary.uploader.upload(body.avatar, {
                     folder: 'don_maris_avatars',
                 });
                 updateData.avatar = uploadResult.secure_url;
             } catch (uploadError) {
                 return NextResponse.json({ error: "Failed to upload avatar." }, { status: 500 });
             }
-        } else if (avatar) {
-            // If avatar is not a data URI, assume it's already a URL
-            updateData.avatar = avatar;
+        } else if (body.avatar) {
+             updateData.avatar = body.avatar;
+        }
+
+        // Only admins can change other fields for other users
+        if (isAdmin) {
+            if (body.email) updateData.email = body.email;
+            if (body.age) updateData.age = body.age;
+            
+            // Only an admin can change roles
+            if (body.role) {
+                updateData.role = body.role;
+            }
+             // Allow admin to update other specific fields if present
+            const otherAdminFields = ['status', 'forceLogoutBefore', 'ledgerBalance', 'lifetimeValue'];
+            for (const field of otherAdminFields) {
+                if (body[field] !== undefined) {
+                    updateData[field] = body[field];
+                }
+            }
         }
         
-        const updatedUser = await User.findByIdAndUpdate(id, { $set: updateData }, { new: true, runValidators: true }).select("-password");
+        const updatedUser = await User.findByIdAndUpdate(params.id, { $set: updateData }, { new: true, runValidators: true }).select("-password");
         
         if (!updatedUser) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -112,7 +114,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
         const loggedInUser = await User.findById(loggedInUserId);
         
-        if (!loggedInUser || loggedInUser.role === 'customer') {
+        // Admins can delete any user. Users can delete themselves.
+        if (!loggedInUser || (loggedInUser.role !== 'admin' && loggedInUserId !== id)) {
              return NextResponse.json({ error: "Not authorized" }, { status: 403 });
         }
 

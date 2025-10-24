@@ -11,6 +11,7 @@ interface User {
     name: string;
     email: string;
     role: string;
+    avatar: string;
     status?: 'active' | 'inactive';
     forceLogoutBefore?: Date;
     ledgerBalance?: number;
