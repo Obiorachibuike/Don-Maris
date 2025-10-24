@@ -48,7 +48,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         const body = await request.json();
         const { name, email, age, avatar, role } = body;
         
-        let updateData: Record<string, any> = { name, email, age };
+        let updateData: Record<string, any> = {};
+        if (name) updateData.name = name;
+        if (email) updateData.email = email;
+        if (age) updateData.age = age;
+
 
         // Handle role update, restricted to non-customers (admins, etc.)
         if (role && loggedInUser.role !== 'customer') {
