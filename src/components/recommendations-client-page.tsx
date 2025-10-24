@@ -10,8 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Sparkles, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import type { Product, ProductType } from '@/lib/types';
+import { ProductCard } from './product-card';
 
 const initialState: RecommendationState = {};
+
+const productTypes: (ProductType | 'Touch Pad')[] = ['Power Flex', 'Charging Flex', 'Screen', 'Backglass', 'Glass', 'Tools', 'Machine', 'Touch Pad'];
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -20,12 +25,12 @@ function SubmitButton() {
       {pending ? (
         <>
           <Sparkles className="mr-2 h-4 w-4 animate-spin" />
-          Getting Recommendations...
+          Finding Products...
         </>
       ) : (
         <>
           <Sparkles className="mr-2 h-4 w-4" />
-          Find Accessories
+          Find Products
         </>
       )}
     </Button>
@@ -52,29 +57,52 @@ export function RecommendationsClientPage() {
         <CardTitle className="text-center font-headline">Find Your Perfect Match</CardTitle>
       </CardHeader>
       <CardContent>
-        <form action={formAction} className="space-y-4">
-          <Input
-            name="phoneModel"
-            placeholder="e.g., iPhone 15 Pro, Samsung Galaxy S24, Google Pixel 8"
-            required
-            className="text-center"
-          />
-          <SubmitButton />
+        <form action={formAction} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div className="md:col-span-2 space-y-2">
+            <label htmlFor="phoneModel" className="text-sm font-medium">Phone Model</label>
+            <Input
+              id="phoneModel"
+              name="phoneModel"
+              placeholder="e.g., iPhone 15 Pro, Samsung S24"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+             <label htmlFor="productType" className="text-sm font-medium">Component Type</label>
+             <Select name="productType" required>
+                <SelectTrigger id="productType">
+                    <SelectValue placeholder="Select a type" />
+                </SelectTrigger>
+                <SelectContent>
+                    {productTypes.map(type => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+          </div>
+          <div className="md:col-span-3">
+            <SubmitButton />
+          </div>
         </form>
 
         {state.recommendations && (
-          <div className="mt-8">
+           <div className="mt-8">
             <h3 className="text-xl font-bold text-center mb-4 font-headline flex items-center justify-center gap-2">
               <CheckCircle className="text-green-500" />
-              Recommendations Found!
+              Here's what we found!
             </h3>
-            <ul className="space-y-2">
-              {state.recommendations.map((rec, index) => (
-                <li key={index} className="p-3 bg-muted rounded-md text-center">
-                  {rec}
-                </li>
-              ))}
-            </ul>
+            {state.recommendations.length > 0 ? (
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {state.recommendations.map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-8">
+                    <p className="text-lg text-muted-foreground">No matching products found in our inventory.</p>
+                    <p className="text-sm text-muted-foreground mt-1">Please try a different model or component type.</p>
+                </div>
+            )}
           </div>
         )}
       </CardContent>

@@ -1,6 +1,6 @@
 
 
-export type ProductType = 'Power Flex' | 'Charging Flex' | 'Screen' | 'Backglass' | 'Glass' | 'Tools' | 'Machine';
+export type ProductType = 'Power Flex' | 'Charging Flex' | 'Screen' | 'Backglass' | 'Glass' | 'Tools' | 'Machine' | 'Touch Pad';
 
 export type Review = {
   id: string;

@@ -43,12 +43,12 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from './ui/scroll-area';
 import { useBrandStore } from '@/store/brand-store';
 
-const productTypes: ProductType[] = ['Power Flex', 'Charging Flex', 'Screen', 'Backglass', 'Glass', 'Tools', 'Machine'];
+const productTypes: (ProductType | 'Touch Pad')[] = ['Power Flex', 'Charging Flex', 'Screen', 'Backglass', 'Glass', 'Tools', 'Machine', 'Touch Pad'];
 
 const formSchema = z.object({
   name: z.string().min(3, 'Product name must be at least 3 characters long.'),
   brand: z.string().min(1, 'Brand is required.'),
-  type: z.enum(productTypes, { required_error: 'Please select a product type.' }),
+  type: z.enum(productTypes as [string, ...string[]], { required_error: 'Please select a product type.' }),
   price: z.coerce.number().min(0.01, 'Price must be greater than 0.'),
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative.'),
   description: z.string().min(10, 'Description must be at least 10 characters long.'),
