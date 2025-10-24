@@ -4,7 +4,6 @@
 import { create } from 'zustand';
 import type { Product } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
-import { dummyProducts } from '@/lib/dummy-products';
 
 interface ProductState {
   products: Product[];
@@ -23,6 +22,16 @@ interface ProductState {
 }
 
 const computeDerivedProducts = (products: Product[]) => {
+  if (!products || products.length === 0) {
+    return { 
+      featured: [], 
+      newArrivals: [], 
+      bestRated: [], 
+      bestSellers: [], 
+      trending: [] 
+    };
+  }
+
   const featured = products.filter(p => p.isFeatured);
   
   const newArrivals = [...products].sort((a, b) => {
@@ -57,10 +66,6 @@ export const useProductStore = create<ProductState>((set, get) => ({
   isLoading: true,
   error: null,
   fetchProducts: async () => {
-    if (get().products.length > 0 && !get().isLoading) {
-      return;
-    }
-    
     set({ isLoading: true, error: null });
     try {
       const response = await fetch('/api/products');
@@ -71,27 +76,23 @@ export const useProductStore = create<ProductState>((set, get) => ({
       
       const productsFromDb: Product[] = await response.json();
 
-      if (productsFromDb && productsFromDb.length > 0) {
-        const derived = computeDerivedProducts(productsFromDb);
-        set({ 
-          products: productsFromDb, 
-          ...derived,
-          isLoading: false 
-        });
-      } else {
-        throw new Error("No products found in database.");
-      }
+      const derived = computeDerivedProducts(productsFromDb);
+      set({ 
+        products: productsFromDb || [], 
+        ...derived,
+        isLoading: false 
+      });
 
     } catch (error: any) {
-      console.error("Failed to fetch products from API, falling back to dummy data.", error);
+      console.error("Failed to fetch products from API.", error);
       toast({
         variant: 'destructive',
         title: 'API Error',
-        description: 'Could not fetch products. Displaying local fallback data.',
+        description: 'Could not fetch products. The database might be offline or empty.',
       });
-      const derived = computeDerivedProducts(dummyProducts);
+      const derived = computeDerivedProducts([]);
       set({
-        products: dummyProducts,
+        products: [],
         ...derived,
         isLoading: false,
         error: error.message,
@@ -248,5 +249,3 @@ export const useProductStore = create<ProductState>((set, get) => ({
     }
   },
 }));
-
-    
