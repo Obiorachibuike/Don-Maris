@@ -30,20 +30,24 @@ export async function GET(request: Request, { params }: { params: { id: string }
 // UPDATE a user
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
     try {
+        await connectDB();
+    } catch (dbError: any) {
+        console.error("Database connection failed for user update:", dbError);
+        return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });
+    }
+
+    try {
         const loggedInUserId = await getDataFromToken(request);
         if (!loggedInUserId) {
             return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
         }
         
-        await connectDB();
         const loggedInUser = await User.findById(loggedInUserId);
         
         const isSelfUpdate = loggedInUserId === params.id;
         const isAdmin = loggedInUser && loggedInUser.role === 'admin';
-        const isSupplier = loggedInUser && loggedInUser.role === 'supplier';
 
         // An admin can update any user. A user can update their own profile.
-        // Other roles are restricted.
         if (!isSelfUpdate && !isAdmin) {
              return NextResponse.json({ error: "Not authorized to update this user." }, { status: 403 });
         }
@@ -93,6 +97,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 // DELETE a user
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
      try {
+        await connectDB();
+    } catch (dbError: any) {
+        console.error("Database connection failed for user deletion:", dbError);
+        return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });
+    }
+
+    try {
         const loggedInUserId = await getDataFromToken(request as any);
         const loggedInUser = await User.findById(loggedInUserId);
         
@@ -100,7 +111,6 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
              return NextResponse.json({ error: "Not authorized. Only admins can perform this action." }, { status: 403 });
         }
 
-        await connectDB();
         const deletedUser = await User.findByIdAndDelete(params.id);
         
         if (!deletedUser) {
