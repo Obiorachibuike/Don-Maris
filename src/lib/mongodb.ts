@@ -1,3 +1,4 @@
+
 import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -29,6 +30,7 @@ export async function connectDB() {
       return mongoose;
     }).catch((err) => {
       console.error("❌ MongoDB connection error:", err);
+      throw err;
     });
   }
 

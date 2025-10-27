@@ -1,4 +1,5 @@
 
+import { connectDB } from '@/lib/mongodb';
 import { NextResponse } from 'next/server';
 
 import OrderModel from '@/models/Order';
@@ -16,7 +17,7 @@ export async function GET(
 ) {
     const { id } = params;
     try {
-        
+        await connectDB();
     } catch (dbError: any) {
         console.error(`Database connection failed for order ${id}:`, dbError);
         return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });
@@ -42,7 +43,7 @@ export async function PUT(
 ) {
     const { id } = params;
     try {
-        
+        await connectDB();
         const updatedData: Partial<Order> = await request.json();
 
         const updatedOrder = await OrderModel.findOneAndUpdate(

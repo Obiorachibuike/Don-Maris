@@ -1,6 +1,6 @@
 
 
-import { connectDB } from "@/lib/dbConnect";
+import { connectDB } from "@/lib/mongodb";
 import Order from '@/models/Order';
 import { NextRequest, NextResponse } from 'next/server';
 

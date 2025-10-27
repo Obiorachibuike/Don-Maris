@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDataFromToken } from "@/lib/get-data-from-token";
 import User from "@/models/User";
-import { connectDB } from "@/lib/dbConnect";
+import { connectDB } from "@/lib/mongodb";
 
 export async function GET(request: NextRequest) {
     try {

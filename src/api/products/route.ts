@@ -1,4 +1,5 @@
 
+import { connectDB } from '@/lib/mongodb';
 import { NextResponse, NextRequest } from 'next/server';
 
 import ProductModel from '@/models/Product';
@@ -15,7 +16,7 @@ cloudinary.config({
 
 export async function GET(request: Request) {
     try {
-        
+        await connectDB();
     } catch (dbError: any) {
         console.error("Database connection failed:", dbError);
         return NextResponse.json({ error: "Could not connect to the database. Please try again later.", details: dbError.message }, { status: 500 });
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: NextRequest) {
     try {
-        
+        await connectDB();
     } catch (dbError: any) {
         console.error("Database connection failed on POST:", dbError);
         return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });

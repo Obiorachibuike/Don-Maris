@@ -1,5 +1,5 @@
 
-import { connectDB } from './dbConnect';
+import { connectDB } from './mongodb';
 import type { Product } from './types';
 
 import ProductModel from '@/models/Product';

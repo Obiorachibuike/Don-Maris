@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
-
+import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import { v2 as cloudinary } from 'cloudinary';
 import { getDataFromToken } from "@/lib/get-data-from-token";
@@ -15,7 +15,7 @@ cloudinary.config({
 // GET a single user by ID
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
     try {
-        
+        await connectDB();
         const user = await User.findById(params.id).select("-password");
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -34,7 +34,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
             return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
         }
 
-        
+        await connectDB();
         const loggedInUser = await User.findById(loggedInUserId);
         
         const isSelfUpdate = loggedInUserId === params.id;
@@ -104,7 +104,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 // DELETE a user
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
      try {
-        
+        await connectDB();
     } catch (dbError: any) {
         return NextResponse.json({ error: "Could not connect to the database." }, { status: 500 });
     }
