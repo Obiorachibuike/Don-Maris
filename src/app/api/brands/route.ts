@@ -1,5 +1,5 @@
 
-import { connectDB } from '@/lib/dbConnect';
+import { connectDB } from '@/lib/mongodb';
 import { NextResponse } from 'next/server';
 
 import BrandModel from '@/models/Brand';

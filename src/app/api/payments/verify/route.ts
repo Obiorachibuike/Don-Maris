@@ -1,5 +1,5 @@
 
-import { connectDB } from "@/lib/dbConnect";
+import { connectDB } from "@/lib/mongodb";
 import Flutterwave from "flutterwave-node-v3";
 import { NextResponse, NextRequest } from "next/server";
 

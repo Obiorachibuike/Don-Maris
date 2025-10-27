@@ -1,5 +1,5 @@
 
-import { connectDB } from "@/lib/dbConnect";
+import { connectDB } from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { getDataFromToken } from "@/lib/get-data-from-token";
 import User from "@/models/User";
