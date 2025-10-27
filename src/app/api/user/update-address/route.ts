@@ -2,11 +2,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDataFromToken } from "@/lib/get-data-from-token";
 import User from "@/models/User";
-import { connectDB } from "@/lib/dbConnect";
+
 
 export async function POST(request: NextRequest) {
     try {
-        await connectDB();
+        
     } catch (dbError: any) {
         console.error("Database connection failed:", dbError);
         return NextResponse.json({ error: "Could not connect to the database." }, { status: 500 });

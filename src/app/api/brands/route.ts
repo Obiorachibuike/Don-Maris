@@ -1,11 +1,11 @@
 
 import { NextResponse } from 'next/server';
-import { connectDB } from '@/lib/dbConnect';
+
 import BrandModel from '@/models/Brand';
 
 export async function GET() {
     try {
-        await connectDB();
+        
         const brands = await BrandModel.find({}).sort({ name: 1 }).lean();
         // A simple fallback for initial setup
         if (brands.length === 0) {

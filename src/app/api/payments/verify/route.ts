@@ -1,14 +1,14 @@
 
 import Flutterwave from "flutterwave-node-v3";
 import { NextResponse, NextRequest } from "next/server";
-import { connectDB } from "@/lib/dbConnect";
+
 import Payment from "@/models/Payment";
 import OrderModel from "@/models/Order";
 import User from "@/models/User";
 
 export async function GET(req: NextRequest) {
   try {
-    await connectDB();
+    
 
     const { searchParams } = new URL(req.url);
     const transaction_id = searchParams.get("transaction_id");

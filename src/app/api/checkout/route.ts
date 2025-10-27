@@ -2,14 +2,14 @@
 
 import { NextResponse, NextRequest } from "next/server";
 import Flutterwave from "flutterwave-node-v3";
-import { connectDB } from '@/lib/dbConnect';
+
 import User from '@/models/User';
 import Payment from '@/models/Payment'; // Import the new Payment model
 import Order from '@/models/Order'; // Import the Order model
 
 export async function POST(req: NextRequest) {
   try {
-    await connectDB();
+    
 
     const { userId, amount, orderId } = await req.json();
 

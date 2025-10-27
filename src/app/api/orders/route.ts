@@ -1,12 +1,12 @@
 
-import { connectDB } from '@/lib/dbConnect';
+
 import Order from '@/models/Order';
 import { NextRequest, NextResponse } from 'next/server';
 
 // GET all orders
 export async function GET(request: NextRequest) {
     try {
-        await connectDB();
+        
         const { searchParams } = new URL(request.url);
         const createdBy = searchParams.get('createdBy');
         const customerId = searchParams.get('customerId');
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 // POST a new order
 export async function POST(request: Request) {
     try {
-        await connectDB();
+        
         const orderData = await request.json();
 
         const newOrder = new Order({

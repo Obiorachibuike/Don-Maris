@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { connectDB } from '@/lib/dbConnect';
+
 import OrderModel from '@/models/Order';
 
 export async function POST(
@@ -9,7 +9,7 @@ export async function POST(
 ) {
     const { id } = params;
     try {
-        await connectDB();
+        
     } catch (dbError: any) {
         console.error(`Database connection failed for printing order ${id}:`, dbError);
         return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });

@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import type { Product, StockHistoryEntry } from '@/lib/types';
-import { connectDB } from '@/lib/dbConnect';
+
 import ProductModel from '@/models/Product';
 import { dummyProducts } from '@/lib/dummy-products';
 
@@ -16,7 +16,7 @@ export async function GET(
 ) {
     const { id } = params;
     try {
-        await connectDB();
+        
     } catch (dbError: any) {
         console.error(`Database connection failed for product ${id}:`, dbError);
         return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });
@@ -42,7 +42,7 @@ export async function PUT(
 ) {
     const { id } = params;
     try {
-        await connectDB();
+        
     } catch (dbError: any) {
         console.error(`Database connection failed for updating product ${id}:`, dbError);
         return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });
@@ -103,7 +103,7 @@ export async function DELETE(
 ) {
     const { id } = params;
     try {
-        await connectDB();
+        
     } catch (dbError: any) {
         console.error(`Database connection failed for deleting product ${id}:`, dbError);
         return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });
