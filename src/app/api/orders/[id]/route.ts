@@ -1,6 +1,7 @@
 
-import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/dbConnect';
+import { NextResponse } from 'next/server';
+
 import OrderModel from '@/models/Order';
 import { dummyOrders } from '@/lib/dummy-orders';
 import type { Order } from '@/lib/types';
@@ -19,8 +20,6 @@ export async function GET(
         await connectDB();
     } catch (dbError: any) {
         console.error(`Database connection failed for order ${id}:`, dbError);
-        const fallbackOrder = getDummyOrderById(id);
-        if (fallbackOrder) return NextResponse.json(fallbackOrder);
         return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });
     }
     
@@ -30,14 +29,10 @@ export async function GET(
         if (order) {
             return NextResponse.json(JSON.parse(JSON.stringify(order)));
         } else {
-            const fallbackOrder = getDummyOrderById(id);
-            if (fallbackOrder) return NextResponse.json(fallbackOrder);
             return new NextResponse('Order not found', { status: 404 });
         }
     } catch (error: any) {
         console.error(`Error fetching order ${id} from DB`, error);
-        const fallbackOrder = getDummyOrderById(id);
-        if (fallbackOrder) return NextResponse.json(fallbackOrder);
         return NextResponse.json({ error: `Failed to fetch order: ${error.message}` }, { status: 500 });
     }
 }

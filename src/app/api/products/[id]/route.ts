@@ -1,7 +1,8 @@
 
+import { connectDB } from '@/lib/dbConnect';
 import { NextResponse } from 'next/server';
 import type { Product, StockHistoryEntry } from '@/lib/types';
-import { connectDB } from '@/lib/dbConnect';
+
 import ProductModel from '@/models/Product';
 import { dummyProducts } from '@/lib/dummy-products';
 
@@ -19,8 +20,6 @@ export async function GET(
         await connectDB();
     } catch (dbError: any) {
         console.error(`Database connection failed for product ${id}:`, dbError);
-        const fallbackProduct = getDummyProductById(id);
-        if (fallbackProduct) return NextResponse.json(fallbackProduct);
         return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });
     }
     
@@ -30,14 +29,10 @@ export async function GET(
         if (product) {
             return NextResponse.json({ ...product, _id: product._id.toString() });
         } else {
-            const fallbackProduct = getDummyProductById(id);
-             if (fallbackProduct) return NextResponse.json(fallbackProduct);
             return new NextResponse('Product not found', { status: 404 });
         }
     } catch (error: any) {
         console.error(`Error fetching product ${id} from DB`, error);
-        const fallbackProduct = getDummyProductById(id);
-        if (fallbackProduct) return NextResponse.json(fallbackProduct);
         return NextResponse.json({ error: `Failed to fetch product: ${error.message}` }, { status: 500 });
     }
 }

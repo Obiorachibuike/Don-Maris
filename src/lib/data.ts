@@ -1,4 +1,5 @@
 
+import { connectDB } from './dbConnect';
 import type { Product } from './types';
 
 import ProductModel from '@/models/Product';
@@ -9,7 +10,7 @@ import ProductModel from '@/models/Product';
  */
 export async function getProducts(): Promise<Product[]> {
   try {
-    
+    await connectDB();
     const products = await ProductModel.find({}).sort({ dateAdded: -1 }).lean();
     // A bit of a hack to serialize the _id to a string, which is what `JSON.stringify` does.
     return JSON.parse(JSON.stringify(products));
@@ -27,7 +28,7 @@ export async function getProducts(): Promise<Product[]> {
  */
 export async function getProductById_SERVER(id: string): Promise<Product | null> {
     try {
-        
+        await connectDB();
         const product = await ProductModel.findOne({ id: id }).lean();
         if (product) {
             return JSON.parse(JSON.stringify(product));

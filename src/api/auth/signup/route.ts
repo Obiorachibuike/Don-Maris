@@ -1,5 +1,6 @@
 
 
+import { connectDB } from "@/lib/dbConnect";
 import User from "@/models/User";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
@@ -10,7 +11,7 @@ const DEVELOPER_EMAIL = 'obiorachibuike22@gmail.com';
 
 export async function POST(request: NextRequest) {
     try {
-        
+        await connectDB();
     } catch (dbError: any) {
         console.error("Database connection failed:", dbError);
         return NextResponse.json({ error: "Could not connect to the database. Please try again later.", details: dbError.message }, { status: 500 });

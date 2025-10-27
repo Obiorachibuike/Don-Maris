@@ -1,7 +1,7 @@
 
-import { NextResponse, NextRequest } from 'next/server';
-import { getProducts } from '@/lib/data';
 import { connectDB } from '@/lib/dbConnect';
+import { NextResponse, NextRequest } from 'next/server';
+
 import ProductModel from '@/models/Product';
 import type { Product, StockHistoryEntry } from '@/lib/types';
 import { v2 as cloudinary } from 'cloudinary';
@@ -23,8 +23,8 @@ export async function GET(request: Request) {
     }
     
     try {
-        const products = await getProducts();
-        return NextResponse.json(products);
+        const products = await ProductModel.find({}).sort({ dateAdded: -1 }).lean();
+        return NextResponse.json(JSON.parse(JSON.stringify(products)));
     } catch (error: any) {
         console.error("Error in /api/products:", error);
         return NextResponse.json(

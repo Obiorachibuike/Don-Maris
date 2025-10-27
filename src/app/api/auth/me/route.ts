@@ -1,4 +1,5 @@
 
+
 import { NextRequest, NextResponse } from "next/server";
 import { getDataFromToken } from "@/lib/get-data-from-token";
 import User from "@/models/User";
