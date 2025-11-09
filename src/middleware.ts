@@ -13,17 +13,16 @@ export function middleware(request: NextRequest) {
     || path === '/cart'
     || path === '/about'
     || path === '/contact'
-    || path === '/recommendations';
+    || path === '/recommendations'
+    || path.startsWith('/admin');
     
-  const isAdminPath = path.startsWith('/admin');
-
   const token = request.cookies.get('token')?.value || ''
 
   if (isPublicPath && token && (path === '/login' || path === '/signup')) {
     return NextResponse.redirect(new URL('/', request.nextUrl));
   }
   
-  if (!token && (path.startsWith('/profile') || isAdminPath)) {
+  if (!token && path.startsWith('/profile')) {
     return NextResponse.redirect(new URL('/login', request.nextUrl));
   }
 
