@@ -13,7 +13,7 @@ import { TikTokIcon } from "@/components/tiktok-icon";
 
 const SnapchatIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20px" height="20px" {...props}>
-        <path fill="#fffc00" d="M40,41c0,2.2-1.8,4-4,4H12c-2.2,0-4-1.8-4-4V7c0-2.2,1.8-4,4-4h24c2.2,0,4,1.8,4,4V41z"/>
+        <path fill="#fffc00" d="M40,41c0,2.2-1.8,4-4,4H12c-2.2,0-4-1.8,4-4V7c0-2.2,1.8-4,4-4h24c2.2,0,4,1.8,4,4V41z"/>
         <path fill="#fff" fillRule="evenodd" d="M22.4,22.9c-0.2-0.5-0.2-1.1,0-1.6c0.5-1.4,1.6-2.5,3-2.9c1.4-0.4,2.9-0.2,4.1,0.7 c0.1,0.1,0.2,0.1,0.3,0.1c0.3,0,0.5-0.1,0.7-0.3c0.4-0.4,0.4-1.1,0-1.5c-0.6-0.6-1.5-1-2.4-1.3c-1-0.3-2-0.4-3-0.4 c-2.3,0-4.4,0.7-6.2,2.2c-1.7,1.4-2.8,3.3-3.1,5.4c-0.2,1.3-0.1,2.6,0.5,3.8c0.5,1.2,1.4,2.2,2.5,3c0.8,0.6,1.7,1,2.6,1.2 c0.3,0.1,0.6,0.1,0.8,0.1c0.6,0,1.2-0.2,1.7-0.5c0.5-0.3,0.9-0.8,1.2-1.3c0.1-0.2,0.2-0.5,0.2-0.7c0-0.3-0.1-0.6-0.4-0.8 c-0.5-0.5-1.3-0.5-1.8-0.2c-0.5,0.3-1,0.4-1.5,0.4c-0.7,0-1.3-0.2-1.9-0.7c-1-0.7-1.6-1.9-1.6-3.1 C22.1,23.7,22.2,23.3,22.4,22.9z" clipRule="evenodd"/>
     </svg>
 )
@@ -57,7 +57,7 @@ export default function ContactPage() {
         </section>
       </AnimatedSection>
       
-      <div className="grid md:grid-cols-2 gap-12">
+      <div className="grid md:grid-cols-2 gap-12 mb-16">
         <AnimatedSection delay="delay-100">
             <Card className="h-full">
                 <CardHeader>
@@ -160,6 +160,26 @@ export default function ContactPage() {
             </Card>
         </AnimatedSection>
       </div>
+
+      <AnimatedSection delay="delay-300">
+        <section>
+          <h2 className="text-3xl font-bold font-headline text-center mb-8">Find Us Here</h2>
+          <Card>
+            <CardContent className="p-0 rounded-lg overflow-hidden">
+            <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3168.6300435133644!2d-122.086029324024!3d37.42232093125233!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fba024251be2d%3A0x47b4c038c202029!2sGoogleplex!5e0!3m2!1sen!2sus!4v1717805126135!5m2!1sen!2sus"
+                width="100%"
+                height="450"
+                style={{ border: 0 }}
+                allowFullScreen={true}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </CardContent>
+          </Card>
+        </section>
+      </AnimatedSection>
     </div>
   );
-}
+
+    
