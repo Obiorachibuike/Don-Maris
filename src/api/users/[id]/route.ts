@@ -2,15 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
-import { v2 as cloudinary } from 'cloudinary';
 import { getDataFromToken } from "@/lib/get-data-from-token";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true
-});
 
 // GET a single user by ID
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -53,17 +45,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
             updateData.name = body.name;
         }
 
-        // Handle avatar upload to Cloudinary for any authorized user
-        if (body.avatar && body.avatar.startsWith('data:image')) {
-            try {
-                const uploadResult = await cloudinary.uploader.upload(body.avatar, {
-                    folder: 'don_maris_avatars',
-                });
-                updateData.avatar = uploadResult.secure_url;
-            } catch (uploadError) {
-                return NextResponse.json({ error: "Failed to upload avatar." }, { status: 500 });
-            }
-        } else if (body.avatar) {
+        // Handle avatar update. We are not using Cloudinary for now.
+        if (body.avatar) {
              updateData.avatar = body.avatar;
         }
 

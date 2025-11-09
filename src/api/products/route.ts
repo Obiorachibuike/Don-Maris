@@ -4,15 +4,6 @@ import { NextResponse, NextRequest } from 'next/server';
 
 import ProductModel from '@/models/Product';
 import type { Product, StockHistoryEntry } from '@/lib/types';
-import { v2 as cloudinary } from 'cloudinary';
-
-// Configure Cloudinary
-cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-  api_key: process.env.CLOUDINARY_API_KEY, 
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true
-});
 
 export async function GET(request: Request) {
     try {
@@ -38,7 +29,7 @@ export async function GET(request: Request) {
 export async function POST(request: NextRequest) {
     try {
         await connectDB();
-    } catch (dbError: any) {
+    } catch (dbError: any)_ {
         console.error("Database connection failed on POST:", dbError);
         return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });
     }
@@ -56,20 +47,6 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "At least one image is required." }, { status: 400 });
         }
 
-        const uploadedImageUrls = [];
-        try {
-            for (const image of productData.images) {
-                // Assuming images are base64 data URIs
-                const result = await cloudinary.uploader.upload(image, {
-                    folder: "don_maris_products",
-                });
-                uploadedImageUrls.push(result.secure_url);
-            }
-        } catch (uploadError: any) {
-            console.error("Cloudinary upload failed:", uploadError);
-            return NextResponse.json({ error: "Failed to upload one or more images to Cloudinary.", details: uploadError.message }, { status: 500 });
-        }
-
         const initialStockHistory: StockHistoryEntry = {
             date: new Date().toISOString(),
             quantityChange: productData.stock,
@@ -81,7 +58,7 @@ export async function POST(request: NextRequest) {
         const newProduct = new ProductModel({
             ...productData,
             id: `prod-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-            images: uploadedImageUrls, // Use Cloudinary URLs
+            images: productData.images, // Use provided image URLs directly
             rating: 0,
             reviews: [],
             dateAdded: new Date().toISOString(),
