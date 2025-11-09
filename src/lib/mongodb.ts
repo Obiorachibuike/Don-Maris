@@ -30,10 +30,20 @@ export async function connectDB() {
       return mongoose;
     }).catch((err) => {
       console.error("❌ MongoDB connection error:", err);
+      // Ensure the promise is rejected on connection failure
+      // And clear the promise cache so a new attempt can be made
+      cached.promise = null; 
       throw err;
     });
   }
 
-  cached.conn = await cached.promise;
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    // If the promise was rejected, clear it so we can try again
+    cached.promise = null;
+    throw e;
+  }
+  
   return cached.conn;
 }
