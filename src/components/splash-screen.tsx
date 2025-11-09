@@ -19,17 +19,24 @@ export function SplashScreen() {
   return (
     <div
       className={cn(
-        'fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background transition-opacity duration-300 ease-in-out',
+        'fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background transition-opacity duration-500 ease-in-out',
         isFadingOut ? 'opacity-0' : 'opacity-100'
       )}
     >
       <div className="relative flex items-center justify-center">
-        <div className="animate-pulse absolute h-24 w-24 rounded-full bg-primary/20 blur-2xl"></div>
-        <div className="flex items-center gap-4 animate-pulse">
-            <Smartphone className="h-16 w-16 text-primary" />
-            <span className="text-4xl font-bold font-headline bg-gradient-to-br from-primary via-accent to-primary bg-clip-text text-transparent">
-            Don Maris
-            </span>
+        {/* Smoky background elements */}
+        <div className="animate-smoke-1 absolute -top-1/2 -left-1/2 w-48 h-48 bg-primary/10 rounded-full opacity-0 blur-2xl"></div>
+        <div className="animate-smoke-2 absolute -bottom-1/2 -right-1/2 w-56 h-56 bg-accent/10 rounded-full opacity-0 blur-2xl"></div>
+
+        {/* The content with the glow animation */}
+        <div className="relative flex items-center justify-center">
+          <div className="animate-glow absolute h-24 w-56 rounded-full bg-primary/20 blur-2xl"></div>
+          <div className="flex items-center gap-4">
+              <Smartphone className="h-16 w-16 text-primary drop-shadow-[0_0_10px_hsl(var(--primary)/0.7)]" />
+              <span className="text-4xl font-bold font-headline bg-gradient-to-br from-primary via-accent to-primary bg-clip-text text-transparent drop-shadow-[0_0_10px_hsl(var(--accent)/0.5)]">
+              Don Maris
+              </span>
+          </div>
         </div>
       </div>
       <p className="mt-4 text-muted-foreground animate-pulse">Loading accessories...</p>
