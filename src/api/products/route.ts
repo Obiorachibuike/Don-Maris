@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 export async function POST(request: NextRequest) {
     try {
         await connectDB();
-    } catch (dbError: any)_ {
+    } catch (dbError: any) {
         console.error("Database connection failed on POST:", dbError);
         return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });
     }
