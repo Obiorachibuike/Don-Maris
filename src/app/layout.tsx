@@ -26,17 +26,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // Show splash screen on initial load and route changes
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500); // Adjust delay as needed
+    setIsClient(true);
+  }, []);
 
-    return () => clearTimeout(timer);
-  }, [pathname]);
+  useEffect(() => {
+    if (isClient) {
+        setIsLoading(true);
+        const timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 1500); // Adjust delay as needed
+
+        return () => clearTimeout(timer);
+    }
+  }, [pathname, isClient]);
 
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
