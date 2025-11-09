@@ -24,9 +24,9 @@ export function SplashScreen() {
       )}
     >
       <div className="relative flex items-center justify-center">
-        {/* Smoky background elements */}
-        <div className="animate-smoke-1 absolute -top-1/2 -left-1/2 w-48 h-48 bg-primary/10 rounded-full opacity-0 blur-2xl"></div>
-        <div className="animate-smoke-2 absolute -bottom-1/2 -right-1/2 w-56 h-56 bg-accent/10 rounded-full opacity-0 blur-2xl"></div>
+        {/* Wavy background elements */}
+        <div className="animate-wave-1 absolute -top-1/2 -left-1/2 w-48 h-48 bg-primary/10 rounded-full opacity-0 blur-2xl"></div>
+        <div className="animate-wave-2 absolute -bottom-1/2 -right-1/2 w-56 h-56 bg-accent/10 rounded-full opacity-0 blur-2xl"></div>
 
         {/* The content with the glow animation */}
         <div className="relative flex items-center justify-center">
@@ -43,3 +43,4 @@ export function SplashScreen() {
     </div>
   );
 }
+
