@@ -71,14 +71,19 @@ export const useProductStore = create<ProductState>((set, get) => ({
       const response = await fetch('/api/products');
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Failed product fetch response:", errorText);
-        throw new Error('Failed to fetch from the database.');
+        let errorMessage = 'Failed to fetch from the database.';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (e) {
+          // Response was not JSON, use the status text.
+          errorMessage = `Network error: ${response.status} ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
       
       const productsFromDb: Product[] = await response.json();
-      console.log("Successful product fetch response:", productsFromDb);
-
+      
       const derived = computeDerivedProducts(productsFromDb);
       set({ 
         products: productsFromDb || [], 
@@ -87,11 +92,11 @@ export const useProductStore = create<ProductState>((set, get) => ({
       });
 
     } catch (error: any) {
-      console.error("Failed to fetch products from API.", error);
+      console.error("Failed to fetch products from API:", error.message);
       toast({
         variant: 'destructive',
         title: 'API Error',
-        description: 'Could not fetch products. The database might be offline or empty.',
+        description: error.message,
       });
       const derived = computeDerivedProducts([]);
       set({
