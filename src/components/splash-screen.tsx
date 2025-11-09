@@ -23,13 +23,16 @@ export function SplashScreen() {
         isFadingOut ? 'opacity-0' : 'opacity-100'
       )}
     >
-      <div className="flex items-center gap-4 animate-pulse">
-        <Smartphone className="h-16 w-16 text-primary" />
-        <span className="text-4xl font-bold font-headline bg-gradient-to-br from-primary via-accent to-primary bg-clip-text text-transparent">
-          Don Maris
-        </span>
+      <div className="relative flex items-center justify-center">
+        <div className="animate-pulse absolute h-24 w-24 rounded-full bg-primary/20 blur-2xl"></div>
+        <div className="flex items-center gap-4 animate-pulse">
+            <Smartphone className="h-16 w-16 text-primary" />
+            <span className="text-4xl font-bold font-headline bg-gradient-to-br from-primary via-accent to-primary bg-clip-text text-transparent">
+            Don Maris
+            </span>
+        </div>
       </div>
-      <p className="mt-4 text-muted-foreground">Loading accessories...</p>
+      <p className="mt-4 text-muted-foreground animate-pulse">Loading accessories...</p>
     </div>
   );
 }
