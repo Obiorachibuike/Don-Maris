@@ -24,6 +24,7 @@ export async function GET(request: Request) {
     
     try {
         const products = await ProductModel.find({}).sort({ dateAdded: -1 }).lean();
+        // An empty array is a valid response, so we just return it.
         return NextResponse.json(JSON.parse(JSON.stringify(products)));
     } catch (error: any) {
         console.error("Error in /api/products:", error);
