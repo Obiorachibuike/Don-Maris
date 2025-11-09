@@ -71,10 +71,13 @@ export const useProductStore = create<ProductState>((set, get) => ({
       const response = await fetch('/api/products');
       
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Failed product fetch response:", errorText);
         throw new Error('Failed to fetch from the database.');
       }
       
       const productsFromDb: Product[] = await response.json();
+      console.log("Successful product fetch response:", productsFromDb);
 
       const derived = computeDerivedProducts(productsFromDb);
       set({ 
