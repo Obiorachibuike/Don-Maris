@@ -85,7 +85,7 @@ export function WhatsAppInquiryModal({ isOpen, setIsOpen, product }: WhatsAppInq
         <DialogHeader>
           <div className="flex items-center gap-4 mb-4">
             <div className="w-16 h-16 relative flex-shrink-0">
-                <Image src={product.images[0]} alt={product.name} fill className="object-cover rounded-md" />
+                <Image src={product.images[0]} alt={product.name} fill className="object-contain rounded-md" />
             </div>
             <div>
               <DialogTitle>Get Price on WhatsApp</DialogTitle>

@@ -289,7 +289,7 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
                     <div className="grid grid-cols-3 gap-2">
                         {currentImages.map((imgSrc, index) => (
                         <div key={index} className="relative aspect-square">
-                            <Image src={imgSrc} alt={`Preview ${index + 1}`} layout="fill" className="rounded-md object-cover" />
+                            <Image src={imgSrc} alt={`Preview ${index + 1}`} layout="fill" className="rounded-md object-contain" />
                         </div>
                         ))}
                     </div>

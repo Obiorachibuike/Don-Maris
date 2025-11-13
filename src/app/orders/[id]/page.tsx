@@ -202,7 +202,7 @@ export default function OrderDetailsPage() {
                                     <TableRow key={item.productId}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
-                                                <Image src={item.product.images?.[0] || 'https://placehold.co/40x40.png'} alt={item.product.name} width={40} height={40} className="rounded-md object-cover" />
+                                                <Image src={item.product.images?.[0] || 'https://placehold.co/40x40.png'} alt={item.product.name} width={40} height={40} className="rounded-md object-contain" />
                                                 <span className="font-medium">{item.product.name}</span>
                                             </div>
                                         </TableCell>

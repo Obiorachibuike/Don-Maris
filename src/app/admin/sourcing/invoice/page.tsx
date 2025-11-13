@@ -106,7 +106,7 @@ export default function SourcingInvoicePage() {
                                                     <div className="flex items-center">
                                                         <div className="h-16 w-16 flex-shrink-0">
                                                             <Image
-                                                                className="h-16 w-16 rounded-md object-cover"
+                                                                className="h-16 w-16 rounded-md object-contain"
                                                                 src={item.product.images[0]}
                                                                 alt={item.product.name}
                                                                 width={64}

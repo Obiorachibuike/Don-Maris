@@ -48,7 +48,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 src={product.images[0] || 'https://placehold.co/600x600.png'}
                 alt={product.name}
                 fill
-                className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
+                className="object-contain transition-transform duration-500 ease-in-out group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 data-ai-hint={product.data_ai_hint}
               />

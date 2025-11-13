@@ -334,7 +334,7 @@ export function AddProductForm() {
                   <div className="grid grid-cols-3 gap-2">
                     {currentImages.map((imgSrc, index) => (
                       <div key={index} className="relative group aspect-square">
-                        <Image src={imgSrc} alt={`Preview ${index + 1}`} layout="fill" className="rounded-md object-cover" />
+                        <Image src={imgSrc} alt={`Preview ${index + 1}`} layout="fill" className="rounded-md object-contain" />
                          <div className="absolute top-1 right-1">
                             <Button
                                 type="button"
