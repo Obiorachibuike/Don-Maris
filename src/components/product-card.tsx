@@ -40,9 +40,9 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <>
-      <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 group relative shadow-sm hover:shadow-xl hover:-translate-y-1">
+      <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 group relative shadow-md hover:shadow-2xl hover:-translate-y-1">
         <Link href={`/products/${product.id}`} className="flex flex-col h-full bg-card rounded-lg">
-          <CardHeader className="p-0 border-b">
+          <CardHeader className="p-0">
             <div className="aspect-square relative overflow-hidden">
               <Image
                 src={product.images[0] || 'https://placehold.co/600x600.png'}
