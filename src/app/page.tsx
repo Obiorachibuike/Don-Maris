@@ -48,7 +48,7 @@ export default function Home() {
   const ProductCarouselSkeleton = () => (
       <div className="flex space-x-4">
         {[...Array(4)].map((_, i) => (
-            <div key={i} className="flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 p-1">
+            <div key={i} className="flex-shrink-0 w-full sm:w-1/2 lg:w-1/3 p-1">
                 <div className="flex flex-col gap-2">
                     <Skeleton className="aspect-square w-full" />
                     <Skeleton className="h-6 w-3/4" />
@@ -86,7 +86,7 @@ export default function Home() {
                 src="https://placehold.co/700x500.png"
                 alt="Assortment of phone accessories"
                 fill
-                className="object-cover rounded-lg shadow-xl"
+                className="object-contain rounded-lg shadow-xl"
                 data-ai-hint="phone accessories"
               />
             </div>
@@ -114,7 +114,7 @@ export default function Home() {
                 >
                     <CarouselContent>
                         {featuredProducts.map((product) => (
-                        <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/4">
+                        <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/3">
                             <div className="p-1">
                             <ProductCard product={product} />
                             </div>
@@ -149,7 +149,7 @@ export default function Home() {
                 >
                     <CarouselContent>
                         {newArrivals.map((product) => (
-                        <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/4">
+                        <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/3">
                             <div className="p-1">
                             <ProductCard product={product} />
                             </div>
@@ -184,7 +184,7 @@ export default function Home() {
                   >
                       <CarouselContent>
                           {trending.map((product) => (
-                              <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/4">
+                              <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/3">
                                   <div className="p-1">
                                       <ProductCard product={product} />
                                   </div>
@@ -219,7 +219,7 @@ export default function Home() {
                 >
                     <CarouselContent>
                         {bestRated.map((product) => (
-                        <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/4">
+                        <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/3">
                             <div className="p-1">
                             <ProductCard product={product} />
                             </div>
@@ -254,7 +254,7 @@ export default function Home() {
                     >
                         <CarouselContent>
                             {bestSellers.map((product) => (
-                                <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/4">
+                                <CarouselItem key={product.id} className="basis-full sm:basis-1/2 lg:basis-1/3">
                                     <div className="p-1">
                                         <ProductCard product={product} />
                                     </div>
