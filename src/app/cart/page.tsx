@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useCart } from '@/hooks/use-cart';
@@ -60,9 +59,7 @@ export default function CartPage() {
                                 <thead>
                                     <tr>
                                         <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-foreground sm:pl-0">Product</th>
-                                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-foreground">Price</th>
                                         <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-foreground">Quantity</th>
-                                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-foreground">Total</th>
                                         <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-0"><span className="sr-only">Remove</span></th>
                                     </tr>
                                 </thead>
@@ -86,7 +83,6 @@ export default function CartPage() {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">₦{item.product.price.toFixed(2)}</td>
                                             <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">
                                                 <Input
                                                     type="number"
@@ -96,7 +92,6 @@ export default function CartPage() {
                                                     className="w-20"
                                                 />
                                             </td>
-                                            <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">₦{(item.product.price * item.quantity).toFixed(2)}</td>
                                             <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
                                                 <Button variant="ghost" size="icon" onClick={() => removeItem(item.id)}>
                                                     <Trash2 className="h-4 w-4" />

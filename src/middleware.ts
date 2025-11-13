@@ -22,7 +22,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.nextUrl));
   }
   
-  if (!token && path.startsWith('/profile')) {
+  if (!token && (path.startsWith('/profile') || path.startsWith('/checkout') || path.startsWith('/payment'))) {
     return NextResponse.redirect(new URL('/login', request.nextUrl));
   }
 
