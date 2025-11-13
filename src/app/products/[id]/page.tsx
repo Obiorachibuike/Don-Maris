@@ -7,19 +7,34 @@ import { Button } from '@/components/ui/button';
 import { StarRating } from '@/components/star-rating';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { MessageSquare, ShoppingCart } from 'lucide-react';
+import { MessageSquare, ShoppingCart, Send } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { AnimatedSection } from '@/components/animated-section';
 import { ProductChat } from '@/components/product-chat';
-import type { Product } from '@/lib/types';
+import type { Product, Review } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatProductType } from '@/lib/display-utils';
 import { getProductById } from '@/lib/client-data';
 import { cn } from '@/lib/utils';
 import { WhatsAppInquiryModal } from '@/components/whatsapp-inquiry-modal';
+import { useSession } from '@/contexts/SessionProvider';
+import { Textarea } from '@/components/ui/textarea';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import axios from 'axios';
+import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
+
+const reviewSchema = z.object({
+  rating: z.number().min(1, 'Please select a rating.'),
+  comment: z.string().min(10, 'Review must be at least 10 characters.'),
+});
+type ReviewFormValues = z.infer<typeof reviewSchema>;
+
 
 export default function ProductPage() {
   const params = useParams();
@@ -30,6 +45,15 @@ export default function ProductPage() {
   const [product, setProduct] = useState<Product | null | undefined>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { user } = useSession();
+
+  const form = useForm<ReviewFormValues>({
+    resolver: zodResolver(reviewSchema),
+    defaultValues: {
+        rating: 0,
+        comment: '',
+    },
+  });
 
   useEffect(() => {
     async function loadProduct() {
@@ -40,11 +64,7 @@ export default function ProductPage() {
       loadProduct();
     }
   }, [productId]);
-
-  if (product === undefined) {
-    notFound();
-  }
-
+  
   const handleAddToCart = () => {
     if (product) {
       addItem(product, quantity);
@@ -54,6 +74,31 @@ export default function ProductPage() {
       });
     }
   };
+
+  const onReviewSubmit = async (data: ReviewFormValues) => {
+    if (!product) return;
+    try {
+      const response = await axios.post(`/api/products/${product.id}/reviews`, data);
+      const updatedProduct: Product = response.data;
+      setProduct(updatedProduct);
+      form.reset();
+      toast({
+        title: 'Review Submitted',
+        description: 'Thank you for your feedback!',
+      });
+    } catch (error) {
+      console.error('Failed to submit review', error);
+      toast({
+        variant: 'destructive',
+        title: 'Submission Failed',
+        description: 'Could not submit your review. Please try again.',
+      });
+    }
+  };
+
+  if (product === undefined) {
+    notFound();
+  }
   
   if (!product) {
     return (
@@ -79,6 +124,8 @@ export default function ProductPage() {
         </div>
     );
   }
+
+  const sortedReviews = product.reviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <>
@@ -151,9 +198,65 @@ export default function ProductPage() {
       <AnimatedSection>
         <div>
           <h2 className="text-3xl font-bold font-headline mb-6">Customer Reviews</h2>
-          {product.reviews.length > 0 ? (
+          {user ? (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>Write a Review</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={form.handleSubmit(onReviewSubmit)} className="space-y-4">
+                   <div>
+                    <label className="text-sm font-medium mb-2 block">Your Rating</label>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => form.setValue('rating', star, { shouldValidate: true })}
+                          className="focus:outline-none"
+                        >
+                          <Star
+                            className={cn(
+                              "h-7 w-7 transition-colors",
+                              form.watch('rating') >= star ? "text-primary fill-primary" : "text-muted-foreground/50"
+                            )}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                     {form.formState.errors.rating && (
+                        <p className="text-sm font-medium text-destructive mt-1">{form.formState.errors.rating.message}</p>
+                    )}
+                   </div>
+                  
+                  <Textarea
+                    {...form.register('comment')}
+                    placeholder={`Tell us what you think about the ${product.name}...`}
+                    rows={4}
+                  />
+                   {form.formState.errors.comment && (
+                        <p className="text-sm font-medium text-destructive">{form.formState.errors.comment.message}</p>
+                    )}
+
+                  <Button type="submit" disabled={form.formState.isSubmitting}>
+                    {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Submit Review
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          ) : (
+             <div className="text-center p-8 bg-muted rounded-lg mb-8">
+                <p className="font-semibold mb-2">Want to share your experience?</p>
+                <Button asChild>
+                    <Link href="/login">Login to leave a review</Link>
+                </Button>
+            </div>
+          )}
+
+          {sortedReviews.length > 0 ? (
             <div className="space-y-6">
-              {product.reviews.map(review => (
+              {sortedReviews.map(review => (
                 <Card key={review.id}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
@@ -171,7 +274,7 @@ export default function ProductPage() {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground">No reviews yet for this product.</p>
+            <p className="text-muted-foreground text-center py-8">No reviews yet for this product. Be the first!</p>
           )}
         </div>
       </AnimatedSection>
