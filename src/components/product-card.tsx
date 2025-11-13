@@ -52,21 +52,6 @@ export function ProductCard({ product }: ProductCardProps) {
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 data-ai-hint={product.data_ai_hint}
               />
-               <AnimatePresence>
-                <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    whileHover={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] flex justify-center items-center gap-2"
-                >
-                    <Button size="sm" className="w-full bg-primary/80 backdrop-blur-sm hover:bg-primary text-primary-foreground shadow-lg" onClick={handleAskPrice}>
-                        <MessageSquare className="mr-2" /> Ask Price
-                    </Button>
-                    <Button size="icon" className="bg-accent/80 backdrop-blur-sm hover:bg-accent text-accent-foreground shadow-lg shrink-0" onClick={handleAddToCart}>
-                        <ShoppingCart />
-                    </Button>
-                </motion.div>
-              </AnimatePresence>
             </div>
           </CardHeader>
           <CardContent className="p-4 flex-grow flex flex-col">
@@ -74,10 +59,18 @@ export function ProductCard({ product }: ProductCardProps) {
               {product.name}
             </CardTitle>
             <p className="text-xs text-muted-foreground mb-2">{product.brand}</p>
-            <div className="flex items-center gap-2 mt-auto">
+            <div className="flex items-center gap-2 mb-4">
               <StarRating rating={product.rating} />
               <span className="text-xs text-muted-foreground">({product.reviews.length})</span>
             </div>
+             <div className="mt-auto flex items-center gap-2">
+                 <Button size="sm" className="w-full bg-primary/80 backdrop-blur-sm hover:bg-primary text-primary-foreground shadow-lg" onClick={handleAskPrice}>
+                    <MessageSquare className="mr-2" /> Ask Price
+                </Button>
+                <Button size="icon" className="bg-accent/80 backdrop-blur-sm hover:bg-accent text-accent-foreground shadow-lg shrink-0" onClick={handleAddToCart}>
+                    <ShoppingCart />
+                </Button>
+             </div>
           </CardContent>
         </Link>
       </Card>
