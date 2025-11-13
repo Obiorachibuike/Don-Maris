@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { StarRating } from '@/components/star-rating';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart } from 'lucide-react';
+import { MessageSquare, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatProductType } from '@/lib/display-utils';
 import { getProductById } from '@/lib/client-data';
 import { cn } from '@/lib/utils';
+import { WhatsAppInquiryModal } from '@/components/whatsapp-inquiry-modal';
 
 export default function ProductPage() {
   const params = useParams();
@@ -28,6 +29,7 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<Product | null | undefined>(null);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     async function loadProduct() {
@@ -120,12 +122,10 @@ export default function ProductPage() {
               <StarRating rating={product.rating} />
               <span className="text-sm text-muted-foreground">({product.reviews.length} reviews)</span>
             </div>
-            
-            <p className="text-4xl font-bold text-accent mb-6">₦{product.price.toFixed(2)}</p>
 
             <p className="text-foreground/80 leading-relaxed mb-6">{product.longDescription}</p>
 
-              <div className="flex items-center gap-4 mt-auto">
+              <div className="flex flex-col sm:flex-row items-center gap-4 mt-auto">
                   <Input
                       type="number"
                       min="1"
@@ -133,6 +133,10 @@ export default function ProductPage() {
                       onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
                       className="w-20"
                     />
+                  <Button size="lg" variant="outline" className="w-full" onClick={() => setIsModalOpen(true)}>
+                      <MessageSquare className="mr-2 h-5 w-5" />
+                      Ask Price on WhatsApp
+                  </Button>
                   <Button size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" onClick={handleAddToCart}>
                       <ShoppingCart className="mr-2 h-5 w-5" />
                       Add to Cart
@@ -172,6 +176,11 @@ export default function ProductPage() {
         </div>
       </AnimatedSection>
     </div>
+    <WhatsAppInquiryModal 
+        isOpen={isModalOpen}
+        setIsOpen={setIsModalOpen}
+        product={product}
+      />
     <ProductChat productId={product.id} productName={product.name} />
     </>
   );
