@@ -71,9 +71,9 @@ export const sendEmail = async ({ request, email, emailType, userId, password }:
         
         if (emailType === "VERIFY") {
             await User.findByIdAndUpdate(userId, { verifyToken: hashedToken, verifyTokenExpiry: Date.now() + 3600000 });
-            subject = 'Verify your email address';
+            subject = 'Welcome! Verify Your Email Address';
             title = 'Email Verification';
-            content = 'Welcome to Don Maris Accessories! We\'re excited to have you. Please verify your email address to complete your registration by clicking the button below.';
+            content = 'Welcome to Don Maris Accessories! We\'re excited to have you. Please click the button below to verify your email address and complete your registration.';
             ctaLink = `${baseUrl}/verify-email?token=${hashedToken}`;
             ctaText = 'Verify Email';
         } else if (emailType === 'RESET') {
