@@ -12,6 +12,7 @@ import { WhatsAppInquiryModal } from './whatsapp-inquiry-modal';
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useSession } from '@/contexts/SessionProvider';
 
 type ProductCardProps = {
   product: Product;
@@ -21,11 +22,20 @@ export function ProductCard({ product }: ProductCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { addItem } = useCart();
   const { toast } = useToast();
+  const { user } = useSession();
 
   const handleAskPrice = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsModalOpen(true);
+    if (user) {
+        setIsModalOpen(true);
+    } else {
+        toast({
+            title: "Authentication Required",
+            description: "Please log in to ask for the price on WhatsApp.",
+            variant: "destructive",
+        })
+    }
   };
   
   const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {

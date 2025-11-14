@@ -39,14 +39,14 @@ export function Header() {
     { href: '/about', label: 'About', icon: Info, show: 'always' },
     { href: '/contact', label: 'Contact', icon: Mail, show: 'always' },
     { href: '/profile', label: 'Profile', icon: UserIcon, show: 'loggedIn' },
-    { href: '/admin', label: 'Admin', icon: LayoutDashboard, show: 'always' },
+    { href: '/admin', label: 'Admin', icon: LayoutDashboard, show: 'adminOnly' },
   ];
 
   const visibleNavLinks = useMemo(() => {
     return baseNavLinks.filter(link => {
         if (link.show === 'always') return true;
         if (link.show === 'loggedIn' && user) return true;
-        if (link.show === 'adminOnly' && user && user.role !== 'customer') return true;
+        if (link.show === 'adminOnly' && user && user.role === 'admin') return true;
         return false;
     });
   }, [user]);
