@@ -26,19 +26,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    const message = `
-Hello! Here is the price for the item you requested:
+    const productUrl = new URL(`/products/${product.id}`, req.nextUrl.origin).toString();
 
-*${product.name}*
-Price: ₦${product.price.toFixed(2)}
-Description: ${product.description}
-
-You can view the product here: ${new URL(`/products/${product.id}`, req.nextUrl.origin).toString()}
-
-Thank you for your interest!
-`;
-
-    await sendWhatsAppMessage(customerPhone, message);
+    await sendWhatsAppMessage(customerPhone, {
+        name: product.name,
+        price: product.price,
+        description: product.description,
+        url: productUrl
+    });
 
     return NextResponse.json({ success: true, message: "WhatsApp message sent!" });
 
