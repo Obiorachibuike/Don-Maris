@@ -74,7 +74,7 @@ export default function SignupPage() {
       if (response.data.success) {
         toast({
           title: 'Account Created!',
-          description: response.data.message || 'We\\'ve sent a verification link to your email.',
+          description: response.data.message || 'We\'ve sent a verification link to your email.',
         });
         router.push('/login');
       }
