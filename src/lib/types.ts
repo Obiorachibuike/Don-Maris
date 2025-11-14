@@ -89,6 +89,8 @@ export interface User {
   virtualAccountNumber?: string;
   virtualAccountName?: string;
   age?: number;
+  authProvider?: string;
+  authProviderId?: string;
 }
 
 export interface PrintHistoryEntry {

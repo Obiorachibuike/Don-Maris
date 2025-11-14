@@ -16,7 +16,8 @@ const UserSchema = new mongoose.Schema<UserType>({
   },
   password: {
     type: String,
-    required: [true, 'Please provide a password.'],
+    // Not required for social logins
+    // required: [true, 'Please provide a password.'],
     minlength: 6,
   },
   role: {
@@ -74,6 +75,12 @@ const UserSchema = new mongoose.Schema<UserType>({
   virtualAccountName: String,
   age: {
       type: Number,
+  },
+  authProvider: {
+    type: String,
+  },
+  authProviderId: {
+      type: String,
   }
 });
 
