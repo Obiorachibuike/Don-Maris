@@ -49,7 +49,7 @@ export type OrderItem = {
 };
 
 export type PaymentStatus = 'paid' | 'unpaid' | 'partial' | 'failed';
-export type OrderPaymentStatus = 'Paid' | 'Not Paid' | 'Incomplete';
+export type OrderPaymentStatus = 'Paid' | 'Not Paid' | 'Incomplete' | 'Pending';
 export type DeliveryMethod = 'Waybill' | 'Come Market';
 
 export interface Customer {

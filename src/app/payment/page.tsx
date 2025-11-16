@@ -90,7 +90,7 @@ export default function PaymentPage() {
             paymentMethod,
             items: shippingDetails.items.map(item => ({ productId: item.id, quantity: item.quantity })),
             deliveryMethod: 'Waybill',
-            paymentStatus: 'Not Paid',
+            paymentStatus: 'Pending',
             amountPaid: 0,
             createdBy: user?._id
         };
@@ -175,24 +175,20 @@ export default function PaymentPage() {
     
         try {
             let accountDetails: VirtualAccount | null = null;
-            if (type === 'Bank') {
-                // Use static account for "submit proof" logic
-                accountDetails = mockAccounts.Bank;
-                
-                /* 
-                // This is the preserved Paystack logic for dynamic virtual accounts.
-                // To re-enable, uncomment this block and comment out the line above.
-                const response = await axios.post('/api/create-virtual-account', {
-                    email: shippingDetails.customer.email,
-                    first_name: shippingDetails.customer.firstName,
-                    last_name: shippingDetails.customer.lastName,
-                    phone: shippingDetails.customer.phone,
-                });
-                accountDetails = response.data.virtualAccount;
-                */
-            } else {
-                accountDetails = mockAccounts[type];
-            }
+            // Use static account for "submit proof" logic
+            accountDetails = mockAccounts[type];
+            
+            /* 
+            // This is the preserved Paystack logic for dynamic virtual accounts.
+            // To re-enable, uncomment this block and comment out the line above.
+            const response = await axios.post('/api/create-virtual-account', {
+                email: shippingDetails.customer.email,
+                first_name: shippingDetails.customer.firstName,
+                last_name: shippingDetails.customer.lastName,
+                phone: shippingDetails.customer.phone,
+            });
+            accountDetails = response.data.virtualAccount;
+            */
            
             setVirtualAccount(accountDetails);
             setIsTransferModalOpen(true);

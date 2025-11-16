@@ -1,7 +1,7 @@
 
-
 import { connectDB } from "@/lib/mongodb";
 import Order from '@/models/Order';
+import User from '@/models/User';
 import { NextRequest, NextResponse } from 'next/server';
 
 // GET all orders
@@ -41,6 +41,16 @@ export async function POST(request: Request) {
         });
         
         const savedOrder = await newOrder.save();
+
+        // If payment is not made upfront, add amount to user's ledger balance
+        if (savedOrder.paymentStatus === 'Pending') {
+            await User.findByIdAndUpdate(savedOrder.customer.id, {
+                $inc: { 
+                    ledgerBalance: savedOrder.amount,
+                    lifetimeValue: savedOrder.amount,
+                }
+            });
+        }
 
         return NextResponse.json({ 
             status: 'success', 
