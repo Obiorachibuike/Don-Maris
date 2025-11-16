@@ -68,7 +68,7 @@ export default function ContactPage() {
                         <MapPin className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
                         <div>
                             <h3 className="font-semibold">Our Address</h3>
-                            <p className="text-muted-foreground">123 Tech Avenue, Silicon Valley, CA 94043</p>
+                            <p className="text-muted-foreground">a137 Alaba International Market Rd, Ojo, Lagos 102113, Lagos, Nigeria</p>
                         </div>
                     </div>
                      <div className="flex items-start gap-4">
@@ -167,7 +167,7 @@ export default function ContactPage() {
           <Card>
             <CardContent className="p-0 rounded-lg overflow-hidden">
             <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3168.6300435133644!2d-122.086029324024!3d37.42232093125233!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fba024251be2d%3A0x47b4c038c202029!2sGoogleplex!5e0!3m2!1sen!2sus!4v1717805126135!5m2!1sen!2sus"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3964.636912328669!2d3.267853674992222!3d6.440902893551525!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103b879c5a536979%3A0x28639e7284f603a1!2sA137%20Alaba%20International%20Market%20Rd%2C%20Ojo%20102113%2C%20Lagos!5e0!3m2!1sen!2sng!4v1720542566738!5m2!1sen!2sng"
                 width="100%"
                 height="450"
                 style={{ border: 0 }}
