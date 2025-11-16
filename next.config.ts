@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
     serverActions: {},
+    allowedDevOrigins: ["https://6000-firebase-studio-1754788587016.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev"]
   },
   typescript: {
     ignoreBuildErrors: true,
