@@ -25,8 +25,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pathname = usePathname();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -35,14 +34,13 @@ export default function RootLayout({
 
   useEffect(() => {
     if (isClient) {
-        setIsLoading(true);
         const timer = setTimeout(() => {
           setIsLoading(false);
         }, 1500); // Adjust delay as needed
 
         return () => clearTimeout(timer);
     }
-  }, [pathname, isClient]);
+  }, [isClient]);
 
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
