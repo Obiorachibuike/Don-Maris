@@ -7,6 +7,7 @@ import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
+import { getErrorExplanation } from "@/ai/flows/error-explainer"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
@@ -16,6 +17,8 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  aiExplanation?: string;
+  aiRecommendation?: string;
 }
 
 const actionTypes = {
@@ -163,6 +166,23 @@ function toast({ ...props }: Toast) {
       },
     },
   })
+  
+  if (props.variant === 'destructive' && props.description) {
+    // Fire and forget AI explanation
+    getErrorExplanation({ errorMessage: props.description as string })
+        .then(explanation => {
+            update({
+                id,
+                aiExplanation: explanation.explanation,
+                aiRecommendation: explanation.recommendation,
+            } as ToasterToast);
+        })
+        .catch(error => {
+            console.error("Failed to get AI error explanation:", error);
+            // We don't show another toast here to avoid loops.
+        });
+  }
+
 
   return {
     id: id,

@@ -3,3 +3,4 @@ config();
 
 import '@/ai/flows/accessory-recommendations.ts';
 import '@/ai/flows/product-chat.ts';
+import '@/ai/flows/error-explainer.ts';
