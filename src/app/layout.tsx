@@ -10,35 +10,30 @@ import { SessionProvider } from '@/contexts/SessionProvider';
 import { ProductStoreInitializer } from '@/store/product-store-initializer';
 import { UserStoreInitializer } from '@/store/user-store-initializer';
 import { ThemeProvider } from '@/components/theme-provider';
-import { useState, useEffect } from 'react';
+import { SplashProvider, useSplash } from '@/contexts/SplashProvider';
 import { SplashScreen } from '@/components/splash-screen';
 
-// export const metadata: Metadata = {
-//   title: 'Don Maris Accessories',
-//   description: 'Your one-stop shop for phone accessories.',
-// };
+function AppContent({ children }: { children: React.ReactNode }) {
+  const { isSplashFinished } = useSplash();
+  return (
+    <>
+      {!isSplashFinished ? <SplashScreen /> : (
+        <>
+          <Header />
+          <main className="flex-grow">{children}</main>
+          <Footer />
+        </>
+      )}
+       <Toaster />
+    </>
+  )
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [showSplash, setShowSplash] = useState(true);
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
-    if (isClient) {
-        const timer = setTimeout(() => {
-          setShowSplash(false);
-        }, 1500); // Adjust delay as needed
-
-        return () => clearTimeout(timer);
-    }
-  }, [isClient]);
 
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
@@ -51,24 +46,22 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased flex flex-col min-h-screen bg-background">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <SessionProvider>
-            <CartProvider>
-              <ProductStoreInitializer />
-              <UserStoreInitializer />
-              {isClient && showSplash && <SplashScreen />}
-              <Header />
-              <main className="flex-grow">{children}</main>
-              <Footer />
-              <Toaster />
-            </CartProvider>
-          </SessionProvider>
-        </ThemeProvider>
+        <SplashProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <SessionProvider>
+              <CartProvider>
+                <ProductStoreInitializer />
+                <UserStoreInitializer />
+                <AppContent>{children}</AppContent>
+              </CartProvider>
+            </SessionProvider>
+          </ThemeProvider>
+        </SplashProvider>
       </body>
     </html>
   );
