@@ -1,7 +1,6 @@
 
 'use client';
 
-import type { Metadata } from 'next';
 import './globals.css';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
@@ -13,7 +12,6 @@ import { UserStoreInitializer } from '@/store/user-store-initializer';
 import { ThemeProvider } from '@/components/theme-provider';
 import { useState, useEffect } from 'react';
 import { SplashScreen } from '@/components/splash-screen';
-import { usePathname } from 'next/navigation';
 
 // export const metadata: Metadata = {
 //   title: 'Don Maris Accessories',
@@ -25,7 +23,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [isLoading, setIsLoading] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -35,7 +33,7 @@ export default function RootLayout({
   useEffect(() => {
     if (isClient) {
         const timer = setTimeout(() => {
-          setIsLoading(false);
+          setShowSplash(false);
         }, 1500); // Adjust delay as needed
 
         return () => clearTimeout(timer);
@@ -63,7 +61,7 @@ export default function RootLayout({
             <CartProvider>
               <ProductStoreInitializer />
               <UserStoreInitializer />
-              {isLoading && <SplashScreen />}
+              {isClient && showSplash && <SplashScreen />}
               <Header />
               <main className="flex-grow">{children}</main>
               <Footer />
