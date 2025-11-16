@@ -68,17 +68,17 @@ export default function PaymentPage() {
         }
     }, [router]);
 
-    const handleFinalizeOrder = async (paymentMethod: 'Bank Transfer' | 'Pay on Delivery' | 'OPay' | 'PalmPay'): Promise<string | null> => {
-        if (!shippingDetails || !user) {
-            toast({ variant: 'destructive', title: "Error", description: "Session expired. Please log in again." });
+    const handleFinalizeOrder = async (paymentMethod: 'Bank Transfer' | 'Pay on Delivery' | 'OPay' | 'PalmPay' | 'Card'): Promise<string | null> => {
+        if (!shippingDetails) {
+            toast({ variant: 'destructive', title: "Error", description: "Shipping details are missing. Please go back to checkout." });
             return null;
         }
 
         const customerDetailsForOrder = {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            avatar: user.avatar,
+            id: user?._id || `guest-${Date.now()}`,
+            name: `${shippingDetails.customer.firstName} ${shippingDetails.customer.lastName}`.trim(),
+            email: shippingDetails.customer.email,
+            avatar: user?.avatar || 'https://placehold.co/100x100.png',
         };
 
         const orderDetails: Omit<Order, 'id'> = {
@@ -91,7 +91,8 @@ export default function PaymentPage() {
             items: shippingDetails.items.map(item => ({ productId: item.id, quantity: item.quantity })),
             deliveryMethod: 'Waybill',
             paymentStatus: 'Not Paid',
-            amountPaid: 0
+            amountPaid: 0,
+            createdBy: user?._id
         };
 
         const orderResult = await submitOrder(orderDetails);
@@ -102,7 +103,7 @@ export default function PaymentPage() {
         
         // Update stock
         for (const item of shippingDetails.items) {
-            await updateStock(item.product.id, item.quantity, user.name);
+            await updateStock(item.product.id, item.quantity, user?.name || 'Customer');
         }
         
         return orderResult.id;
@@ -112,7 +113,6 @@ export default function PaymentPage() {
         if (!shippingDetails) return;
         setIsCardLoading(true);
     
-        // If the user is not logged in, we cannot proceed with card payment that requires a user ID.
         if (!user) {
             toast({
                 variant: 'destructive',
@@ -123,7 +123,7 @@ export default function PaymentPage() {
             return;
         }
 
-        const orderId = await handleFinalizeOrder('Card' as any); // The method will be 'Card', but function expects transfer/later
+        const orderId = await handleFinalizeOrder('Card');
         if (!orderId) {
             setIsCardLoading(false);
             return;
@@ -208,6 +208,7 @@ export default function PaymentPage() {
                 date: orderDate.toLocaleDateString(),
                 customer: {
                     name: `${shippingDetails.customer.firstName} ${shippingDetails.customer.lastName}`.trim(),
+                    email: shippingDetails.customer.email,
                     address: shippingDetails.customer.address,
                     city: shippingDetails.customer.city,
                     state: shippingDetails.customer.state,
@@ -226,11 +227,11 @@ export default function PaymentPage() {
     }
 
     const handlePayLater = async () => {
-        if (!shippingDetails || !user) {
+        if (!shippingDetails) {
              toast({
                 variant: 'destructive',
-                title: 'Login Required',
-                description: 'Please log in to use this payment option.',
+                title: 'Error',
+                description: 'Shipping details are missing.',
             });
             return;
         }
@@ -247,6 +248,7 @@ export default function PaymentPage() {
                 date: orderDate.toLocaleDateString(),
                 customer: {
                     name: `${shippingDetails.customer.firstName} ${shippingDetails.customer.lastName}`.trim(),
+                    email: shippingDetails.customer.email,
                     address: shippingDetails.customer.address,
                     city: shippingDetails.customer.city,
                     state: shippingDetails.customer.state,

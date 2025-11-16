@@ -34,7 +34,7 @@ interface BankTransferModalProps {
 }
 
 export function BankTransferModal({ isOpen, setIsOpen, virtualAccount, total, onConfirmPayment }: BankTransferModalProps) {
-    const [step, setStep] = useState(2);
+    const [step, setStep] = useState(1);
     const [paymentSlip, setPaymentSlip] = useState<File | null>(null);
     const [slipPreview, setSlipPreview] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -81,7 +81,7 @@ export function BankTransferModal({ isOpen, setIsOpen, virtualAccount, total, on
     }
 
     const resetState = () => {
-        setStep(2);
+        setStep(1);
         setPaymentSlip(null);
         setSlipPreview(null);
     }
@@ -101,7 +101,7 @@ export function BankTransferModal({ isOpen, setIsOpen, virtualAccount, total, on
                     </DialogDescription>
                 </DialogHeader>
 
-                {virtualAccount && step === 2 && (
+                {virtualAccount && step === 1 && (
                     <div className="space-y-4">
                         <Alert>
                             <Banknote className="h-4 w-4" />
@@ -142,13 +142,13 @@ export function BankTransferModal({ isOpen, setIsOpen, virtualAccount, total, on
                                 </div>
                             </AlertDescription>
                         </Alert>
-                        <Button className="w-full" onClick={() => setStep(3)}>
+                        <Button className="w-full" onClick={() => setStep(2)}>
                             I Have Made Payment
                         </Button>
                     </div>
                 )}
                 
-                {step === 3 && (
+                {step === 2 && (
                     <div className="space-y-4">
                         <Alert>
                             <Upload className="h-4 w-4" />
@@ -185,7 +185,7 @@ export function BankTransferModal({ isOpen, setIsOpen, virtualAccount, total, on
                             id="slip-upload"
                         />
                          <DialogFooter>
-                            <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
+                            <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
                             <Button className="w-full" onClick={handleUpload} disabled={!paymentSlip || isUploading}>
                                 {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Upload className="mr-2 h-4 w-4" />}
                                 {isUploading ? "Uploading..." : "Submit Payment Slip"}
