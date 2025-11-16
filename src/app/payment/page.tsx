@@ -17,6 +17,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useSession } from '@/contexts/SessionProvider';
 import Image from 'next/image';
 import { BankTransferModal } from '@/components/bank-transfer-modal';
+import { Input } from '@/components/ui/input';
 
 interface CustomerDetails {
     firstName: string;
@@ -152,7 +153,7 @@ export default function PaymentPage() {
     const handleBankTransferCheckout = async (type: 'Bank' | 'OPay' | 'PalmPay' = 'Bank') => {
         if (!shippingDetails) return;
         setIsTransferLoading(true);
-
+    
         const mockAccounts = {
             OPay: {
                 account_name: "Don Maris (OPay)",
@@ -163,30 +164,43 @@ export default function PaymentPage() {
                 account_name: "Don Maris (PalmPay)",
                 account_number: "8012345678",
                 bank: { name: "PalmPay" }
+            },
+            // Static bank account for the "submit proof" flow
+            Bank: {
+                account_name: "Don Maris Accessories Ltd",
+                account_number: "1234567890",
+                bank: { name: "Wema Bank" }
             }
-        }
-
+        };
+    
         try {
             let accountDetails: VirtualAccount | null = null;
             if (type === 'Bank') {
-                 const response = await axios.post('/api/create-virtual-account', {
+                // Use static account for "submit proof" logic
+                accountDetails = mockAccounts.Bank;
+                
+                /* 
+                // This is the preserved Paystack logic for dynamic virtual accounts.
+                // To re-enable, uncomment this block and comment out the line above.
+                const response = await axios.post('/api/create-virtual-account', {
                     email: shippingDetails.customer.email,
                     first_name: shippingDetails.customer.firstName,
                     last_name: shippingDetails.customer.lastName,
                     phone: shippingDetails.customer.phone,
                 });
                 accountDetails = response.data.virtualAccount;
+                */
             } else {
                 accountDetails = mockAccounts[type];
             }
            
             setVirtualAccount(accountDetails);
             setIsTransferModalOpen(true);
-
+    
         } catch (error: any) {
-            console.error('Error creating virtual account', error);
+            console.error('Error preparing for bank transfer', error);
             const axiosError = error as AxiosError<{ error: string, details?: any }>;
-            const errorMessage = axiosError.response?.data?.error || 'Could not create a bank account for transfer. Please try again.';
+            const errorMessage = axiosError.response?.data?.error || 'Could not prepare for bank transfer. Please try again.';
             toast({
                 variant: 'destructive',
                 title: 'Transfer Failed',
