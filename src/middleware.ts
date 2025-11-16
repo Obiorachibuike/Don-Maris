@@ -14,7 +14,9 @@ export function middleware(request: NextRequest) {
     || path === '/about'
     || path === '/contact'
     || path === '/recommendations'
-    || path.startsWith('/admin');
+    || path.startsWith('/admin')
+    || path.startsWith('/checkout')
+    || path.startsWith('/payment');
     
   const token = request.cookies.get('token')?.value || ''
 
@@ -22,7 +24,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.nextUrl));
   }
   
-  if (!token && (path.startsWith('/profile') || path.startsWith('/checkout') || path.startsWith('/payment'))) {
+  if (!token && (path.startsWith('/profile'))) {
     return NextResponse.redirect(new URL('/login', request.nextUrl));
   }
 
