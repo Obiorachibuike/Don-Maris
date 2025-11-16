@@ -49,7 +49,12 @@ const OrderSchema = new mongoose.Schema<OrderType>({
       default: 0
   },
   printHistory: [PrintHistoryEntrySchema],
-  createdBy: { type: String }
+  createdBy: { type: String },
+  paymentDetails: {
+      opayReference: String,
+      opayOrderNo: String,
+      flutterwaveTxRef: String,
+  }
 });
 
 export default mongoose.models.Order || mongoose.model<OrderType>('Order', OrderSchema);

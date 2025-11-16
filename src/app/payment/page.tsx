@@ -51,12 +51,11 @@ export default function PaymentPage() {
     const [isCardLoading, setIsCardLoading] = useState(false);
     const [isTransferLoading, setIsTransferLoading] = useState(false);
     const [isPayLaterLoading, setIsPayLaterLoading] = useState(false);
+    const [isOpayLoading, setIsOpayLoading] = useState(false);
     const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null);
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
     const { toast } = useToast();
     const { updateStock } = useProductStore();
-    
-    const isNigeria = user?.countryCode === 'NG';
     
     useEffect(() => {
         const savedShipping = sessionStorage.getItem('don_maris_shipping');
@@ -196,6 +195,44 @@ export default function PaymentPage() {
         }
         setIsTransferLoading(false);
     };
+
+    const handleOpayCheckout = async () => {
+        if (!shippingDetails) return;
+        setIsOpayLoading(true);
+
+        const orderId = await handleFinalizeOrder('OPay');
+        if (!orderId) {
+            setIsOpayLoading(false);
+            return;
+        }
+
+        try {
+            const res = await axios.post("/api/opay/create", {
+                userId: user?._id,
+                orderId: orderId,
+            });
+
+            const data = res.data;
+            if (data?.data?.cashierUrl) {
+                clearCart();
+                window.location.href = data.data.cashierUrl;
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: 'OPay Error',
+                    description: data.message || "Failed to initialize OPay payment."
+                });
+            }
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: "Could not connect to OPay. Please try again."
+            });
+        } finally {
+            setIsOpayLoading(false);
+        }
+    };
     
     const onConfirmBankPayment = async () => {
         const orderId = await handleFinalizeOrder('Bank Transfer');
@@ -300,8 +337,8 @@ export default function PaymentPage() {
                                         Pay with Bank Transfer
                                     </Button>
                                     
-                                    <Button variant="outline" size="lg" className="h-20 text-lg" onClick={() => handleBankTransferCheckout('OPay')} disabled={isTransferLoading}>
-                                        {isTransferLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Banknote className="mr-4 h-6 w-6"/>}
+                                    <Button variant="outline" size="lg" className="h-20 text-lg" onClick={handleOpayCheckout} disabled={isOpayLoading}>
+                                        {isOpayLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Banknote className="mr-4 h-6 w-6"/>}
                                         Pay with OPay
                                     </Button>
                                     <Button variant="outline" size="lg" className="h-20 text-lg" onClick={() => handleBankTransferCheckout('PalmPay')} disabled={isTransferLoading}>

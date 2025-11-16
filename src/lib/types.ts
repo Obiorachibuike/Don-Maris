@@ -112,6 +112,11 @@ export interface Order {
   amountPaid: number;
   printHistory?: PrintHistoryEntry[];
   createdBy?: string;
+  paymentDetails?: {
+    opayReference?: string;
+    opayOrderNo?: string;
+    flutterwaveTxRef?: string;
+  };
 }
 
 export interface Brand {
