@@ -12,8 +12,26 @@ const OPAY_API_BASE = process.env.OPAY_MODE === 'test'
 export async function POST(req: NextRequest) {
     try {
         await connectDB();
-        const { userId, orderId } = await req.json();
+    } catch (dbError: any) {
+        console.error("OPAY CREATE - DB CONNECTION ERROR:", dbError);
+        return NextResponse.json({ error: "Database connection failed." }, { status: 500 });
+    }
 
+    let body;
+    try {
+        body = await req.json();
+    } catch (jsonError) {
+        console.error("OPAY CREATE - INVALID JSON:", jsonError);
+        return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+    }
+    
+    const { userId, orderId } = body;
+
+    if (!userId || !orderId) {
+        return NextResponse.json({ error: "User ID and Order ID are required." }, { status: 400 });
+    }
+
+    try {
         const user = await User.findById(userId);
         const order = await Order.findById(orderId);
 
@@ -22,7 +40,8 @@ export async function POST(req: NextRequest) {
         }
 
         const reference = `DM-${order.id}-${Date.now()}`;
-        const body = {
+        
+        const opayPayload = {
             country: user.countryCode || "NG",
             reference: reference,
             amount: {
@@ -41,13 +60,15 @@ export async function POST(req: NextRequest) {
             userInfo: {
                 userEmail: user.email,
                 userId: user._id.toString(),
-                userMobile: user.virtualAccountNumber, // Assuming this might hold phone
+                userMobile: user.virtualAccountNumber || 'N/A',
                 userName: user.name,
             },
-            payMethod: "BankCard", // Can be updated based on user choice
+            payMethod: "BankCard",
         };
 
-        const response = await axios.post(`${OPAY_API_BASE}/cashier/create`, body, {
+        console.log("OPAY CREATE - REQUEST PAYLOAD:", JSON.stringify(opayPayload, null, 2));
+
+        const response = await axios.post(`${OPAY_API_BASE}/cashier/create`, opayPayload, {
             headers: {
                 Authorization: `Bearer ${process.env.OPAY_PUBLIC_KEY}`,
                 MerchantId: process.env.OPAY_MERCHANT_ID,
@@ -55,6 +76,8 @@ export async function POST(req: NextRequest) {
             },
         });
         
+        console.log("OPAY CREATE - RESPONSE:", response.data);
+
         // Associate opay reference with our order
         order.paymentDetails = {
             ...order.paymentDetails,
@@ -62,14 +85,13 @@ export async function POST(req: NextRequest) {
         };
         await order.save();
 
-
         return NextResponse.json(response.data);
 
     } catch (err: any) {
-        console.error("OPAY CREATE ERROR:", err.response?.data || err);
+        console.error("OPAY CREATE - ERROR:", err.response?.data || err.message);
         return NextResponse.json(
-            { error: err.response?.data || "Failed to create payment" },
-            { status: 500 }
+            { error: err.response?.data?.message || "Failed to create payment" },
+            { status: err.response?.status || 500 }
         );
     }
 }
