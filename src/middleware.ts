@@ -4,28 +4,38 @@ import type { NextRequest } from 'next/server'
  
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
-
-  const isPublicPath = path === '/login' 
-    || path === '/signup' 
-    || path === '/verify-email' 
-    || path === '/' 
-    || path.startsWith('/products')
-    || path === '/cart'
-    || path === '/about'
-    || path === '/contact'
-    || path === '/recommendations'
-    || path.startsWith('/admin')
-    || path.startsWith('/checkout')
-    || path.startsWith('/payment');
-    
   const token = request.cookies.get('token')?.value || ''
 
-  if (isPublicPath && token && (path === '/login' || path === '/signup')) {
-    return NextResponse.redirect(new URL('/', request.nextUrl));
-  }
-  
-  if (!token && (path.startsWith('/profile'))) {
+  // Paths that are public and accessible to everyone
+  const isPublicPath = 
+    path === '/login' || 
+    path === '/signup' || 
+    path === '/verify-email' || 
+    path === '/forgot-password' ||
+    path === '/reset-password' ||
+    path === '/' || 
+    path.startsWith('/products') || 
+    path === '/cart' || 
+    path === '/about' || 
+    path === '/contact' || 
+    path === '/recommendations';
+
+  // Paths that require authentication
+  const isProtectedRoute = 
+    path.startsWith('/profile') ||
+    path.startsWith('/checkout') ||
+    path.startsWith('/payment') ||
+    path.startsWith('/invoice') ||
+    path.startsWith('/admin');
+
+  // If trying to access a protected route without a token, redirect to login
+  if (isProtectedRoute && !token) {
     return NextResponse.redirect(new URL('/login', request.nextUrl));
+  }
+
+  // If logged in, redirect away from login/signup pages
+  if (token && (path === '/login' || path === '/signup')) {
+    return NextResponse.redirect(new URL('/', request.nextUrl));
   }
 
   return NextResponse.next();
@@ -40,6 +50,8 @@ export const config = {
     '/login',
     '/signup',
     '/verify-email',
+    '/forgot-password',
+    '/reset-password',
     '/admin/:path*',
     '/cart',
     '/checkout',
