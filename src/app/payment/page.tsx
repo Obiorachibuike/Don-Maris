@@ -75,7 +75,7 @@ export default function PaymentPage() {
         }
 
         const customerDetailsForOrder = {
-            id: user.id,
+            id: user._id,
             name: user.name,
             email: user.email,
             avatar: user.avatar,
@@ -109,8 +109,19 @@ export default function PaymentPage() {
     }
     
     const handleCardCheckout = async () => {
-        if (!user || !shippingDetails) return;
+        if (!shippingDetails) return;
         setIsCardLoading(true);
+    
+        // If the user is not logged in, we cannot proceed with card payment that requires a user ID.
+        if (!user) {
+            toast({
+                variant: 'destructive',
+                title: 'Login Required',
+                description: 'Please log in or create an account to pay by card.',
+            });
+            setIsCardLoading(false);
+            return;
+        }
 
         const orderId = await handleFinalizeOrder('Card' as any); // The method will be 'Card', but function expects transfer/later
         if (!orderId) {
@@ -143,7 +154,6 @@ export default function PaymentPage() {
         if (!shippingDetails) return;
         setIsTransferLoading(true);
 
-        // Mock account details for OPay and PalmPay
         const mockAccounts = {
             OPay: {
                 account_name: "Don Maris (OPay)",
@@ -216,7 +226,14 @@ export default function PaymentPage() {
     }
 
     const handlePayLater = async () => {
-        if (!shippingDetails || !user) return;
+        if (!shippingDetails || !user) {
+             toast({
+                variant: 'destructive',
+                title: 'Login Required',
+                description: 'Please log in to use this payment option.',
+            });
+            return;
+        }
         setIsPayLaterLoading(true);
 
         const orderId = await handleFinalizeOrder('Pay on Delivery');
@@ -251,7 +268,7 @@ export default function PaymentPage() {
         setIsPayLaterLoading(false);
     };
 
-    if (!shippingDetails || !user) {
+    if (!shippingDetails) {
         return (
              <div className="container mx-auto px-4 py-16 text-center">
                 <Loader2 className="mx-auto h-8 w-8 animate-spin" />
@@ -276,24 +293,20 @@ export default function PaymentPage() {
                                         {isCardLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <CreditCard className="mr-4 h-6 w-6"/>}
                                         Pay with Card
                                     </Button>
-                                    {isNigeria && (
                                     <Button variant="outline" size="lg" className="h-20 text-lg" onClick={() => handleBankTransferCheckout('Bank')} disabled={isTransferLoading}>
                                         {isTransferLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Banknote className="mr-4 h-6 w-6"/>}
                                         Pay with Bank Transfer
                                     </Button>
-                                    )}
-                                     {isNigeria && (
-                                        <>
-                                            <Button variant="outline" size="lg" className="h-20 text-lg" onClick={() => handleBankTransferCheckout('OPay')} disabled={isTransferLoading}>
-                                                {isTransferLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Banknote className="mr-4 h-6 w-6"/>}
-                                                Pay with OPay
-                                            </Button>
-                                            <Button variant="outline" size="lg" className="h-20 text-lg" onClick={() => handleBankTransferCheckout('PalmPay')} disabled={isTransferLoading}>
-                                                {isTransferLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Banknote className="mr-4 h-6 w-6"/>}
-                                                Pay with PalmPay
-                                            </Button>
-                                        </>
-                                    )}
+                                    
+                                    <Button variant="outline" size="lg" className="h-20 text-lg" onClick={() => handleBankTransferCheckout('OPay')} disabled={isTransferLoading}>
+                                        {isTransferLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Banknote className="mr-4 h-6 w-6"/>}
+                                        Pay with OPay
+                                    </Button>
+                                    <Button variant="outline" size="lg" className="h-20 text-lg" onClick={() => handleBankTransferCheckout('PalmPay')} disabled={isTransferLoading}>
+                                        {isTransferLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Banknote className="mr-4 h-6 w-6"/>}
+                                        Pay with PalmPay
+                                    </Button>
+                                    
                                     <div className="sm:col-span-2">
                                         <Button variant="secondary" size="lg" className="h-20 w-full text-lg" onClick={handlePayLater} disabled={isPayLaterLoading}>
                                             {isPayLaterLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Forward className="mr-4 h-6 w-6"/>}
