@@ -1,0 +1,49 @@
+
+import mongoose from "mongoose";
+
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  throw new Error("Please define the MONGODB_URI environment variable inside .env.local");
+}
+
+/**
+ * Global is used to maintain a cached connection across hot reloads in development.
+ * This prevents connections from growing exponentially during API route usage.
+ */
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+export async function connectDB() {
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(MONGODB_URI, {
+      bufferCommands: false,
+    }).then((mongoose) => {
+      console.log("✅ Connected to MongoDB");
+      return mongoose;
+    }).catch((err) => {
+      console.error("❌ MongoDB connection error:", err);
+      // Ensure the promise is rejected on connection failure
+      // And clear the promise cache so a new attempt can be made
+      cached.promise = null; 
+      throw err;
+    });
+  }
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    // If the promise was rejected, clear it so we can try again
+    cached.promise = null;
+    throw e;
+  }
+  
+  return cached.conn;
+}
