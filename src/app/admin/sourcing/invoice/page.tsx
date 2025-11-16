@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import type { CartItem, PaymentStatus } from '@/lib/types';
 import { ArrowLeft, Printer, Truck } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface CustomerDetails {
     name: string;
@@ -35,6 +36,7 @@ interface OrderDetails {
 export default function SourcingInvoicePage() {
     const [order, setOrder] = useState<OrderDetails | null>(null);
     const router = useRouter();
+    const { toast } = useToast();
 
     useEffect(() => {
         const savedOrder = sessionStorage.getItem('don_maris_order');
@@ -44,6 +46,19 @@ export default function SourcingInvoicePage() {
             router.push('/admin/sourcing');
         }
     }, [router]);
+
+    const handlePrint = () => {
+        try {
+            window.print();
+        } catch (error) {
+            console.error("Failed to initiate print:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Print Error',
+                description: 'Could not open print dialog. Please check your browser settings or connected devices.'
+            });
+        }
+    };
 
     if (!order) {
         return (
@@ -157,7 +172,7 @@ export default function SourcingInvoicePage() {
                                 Back to Posting
                             </Link>
                         </Button>
-                        <Button variant="outline" onClick={() => window.print()}>
+                        <Button variant="outline" onClick={handlePrint}>
                             <Printer className="mr-2 h-4 w-4" />
                             Print Invoice
                         </Button>

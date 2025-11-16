@@ -48,22 +48,30 @@ export default function InvoicePage() {
     }, [router]);
 
     const handlePrint = async () => {
-        if (order) {
-            try {
-                await fetch(`/api/orders/${order.invoiceId}/print`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ printedBy: order.printedBy }),
-                });
-                window.print();
-            } catch (error) {
-                console.error("Failed to record print history:", error);
-                toast({
-                    variant: 'destructive',
-                    title: 'Error',
-                    description: 'Could not record print history. Please try again.'
-                });
-            }
+        if (!order) return;
+
+        try {
+            // Attempt to open print dialog first
+            window.print();
+
+            // If printing is initiated (or cancelled by user), record the print history
+            await fetch(`/api/orders/${order.invoiceId}/print`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ printedBy: order.printedBy }),
+            });
+             toast({
+                title: 'Print Recorded',
+                description: 'The print action has been logged.'
+            });
+
+        } catch (error) {
+            console.error("Failed to initiate print or record history:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Print Error',
+                description: 'Could not open print dialog or record print history. Please try again.'
+            });
         }
     };
 
