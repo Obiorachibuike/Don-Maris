@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -23,10 +24,21 @@ const ErrorExplainerOutputSchema = z.object({
 });
 export type ErrorExplainerOutput = z.infer<typeof ErrorExplainerOutputSchema>;
 
+// Simple in-memory cache to avoid repeated API calls for the same error.
+const explanationCache = new Map<string, ErrorExplainerOutput>();
+
 export async function getErrorExplanation(
   input: ErrorExplainerInput
 ): Promise<ErrorExplainerOutput> {
-  return errorExplainerFlow(input);
+  const cacheKey = JSON.stringify(input);
+  if (explanationCache.has(cacheKey)) {
+    return explanationCache.get(cacheKey)!;
+  }
+  
+  const result = await errorExplainerFlow(input);
+  explanationCache.set(cacheKey, result);
+  
+  return result;
 }
 
 const prompt = ai.definePrompt({
@@ -51,8 +63,6 @@ const errorExplainerFlow = ai.defineFlow(
     outputSchema: ErrorExplainerOutputSchema,
   },
   async (input) => {
-    // In a real-world scenario, you might add logic here to check for common errors
-    // and provide canned responses to save on API calls.
     const { output } = await prompt(input);
     return output!;
   }
