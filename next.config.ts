@@ -1,8 +1,5 @@
 
 import type {NextConfig} from 'next';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -37,24 +34,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  env: {
-    MONGODB_URI: process.env.MONGODB_URI,
-    JWT_SECRET: process.env.JWT_SECRET,
-    EMAIL_SERVER_USER: process.env.EMAIL_SERVER_USER,
-    EMAIL_SERVER_PASSWORD: process.env.EMAIL_SERVER_PASSWORD,
-    EMAIL_FROM: process.env.EMAIL_FROM,
-    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
-    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
-    PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,
-    FLW_SECRET_KEY: process.env.FLW_SECRET_KEY,
-    FLW_PUBLIC_KEY: process.env.FLW_PUBLIC_KEY,
-    CLOUDINARY_URL: process.env.CLOUDINARY_URL,
-    CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
-    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
-    CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
-    WHATSAPP_TOKEN: process.env.WHATSAPP_TOKEN,
-    WHATSAPP_PHONE_NUMBER_ID: process.env.WHATSAPP_PHONE_NUMBER_ID,
-  }
 };
 
 export default nextConfig;
