@@ -23,7 +23,7 @@ function initialize() {
 }
 
 // Initialize on first access
-if (!getApps().length) {
+if (typeof window !== 'undefined' && !getApps().length) {
     initialize();
 }
 
