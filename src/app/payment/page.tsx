@@ -68,7 +68,7 @@ export default function PaymentPage() {
         }
     }, [router]);
 
-    const handleFinalizeOrder = async (paymentMethod: 'Bank Transfer' | 'Pay on Delivery'): Promise<string | null> => {
+    const handleFinalizeOrder = async (paymentMethod: 'Bank Transfer' | 'Pay on Delivery' | 'OPay' | 'PalmPay'): Promise<string | null> => {
         if (!shippingDetails || !user) {
             toast({ variant: 'destructive', title: "Error", description: "Session expired. Please log in again." });
             return null;
@@ -139,25 +139,48 @@ export default function PaymentPage() {
         }
     };
     
-    const handleBankTransferCheckout = async () => {
+    const handleBankTransferCheckout = async (type: 'Bank' | 'OPay' | 'PalmPay' = 'Bank') => {
         if (!shippingDetails) return;
         setIsTransferLoading(true);
+
+        // Mock account details for OPay and PalmPay
+        const mockAccounts = {
+            OPay: {
+                account_name: "Don Maris (OPay)",
+                account_number: "9012345678",
+                bank: { name: "OPay Digital Services" }
+            },
+            PalmPay: {
+                account_name: "Don Maris (PalmPay)",
+                account_number: "8012345678",
+                bank: { name: "PalmPay" }
+            }
+        }
+
         try {
-            const response = await axios.post('/api/create-virtual-account', {
-                email: shippingDetails.customer.email,
-                first_name: shippingDetails.customer.firstName,
-                last_name: shippingDetails.customer.lastName,
-                phone: shippingDetails.customer.phone,
-            });
-            setVirtualAccount(response.data.virtualAccount);
+            let accountDetails: VirtualAccount | null = null;
+            if (type === 'Bank') {
+                 const response = await axios.post('/api/create-virtual-account', {
+                    email: shippingDetails.customer.email,
+                    first_name: shippingDetails.customer.firstName,
+                    last_name: shippingDetails.customer.lastName,
+                    phone: shippingDetails.customer.phone,
+                });
+                accountDetails = response.data.virtualAccount;
+            } else {
+                accountDetails = mockAccounts[type];
+            }
+           
+            setVirtualAccount(accountDetails);
             setIsTransferModalOpen(true);
+
         } catch (error: any) {
             console.error('Error creating virtual account', error);
             const axiosError = error as AxiosError<{ error: string, details?: any }>;
             const errorMessage = axiosError.response?.data?.error || 'Could not create a bank account for transfer. Please try again.';
             toast({
                 variant: 'destructive',
-                title: 'Bank Transfer Failed',
+                title: 'Transfer Failed',
                 description: errorMessage,
             });
         }
@@ -254,10 +277,22 @@ export default function PaymentPage() {
                                         Pay with Card
                                     </Button>
                                     {isNigeria && (
-                                    <Button variant="outline" size="lg" className="h-20 text-lg" onClick={handleBankTransferCheckout} disabled={isTransferLoading}>
+                                    <Button variant="outline" size="lg" className="h-20 text-lg" onClick={() => handleBankTransferCheckout('Bank')} disabled={isTransferLoading}>
                                         {isTransferLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Banknote className="mr-4 h-6 w-6"/>}
                                         Pay with Bank Transfer
                                     </Button>
+                                    )}
+                                     {isNigeria && (
+                                        <>
+                                            <Button variant="outline" size="lg" className="h-20 text-lg" onClick={() => handleBankTransferCheckout('OPay')} disabled={isTransferLoading}>
+                                                {isTransferLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Banknote className="mr-4 h-6 w-6"/>}
+                                                Pay with OPay
+                                            </Button>
+                                            <Button variant="outline" size="lg" className="h-20 text-lg" onClick={() => handleBankTransferCheckout('PalmPay')} disabled={isTransferLoading}>
+                                                {isTransferLoading ? <Loader2 className="mr-4 h-6 w-6 animate-spin"/> : <Banknote className="mr-4 h-6 w-6"/>}
+                                                Pay with PalmPay
+                                            </Button>
+                                        </>
                                     )}
                                     <div className="sm:col-span-2">
                                         <Button variant="secondary" size="lg" className="h-20 w-full text-lg" onClick={handlePayLater} disabled={isPayLaterLoading}>
