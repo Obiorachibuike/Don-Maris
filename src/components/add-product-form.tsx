@@ -91,7 +91,7 @@ export function AddProductForm() {
     defaultValues: defaultFormValues,
   });
 
-  const { fields, append, remove, replace } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "images"
   });

@@ -288,7 +288,7 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
                 {currentImages && currentImages.length > 0 && (
                     <div className="grid grid-cols-3 gap-2">
                         {currentImages.map((imgSrc, index) => (
-                        <div key={index} className="relative aspect-square">
+                        <div key={index} className="relative group aspect-square">
                             <Image src={imgSrc} alt={`Preview ${index + 1}`} layout="fill" className="rounded-md object-contain" />
                         </div>
                         ))}
@@ -301,7 +301,7 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
                                 {...form.register(`images.${index}`)}
                                 placeholder="https://..."
                             />
-                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length === 1}>
+                            <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)} disabled={fields.length === 1}>
                                 <Trash2 className="h-4 w-4" />
                             </Button>
                         </div>

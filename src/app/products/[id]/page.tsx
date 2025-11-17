@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { StarRating } from '@/components/star-rating';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { MessageSquare, ShoppingCart, Send } from 'lucide-react';
+import { MessageSquare, ShoppingCart, Send, Star } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
