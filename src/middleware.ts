@@ -8,6 +8,7 @@ export function middleware(request: NextRequest) {
 
   // Paths that are public and accessible to everyone
   const isPublicPath = 
+    path.startsWith('/api') || // Treat all API routes as public
     path === '/login' || 
     path === '/signup' || 
     path === '/verify-email' || 
@@ -60,5 +61,6 @@ export const config = {
     '/recommendations',
     '/about',
     '/contact',
+    '/api/:path*', // Ensure middleware runs on API routes
   ]
 }
