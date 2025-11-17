@@ -46,7 +46,7 @@ export function Header() {
     return baseNavLinks.filter(link => {
         if (link.show === 'always') return true;
         if (link.show === 'loggedIn' && user) return true;
-        if (link.show === 'adminOnly' && user && user.role === 'admin') return true;
+        if (link.show === 'adminOnly' && user && user.role !== 'customer') return true;
         return false;
     });
   }, [user]);
