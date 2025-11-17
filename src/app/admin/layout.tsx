@@ -15,7 +15,7 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
-import { Home, ShoppingBag, Package, Users, BarChart2, Settings, UserCircle, LifeBuoy, LayoutDashboard, PackageSearch, Truck, Briefcase, LayoutGrid, Wallet } from 'lucide-react';
+import { Home, ShoppingBag, Package, Users, BarChart2, Settings, UserCircle, LifeBuoy, LayoutDashboard, PackageSearch, Truck, Briefcase, LayoutGrid, Wallet, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -45,8 +45,23 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const { user, isLoading, logout } = useSession();
+  const router = useRouter();
 
-  const userRole = user?.role || 'admin'; // Default to admin for testing
+  useEffect(() => {
+    if (!isLoading && (!user || user.role === 'customer')) {
+      router.push('/');
+    }
+  }, [isLoading, user, router]);
+
+  if (isLoading || !user || user.role === 'customer') {
+    return (
+        <div className="flex h-screen items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+    );
+  }
+
+  const userRole = user?.role || 'admin'; 
   const userName = user?.name || 'Admin';
   const userAvatar = (user as any)?.avatar;
 
