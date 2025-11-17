@@ -1,8 +1,6 @@
 
-'use client';
-
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DollarSign, Users, Package, CreditCard, ShoppingBag } from 'lucide-react';
+import { DollarSign, Users, Package, CreditCard } from 'lucide-react';
 import {
   Table,
   TableHeader,
@@ -14,56 +12,79 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Bar, BarChart, CartesianGrid, Pie, PieChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, type ChartConfig } from "@/components/ui/chart";
-
-const salesData = [
-    { month: 'Jan', sales: 186, revenue: 80 },
-    { month: 'Feb', sales: 305, revenue: 200 },
-    { month: 'Mar', sales: 237, revenue: 120 },
-    { month: 'Apr', sales: 73, revenue: 190 },
-    { month: 'May', sales: 209, revenue: 130 },
-    { month: 'Jun', sales: 214, revenue: 140 },
-    { month: 'Jul', sales: 286, revenue: 180 },
-    { month: 'Aug', sales: 145, revenue: 120 },
-];
-
-const orderStatusData = [
-    { status: 'fulfilled', count: 245, label: 'Fulfilled', fill: 'var(--color-fulfilled)' },
-    { status: 'processing', count: 123, label: 'Processing', fill: 'var(--color-processing)' },
-    { status: 'pending', count: 45, label: 'Pending', fill: 'var(--color-pending)' },
-];
+import { connectDB } from "@/lib/mongodb";
+import OrderModel from "@/models/Order";
+import UserModel from "@/models/User";
+import ProductModel from "@/models/Product";
+import type { Order, User, Product } from "@/lib/types";
+import { subDays, format } from 'date-fns';
 
 const chartConfig: ChartConfig = {
-  sales: {
-    label: "Sales",
-    color: "hsl(var(--primary))",
-  },
   revenue: {
       label: "Revenue",
-      color: "hsl(var(--accent))",
+      color: "hsl(var(--primary))",
   },
-  fulfilled: {
+  Fulfilled: {
       label: "Fulfilled",
-      color: "hsl(var(--chart-2))", // Green
+      color: "hsl(var(--chart-2))",
   },
-  processing: {
+  Processing: {
       label: "Processing",
-      color: "hsl(var(--chart-4))", // Yellow
+      color: "hsl(var(--chart-4))",
   },
-  pending: {
+  Pending: {
       label: "Pending",
-      color: "hsl(var(--chart-1))", // Red/Orange
+      color: "hsl(var(--chart-1))",
   },
+  Cancelled: {
+      label: "Cancelled",
+      color: "hsl(var(--muted))",
+  }
 };
 
-export default function AdminDashboard() {
 
-  const recentOrders = [
-    { invoiceId: '123456', customer: 'Olivia Martin', amount: 250.00, status: 'Fulfilled', date: '2023-08-23' },
-    { invoiceId: '123457', customer: 'Jackson Lee', amount: 150.75, status: 'Processing', date: '2023-08-23' },
-    { invoiceId: '123458', customer: 'Isabella Nguyen', amount: 350.00, status: 'Fulfilled', date: '2023-08-22' },
-    { invoiceId: '123459', customer: 'William Kim', amount: 45.50, status: 'Pending', date: '2023-08-22' },
-    { invoiceId: '123460', customer: 'Sophia Davis', amount: 550.20, status: 'Fulfilled', date: '2023-08-21' },
-  ];
+export default async function AdminDashboard() {
+  
+  await connectDB();
+  const orders: Order[] = await OrderModel.find({}).sort({ date: -1 }).lean();
+  const users: User[] = await UserModel.find({ role: 'customer' }).lean();
+  const products: Product[] = await ProductModel.find({}).lean();
+
+  const totalRevenue = orders.reduce((acc, order) => acc + (order.amountPaid || 0), 0);
+  
+  const oneMonthAgo = subDays(new Date(), 30);
+  const newCustomers = users.filter(user => new Date(user.dateJoined) >= oneMonthAgo).length;
+  
+  const totalOrders = orders.length;
+  const productsInStock = products.reduce((acc, product) => acc + product.stock, 0);
+
+  const salesData = orders.reduce((acc, order) => {
+    const month = format(new Date(order.date), 'MMM');
+    if (!acc[month]) {
+      acc[month] = { month, revenue: 0 };
+    }
+    acc[month].revenue += order.amountPaid;
+    return acc;
+  }, {} as Record<string, { month: string, revenue: number }>);
+  
+  const monthlyRevenue = Object.values(salesData).map(data => ({
+      ...data,
+      revenue: Math.round(data.revenue)
+  })).reverse();
+
+
+  const orderStatusCounts = orders.reduce((acc, order) => {
+    acc[order.status] = (acc[order.status] || 0) + 1;
+    return acc;
+  }, {} as Record<Order['status'], number>);
+  
+  const orderStatusData = Object.entries(orderStatusCounts).map(([status, count]) => ({
+    status,
+    count,
+    fill: `var(--color-${status})`,
+  }));
+
+  const recentOrders = orders.slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -74,8 +95,8 @@ export default function AdminDashboard() {
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">₦45,231.89</div>
-                    <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+                    <div className="text-2xl font-bold">₦{totalRevenue.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground">All-time revenue from all orders</p>
                 </CardContent>
             </Card>
              <Card>
@@ -84,18 +105,18 @@ export default function AdminDashboard() {
                     <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">+2350</div>
-                    <p className="text-xs text-muted-foreground">+180.1% from last month</p>
+                    <div className="text-2xl font-bold">+{newCustomers}</div>
+                    <p className="text-xs text-muted-foreground">in the last 30 days</p>
                 </CardContent>
             </Card>
              <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Orders</CardTitle>
+                    <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
                     <CreditCard className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">+12,234</div>
-                    <p className="text-xs text-muted-foreground">+19% from last month</p>
+                    <div className="text-2xl font-bold">{totalOrders}</div>
+                    <p className="text-xs text-muted-foreground">Total orders placed all-time</p>
                 </CardContent>
             </Card>
              <Card>
@@ -104,8 +125,8 @@ export default function AdminDashboard() {
                     <Package className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">573</div>
-                    <p className="text-xs text-muted-foreground">201 since last month</p>
+                    <div className="text-2xl font-bold">{productsInStock}</div>
+                    <p className="text-xs text-muted-foreground">Total units across all products</p>
                 </CardContent>
             </Card>
         </div>
@@ -121,7 +142,7 @@ export default function AdminDashboard() {
                          <PieChart accessibilityLayer>
                             <Tooltip content={<ChartTooltipContent nameKey="count" hideLabel />} />
                             <Pie data={orderStatusData} dataKey="count" nameKey="status" innerRadius={60} />
-                            <ChartLegend content={<ChartLegendContent nameKey="label" />} />
+                            <ChartLegend content={<ChartLegendContent nameKey="status" />} />
                         </PieChart>
                     </ChartContainer>
                 </CardContent>
@@ -129,13 +150,13 @@ export default function AdminDashboard() {
              <Card className="lg:col-span-2">
                 <CardHeader>
                     <CardTitle>Sales Overview (Line Chart)</CardTitle>
-                    <CardDescription>A line chart showing total sales and revenue per month.</CardDescription>
+                    <CardDescription>A line chart showing total revenue per month.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ChartContainer config={chartConfig} className="h-[300px] w-full">
                         <LineChart
                           accessibilityLayer
-                          data={salesData}
+                          data={monthlyRevenue}
                           margin={{
                             left: 12,
                             right: 12,
@@ -148,20 +169,16 @@ export default function AdminDashboard() {
                             axisLine={false}
                             tickMargin={8}
                           />
-                           <YAxis />
+                           <YAxis
+                            tickFormatter={(value) => `₦${value / 1000}k`}
+                           />
                           <ChartTooltip
                             cursor={false}
-                            content={<ChartTooltipContent />}
+                            content={<ChartTooltipContent 
+                                formatter={(value) => `₦${Number(value).toLocaleString()}`}
+                            />}
                           />
-                          <ChartLegend content={<ChartLegendContent />} />
                           <Line
-                            dataKey="sales"
-                            type="monotone"
-                            stroke="var(--color-sales)"
-                            strokeWidth={2}
-                            dot={false}
-                          />
-                           <Line
                             dataKey="revenue"
                             type="monotone"
                             stroke="var(--color-revenue)"
@@ -178,11 +195,11 @@ export default function AdminDashboard() {
             <Card>
                 <CardHeader>
                     <CardTitle>Sales Overview (Bar Chart)</CardTitle>
-                    <CardDescription>A bar chart showing total sales and revenue per month.</CardDescription>
+                    <CardDescription>A bar chart showing total revenue per month.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                        <BarChart accessibilityLayer data={salesData}>
+                        <BarChart accessibilityLayer data={monthlyRevenue}>
                             <CartesianGrid vertical={false} />
                             <XAxis
                                 dataKey="month"
@@ -190,10 +207,12 @@ export default function AdminDashboard() {
                                 tickMargin={10}
                                 axisLine={false}
                             />
-                            <YAxis />
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <ChartLegend content={<ChartLegendContent />} />
-                            <Bar dataKey="sales" fill="var(--color-sales)" radius={4} />
+                            <YAxis 
+                                tickFormatter={(value) => `₦${value / 1000}k`}
+                            />
+                            <ChartTooltip content={<ChartTooltipContent 
+                                 formatter={(value) => `₦${Number(value).toLocaleString()}`}
+                            />} />
                             <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
                         </BarChart>
                     </ChartContainer>
@@ -219,9 +238,9 @@ export default function AdminDashboard() {
                     </TableHeader>
                     <TableBody>
                         {recentOrders.map(order => (
-                            <TableRow key={order.invoiceId}>
-                                <TableCell className="font-medium">{order.invoiceId}</TableCell>
-                                <TableCell>{order.customer}</TableCell>
+                            <TableRow key={order.id}>
+                                <TableCell className="font-medium">{order.id}</TableCell>
+                                <TableCell>{order.customer.name}</TableCell>
                                 <TableCell>₦{order.amount.toFixed(2)}</TableCell>
                                 <TableCell>
                                     <Badge variant={
@@ -232,7 +251,7 @@ export default function AdminDashboard() {
                                         {order.status}
                                     </Badge>
                                 </TableCell>
-                                <TableCell>{order.date}</TableCell>
+                                <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
