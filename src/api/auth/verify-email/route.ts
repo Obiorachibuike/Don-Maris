@@ -3,6 +3,7 @@
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import { NextRequest, NextResponse } from "next/server";
+import { sendEmail } from "@/lib/mailer";
 
 export async function POST(request: NextRequest) {
     try {
@@ -25,6 +26,9 @@ export async function POST(request: NextRequest) {
         user.verifyToken = undefined;
         user.verifyTokenExpiry = undefined;
         await user.save();
+
+        // Send welcome email
+        await sendEmail({ request, email: user.email, emailType: 'WELCOME', userId: user._id });
 
         return NextResponse.json({ message: "Email verified successfully", success: true });
 

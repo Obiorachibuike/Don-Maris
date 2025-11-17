@@ -132,7 +132,7 @@ const emailTemplate = (name: string, title: string, content: string, ctaLink: st
 `;
 
 
-export const sendEmail = async ({ request, email, emailType, userId, password }: { request: NextRequest, email: string, emailType: 'VERIFY' | 'RESET' | 'ADMIN_CREATED', userId: string, password?: string }) => {
+export const sendEmail = async ({ request, email, emailType, userId, password }: { request: NextRequest, email: string, emailType: 'VERIFY' | 'RESET' | 'ADMIN_CREATED' | 'WELCOME', userId: string, password?: string }) => {
     try {
         const hashedToken = await bcrypt.hash(userId.toString(), 10);
         let subject = '';
@@ -172,6 +172,12 @@ export const sendEmail = async ({ request, email, emailType, userId, password }:
             content = `An administrator has created an account for you. You can log in using the credentials below. We recommend changing your password after your first login.<br><br><div class="credentials"><p><strong>Email:</strong> ${email}</p><p><strong>Password:</strong> ${password}</p></div>`;
             ctaLink = `${baseUrl}/login`;
             ctaText = 'Login Now';
+        } else if (emailType === 'WELCOME') {
+            subject = 'Welcome to Don Maris!';
+            title = 'Account Verified';
+            content = 'Your account is now verified! You can now explore our full range of products, manage your orders, and enjoy a seamless shopping experience. Thanks for joining us!';
+            ctaLink = `${baseUrl}/products`;
+            ctaText = 'Start Shopping';
         }
 
         const transport = nodemailer.createTransport({
