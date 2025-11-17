@@ -18,15 +18,15 @@ export function middleware(request: NextRequest) {
     path === '/cart' || 
     path === '/about' || 
     path === '/contact' || 
-    path === '/recommendations';
+    path === '/recommendations' ||
+    path.startsWith('/admin');
 
   // Paths that require authentication
   const isProtectedRoute = 
     path.startsWith('/profile') ||
     path.startsWith('/checkout') ||
     path.startsWith('/payment') ||
-    path.startsWith('/invoice') ||
-    path.startsWith('/admin');
+    path.startsWith('/invoice');
 
   // If trying to access a protected route without a token, redirect to login
   if (isProtectedRoute && !token) {

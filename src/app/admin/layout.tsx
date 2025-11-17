@@ -47,25 +47,13 @@ export default function AdminLayout({
   const { user, isLoading, logout } = useSession();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login');
-    }
-  }, [isLoading, user, router]);
-
-  if (isLoading || !user) {
-    return (
-        <div className="flex h-screen items-center justify-center">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        </div>
-    );
-  }
-
-  const userRole = user?.role || 'customer'; 
+  const userRole = user?.role || 'admin'; 
   const userName = user?.name || 'Admin';
   const userAvatar = (user as any)?.avatar;
 
   const userCanAccess = (itemRoles: string[]) => {
+      // If no user, default to admin to show all links for public access
+      if (!user) return itemRoles.includes('admin');
       return itemRoles.includes(userRole);
   };
   
@@ -108,23 +96,29 @@ export default function AdminLayout({
                       </SidebarMenu>
                   </SidebarContent>
                   <SidebarFooter>
-                       <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="w-full justify-start gap-2">
-                                     <UserCircle />
-                                     <div className="flex flex-col items-start">
-                                        <span>{userName}</span>
-                                        <span className="text-xs text-muted-foreground capitalize">{userRole}</span>
-                                     </div>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56 mb-2" side="top" align="start">
-                                <DropdownMenuItem>Profile</DropdownMenuItem>
-                                <DropdownMenuItem>Help</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => logout()}>Logout</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                       {user ? (
+                           <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="w-full justify-start gap-2">
+                                        <UserCircle />
+                                        <div className="flex flex-col items-start">
+                                            <span>{userName}</span>
+                                            <span className="text-xs text-muted-foreground capitalize">{userRole}</span>
+                                        </div>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-56 mb-2" side="top" align="start">
+                                    <DropdownMenuItem>Profile</DropdownMenuItem>
+                                    <DropdownMenuItem>Help</DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => logout()}>Logout</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                       ) : (
+                           <Button asChild variant="outline">
+                               <Link href="/login">Login</Link>
+                           </Button>
+                       )}
                   </SidebarFooter>
               </Sidebar>
               <main className="flex-1 overflow-y-auto">
