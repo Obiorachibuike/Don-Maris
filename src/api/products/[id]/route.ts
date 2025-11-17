@@ -2,9 +2,18 @@
 import { connectDB } from '@/lib/mongodb';
 import { NextResponse } from 'next/server';
 import type { Product, StockHistoryEntry } from '@/lib/types';
+import { v2 as cloudinary } from 'cloudinary';
 
 import ProductModel from '@/models/Product';
 import { dummyProducts } from '@/lib/dummy-products';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true
+});
+
 
 // Fallback function in case DB fails
 function getDummyProductById(id: string): Product | undefined {
@@ -73,6 +82,31 @@ export async function PUT(
         }
 
         const { stockChangeReason, stockChangeUser, ...productUpdateData } = updatedData;
+
+        // Handle image uploads
+        if (productUpdateData.images) {
+            const uploadedImageUrls = await Promise.all(
+                productUpdateData.images.map(async (image) => {
+                    if (image.startsWith('data:image')) {
+                        try {
+                            const uploadResult = await cloudinary.uploader.upload(image, {
+                                folder: 'don_maris_products',
+                            });
+                            return uploadResult.secure_url;
+                        } catch (uploadError) {
+                            console.error("Failed to upload image:", uploadError);
+                            // We can choose to fail the whole request or just skip this image
+                            // For now, let's return null and filter it out
+                            return null;
+                        }
+                    }
+                    return image; // It's already a URL
+                })
+            );
+            // Filter out any failed uploads
+            productUpdateData.images = uploadedImageUrls.filter((url): url is string => url !== null);
+        }
+
 
         const finalUpdateData = {
             ...productUpdateData,

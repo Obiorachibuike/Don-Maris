@@ -1,9 +1,17 @@
 
 import { connectDB } from '@/lib/mongodb';
 import { NextResponse, NextRequest } from 'next/server';
+import { v2 as cloudinary } from 'cloudinary';
 
 import ProductModel from '@/models/Product';
 import type { Product, StockHistoryEntry } from '@/lib/types';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true
+});
 
 export async function GET(request: Request) {
     try {
@@ -46,6 +54,17 @@ export async function POST(request: NextRequest) {
         if (!productData.images || productData.images.length === 0) {
             return NextResponse.json({ error: "At least one image is required." }, { status: 400 });
         }
+        
+        // Upload images to Cloudinary
+        const uploadedImageUrls = await Promise.all(
+            productData.images.map(async (base64Image) => {
+                const uploadResult = await cloudinary.uploader.upload(base64Image, {
+                    folder: 'don_maris_products',
+                });
+                return uploadResult.secure_url;
+            })
+        );
+
 
         const initialStockHistory: StockHistoryEntry = {
             date: new Date().toISOString(),
@@ -58,7 +77,7 @@ export async function POST(request: NextRequest) {
         const newProduct = new ProductModel({
             ...productData,
             id: `prod-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-            images: productData.images, // Use provided image URLs directly
+            images: uploadedImageUrls,
             rating: 0,
             reviews: [],
             dateAdded: new Date().toISOString(),

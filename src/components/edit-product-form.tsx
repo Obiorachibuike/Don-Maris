@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -35,8 +35,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
-import { Product, ProductType, Brand } from '@/lib/types';
+import { Loader2, PlusCircle, Trash2, Upload } from 'lucide-react';
+import { Product, ProductType } from '@/lib/types';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from './ui/scroll-area';
 import Image from 'next/image';
@@ -52,7 +52,7 @@ const formSchema = z.object({
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative.'),
   description: z.string().min(10, 'Description must be at least 10 characters long.'),
   longDescription: z.string().min(20, 'Long description must be at least 20 characters long.'),
-  images: z.array(z.string().url('Please enter a valid URL.')).min(1, "At least one image is required.").max(5, "You can add a maximum of 5 images."),
+  images: z.array(z.string().min(1, 'Image data URI cannot be empty')).min(1, "At least one image is required.").max(5, "You can add a maximum of 5 images."),
   data_ai_hint: z.string().min(1, 'AI hint is required.'),
   isFeatured: z.boolean().default(false),
 });
@@ -69,6 +69,7 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
   const { editProduct } = useProductStore();
   const { brands, fetchBrands } = useBrandStore();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
@@ -90,11 +91,38 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
   }, [isOpen, fetchBrands]);
 
   useEffect(() => {
-    form.reset({
-      ...product,
-      images: product.images,
-    });
+    if (product) {
+        form.reset({
+            ...product,
+            images: product.images,
+        });
+    }
   }, [product, form, isOpen]);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const fileArray = Array.from(files);
+
+      if (fileArray.length + fields.length > 5) {
+        toast({
+          variant: "destructive",
+          title: "Too many files",
+          description: "You can only upload a maximum of 5 images.",
+        });
+        return;
+      }
+      
+      fileArray.forEach(file => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+              append(reader.result as string);
+          };
+          reader.readAsDataURL(file);
+      });
+    }
+  };
+
 
   const onSubmit = async (data: ProductFormValues) => {
     const submissionData = {
@@ -285,32 +313,40 @@ export function EditProductForm({ isOpen, setIsOpen, product }: EditProductFormP
 
               <div className="space-y-4">
                 <Label>Product Images (up to 5)</Label>
+                 <FormControl>
+                    <Input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleFileChange} 
+                        multiple 
+                        accept="image/*"
+                        className="hidden" 
+                        id="image-upload"
+                    />
+                </FormControl>
+                <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={fields.length >= 5}>
+                    <Upload className="mr-2 h-4 w-4" /> Add Images
+                </Button>
+                
                 {currentImages && currentImages.length > 0 && (
-                    <div className="grid grid-cols-3 gap-2">
-                        {currentImages.map((imgSrc, index) => (
-                        <div key={index} className="relative group aspect-square">
-                            <Image src={imgSrc} alt={`Preview ${index + 1}`} layout="fill" className="rounded-md object-contain" />
-                        </div>
-                        ))}
-                    </div>
-                )}
-                <div className="space-y-2">
-                    {fields.map((field, index) => (
-                        <div key={field.id} className="flex items-center gap-2">
-                            <Input
-                                {...form.register(`images.${index}`)}
-                                placeholder="https://..."
-                            />
-                            <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)} disabled={fields.length === 1}>
+                  <div className="grid grid-cols-3 gap-2">
+                    {currentImages.map((imgSrc, index) => (
+                      <div key={index} className="relative group aspect-square">
+                        <Image src={imgSrc} alt={`Preview ${index + 1}`} layout="fill" className="rounded-md object-contain" />
+                         <div className="absolute top-1 right-1">
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => remove(index)}
+                            >
                                 <Trash2 className="h-4 w-4" />
                             </Button>
                         </div>
+                      </div>
                     ))}
-                </div>
-                {fields.length < 5 && (
-                    <Button type="button" variant="outline" size="sm" onClick={() => append("")}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Image URL
-                    </Button>
+                  </div>
                 )}
                 <FormField name="images" render={() => <FormMessage />} />
               </div>
