@@ -112,8 +112,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
         
-        // Log the administrative action if it wasn't a self-update
-        if (!isSelfUpdate && (isAdmin || isAccountant)) {
+        // Log the administrative action if it wasn't a self-update and changes were made
+        if (!isSelfUpdate && changes.length > 0 && (isAdmin || isAccountant)) {
              await AdminLog.create({
                 adminId: loggedInUserId,
                 adminName: loggedInUser.name,
