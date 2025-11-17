@@ -13,38 +13,118 @@ const emailTemplate = (name: string, title: string, content: string, ctaLink: st
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
     <style>
-        body { font-family: 'PT Sans', sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
-        .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .header { background-color: #0F172A; padding: 30px; text-align: center; }
-        .header h1 { color: #FFD54A; margin: 0; font-family: 'Poppins', sans-serif; }
-        .content { padding: 30px; color: #333; line-height: 1.6; }
-        .content h2 { font-family: 'Poppins', sans-serif; color: #0F172A; }
-        .credentials { background-color: #f9f9f9; border: 1px solid #eaeaea; padding: 20px; margin: 20px 0; border-radius: 5px; }
-        .credentials p { margin: 5px 0; }
-        .credentials strong { color: #0F172A; }
-        .button-container { text-align: center; margin: 30px 0; }
-        .button { background-color: #6D5DF6; color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; }
-        .footer { background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #eaeaea; }
-        .link { color: #6D5DF6; }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=PT+Sans:wght@400;700&display=swap');
+        body { 
+            font-family: 'PT Sans', sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f0f2f5; 
+            color: #333;
+        }
+        .wrapper {
+            width: 100%;
+            background-color: #f0f2f5;
+            padding: 20px 0;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background-color: #ffffff; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+        }
+        .header { 
+            background-color: #0F172A; /* dark background */
+            padding: 40px 20px; 
+            text-align: center; 
+        }
+        .header h1 { 
+            color: #FFD54A; /* primary yellow */
+            margin: 0; 
+            font-family: 'Poppins', sans-serif;
+            font-size: 28px;
+            letter-spacing: 1px;
+        }
+        .content { 
+            padding: 30px 40px; 
+            color: #4A5568; 
+            line-height: 1.7; 
+            font-size: 16px;
+        }
+        .content h2 { 
+            font-family: 'Poppins', sans-serif; 
+            color: #1A202C;
+            font-size: 22px;
+            margin-top: 0;
+        }
+        .credentials { 
+            background-color: #f7fafc; 
+            border: 1px solid #e2e8f0; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 8px; 
+            font-size: 14px;
+        }
+        .credentials p { 
+            margin: 10px 0; 
+        }
+        .credentials strong { 
+            color: #0F172A; 
+        }
+        .button-container { 
+            text-align: center; 
+            margin: 30px 0; 
+        }
+        .button { 
+            background-color: #6D5DF6; /* accent purple */
+            color: #ffffff !important; 
+            padding: 15px 35px; 
+            text-decoration: none; 
+            border-radius: 50px; 
+            font-weight: bold;
+            font-family: 'PT Sans', sans-serif;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #5849d8;
+        }
+        .footer { 
+            background-color: #f7fafc; 
+            padding: 20px; 
+            text-align: center; 
+            font-size: 12px; 
+            color: #718096; 
+            border-top: 1px solid #e2e8f0; 
+        }
+        .link { 
+            color: #6D5DF6;
+        }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=PT+Sans&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Don Maris Accessories</h1>
-        </div>
-        <div class="content">
-            <h2>Hi ${name},</h2>
-            <p>${content}</p>
-            <div class="button-container">
-                <a href="${ctaLink}" class="button">${ctaText}</a>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>Don Maris Accessories</h1>
             </div>
-            <p>If you did not request this, please ignore this email.</p>
-            <p>Thanks,<br>The Don Maris Team</p>
-        </div>
-        <div class="footer">
-            &copy; ${new Date().getFullYear()} Don Maris Accessories. All rights reserved.
+            <div class="content">
+                <h2>Hi ${name},</h2>
+                <p>${content}</p>
+                <div class="button-container">
+                    <a href="${ctaLink}" class="button">${ctaText}</a>
+                </div>
+                <p>If you're having trouble with the button above, copy and paste the URL below into your web browser.</p>
+                <p><a href="${ctaLink}" class="link">${ctaLink}</a></p>
+                <p>If you did not request this, please ignore this email.</p>
+                <p>Thanks,<br>The Don Maris Team</p>
+            </div>
+            <div class="footer">
+                &copy; ${new Date().getFullYear()} Don Maris Accessories. All rights reserved.<br>
+                a137 Alaba International Market Rd, Ojo, Lagos 102113, Lagos, Nigeria
+            </div>
         </div>
     </div>
 </body>
@@ -103,7 +183,7 @@ export const sendEmail = async ({ request, email, emailType, userId, password }:
         });
 
         const mailOptions = {
-            from: process.env.EMAIL_FROM,
+            from: `"Don Maris" <${process.env.EMAIL_FROM}>`,
             to: email,
             subject: subject,
             html: emailTemplate(userName, title, content, ctaLink, ctaText),
@@ -113,7 +193,6 @@ export const sendEmail = async ({ request, email, emailType, userId, password }:
         return mailresponse;
 
     } catch (error: any) {
-        console.error("Error sending email:", error);
         throw new Error(error.message);
     }
 };
