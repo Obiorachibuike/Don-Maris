@@ -32,21 +32,27 @@ const computeDerivedProducts = (products: Product[]) => {
     };
   }
 
-  const featured = products.filter(p => p.isFeatured);
+  const inStockProducts = products.filter(p => p.stock > 0);
+
+  const featured = inStockProducts.filter(p => p.isFeatured);
   
-  const newArrivals = [...products].sort((a, b) => {
+  const newArrivals = [...inStockProducts].sort((a, b) => {
     const dateA = new Date(b.dateAdded).getTime();
     const dateB = new Date(a.dateAdded).getTime();
     if (dateA !== dateB) return dateA - dateB;
     return a.id.localeCompare(b.id);
   }).slice(0, 8);
 
-  const bestRated = [...products].sort((a, b) => {
+  const bestRated = [...inStockProducts].sort((a, b) => {
     if (b.rating !== a.rating) return b.rating - a.rating;
     return a.id.localeCompare(b.id);
   }).slice(0, 8);
   
-  const bestSellers = [...products].sort((a, b) => {
+  const bestSellers = [...inStockProducts].sort((a, b) => {
+    // Assuming higher totalSales means better seller. If not available, fallback to stock.
+    if (b.totalSales !== undefined && a.totalSales !== undefined && b.totalSales !== a.totalSales) {
+        return b.totalSales - a.totalSales;
+    }
     if (b.stock !== a.stock) return b.stock - a.stock;
     return a.id.localeCompare(b.id);
   }).slice(0, 8);

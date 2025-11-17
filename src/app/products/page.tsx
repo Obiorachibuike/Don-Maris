@@ -104,6 +104,9 @@ function ProductsPageComponent() {
 
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = products.filter(product => {
+      // Always filter by stock first
+      if (product.stock <= 0) return false;
+
       const searchMatch = product.name.toLowerCase().includes(appliedFilters.searchQuery.toLowerCase()) || product.description.toLowerCase().includes(appliedFilters.searchQuery.toLowerCase());
       const typeMatch = appliedFilters.selectedTypes.length === 0 || appliedFilters.selectedTypes.includes(product.type);
       const brandMatch = appliedFilters.selectedBrands.length === 0 || appliedFilters.selectedBrands.includes(product.brand);
