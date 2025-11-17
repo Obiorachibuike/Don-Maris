@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DollarSign, Users, Package, CreditCard } from 'lucide-react';
 import {
@@ -15,7 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Bar, BarChart, CartesianGrid, Pie, PieChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, type ChartConfig } from "@/components/ui/chart";
 import type { Order, User, Product } from "@/lib/types";
-import { subDays, format } from 'date-fns';
+import { subDays, format, startOfDay, startOfWeek, startOfMonth, startOfYear } from 'date-fns';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const chartConfig: ChartConfig = {
   revenue: {
@@ -46,8 +48,55 @@ export interface DashboardData {
     products: Product[];
 }
 
+type TimeRange = 'daily' | 'weekly' | 'monthly' | 'yearly';
+
+const aggregateSalesData = (orders: Order[], range: TimeRange) => {
+    const now = new Date();
+    let data: { [key: string]: { date: string, revenue: number } } = {};
+    let sortedAndFilteredOrders = [...orders].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    switch(range) {
+        case 'daily':
+            const thirtyDaysAgo = startOfDay(subDays(now, 29));
+            sortedAndFilteredOrders = sortedAndFilteredOrders.filter(o => new Date(o.date) >= thirtyDaysAgo);
+            sortedAndFilteredOrders.forEach(order => {
+                const day = format(new Date(order.date), 'MMM d');
+                if (!data[day]) data[day] = { date: day, revenue: 0 };
+                data[day].revenue += order.amountPaid || 0;
+            });
+            break;
+        case 'weekly':
+            const twelveWeeksAgo = startOfWeek(subDays(now, 12 * 7));
+            sortedAndFilteredOrders = sortedAndFilteredOrders.filter(o => new Date(o.date) >= twelveWeeksAgo);
+            sortedAndFilteredOrders.forEach(order => {
+                const week = format(startOfWeek(new Date(order.date)), 'MMM d');
+                if (!data[week]) data[week] = { date: week, revenue: 0 };
+                data[week].revenue += order.amountPaid || 0;
+            });
+            break;
+        case 'monthly':
+            const twelveMonthsAgo = startOfMonth(subDays(now, 365));
+             sortedAndFilteredOrders = sortedAndFilteredOrders.filter(o => new Date(o.date) >= twelveMonthsAgo);
+            sortedAndFilteredOrders.forEach(order => {
+                const month = format(new Date(order.date), 'MMM');
+                if (!data[month]) data[month] = { date: month, revenue: 0 };
+                data[month].revenue += order.amountPaid || 0;
+            });
+            break;
+        case 'yearly':
+             sortedAndFilteredOrders.forEach(order => {
+                const year = format(new Date(order.date), 'yyyy');
+                if (!data[year]) data[year] = { date: year, revenue: 0 };
+                data[year].revenue += order.amountPaid || 0;
+            });
+            break;
+    }
+    return Object.values(data).map(d => ({ ...d, revenue: Math.round(d.revenue) }));
+};
+
 export function AdminDashboardClient({ data }: { data: DashboardData }) {
   const { orders, users, products } = data;
+  const [timeRange, setTimeRange] = useState<TimeRange>('monthly');
 
   const totalRevenue = orders.reduce((acc, order) => acc + (order.amountPaid || 0), 0);
   
@@ -57,20 +106,7 @@ export function AdminDashboardClient({ data }: { data: DashboardData }) {
   const totalOrders = orders.length;
   const productsInStock = products.reduce((acc, product) => acc + product.stock, 0);
 
-  const salesData = orders.reduce((acc, order) => {
-    const month = format(new Date(order.date), 'MMM');
-    if (!acc[month]) {
-      acc[month] = { month, revenue: 0 };
-    }
-    acc[month].revenue += order.amountPaid || 0;
-    return acc;
-  }, {} as Record<string, { month: string, revenue: number }>);
-  
-  const monthlyRevenue = Object.values(salesData).map(data => ({
-      ...data,
-      revenue: Math.round(data.revenue)
-  })).reverse();
-
+  const salesData = useMemo(() => aggregateSalesData(orders, timeRange), [orders, timeRange]);
 
   const orderStatusCounts = orders.reduce((acc, order) => {
     const status = order.status || 'Pending';
@@ -85,6 +121,79 @@ export function AdminDashboardClient({ data }: { data: DashboardData }) {
   }));
 
   const recentOrders = orders.slice(0, 5);
+  
+  const SalesCharts = () => (
+    <>
+       <Card className="lg:col-span-2">
+            <CardHeader>
+                <CardTitle>Sales Overview (Line Chart)</CardTitle>
+                <CardDescription>Total revenue over time.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                    <LineChart
+                        accessibilityLayer
+                        data={salesData}
+                        margin={{
+                        left: 12,
+                        right: 12,
+                        }}
+                    >
+                        <CartesianGrid vertical={false} />
+                        <XAxis
+                        dataKey="date"
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                        />
+                        <YAxis
+                        tickFormatter={(value) => `₦${value / 1000}k`}
+                        />
+                        <ChartTooltip
+                        cursor={false}
+                        content={<ChartTooltipContent 
+                            formatter={(value) => `₦${Number(value).toLocaleString()}`}
+                        />}
+                        />
+                        <Line
+                        dataKey="revenue"
+                        type="monotone"
+                        stroke="var(--color-revenue)"
+                        strokeWidth={2}
+                        dot={false}
+                        />
+                    </LineChart>
+                </ChartContainer>
+            </CardContent>
+        </Card>
+         <Card>
+            <CardHeader>
+                <CardTitle>Sales Overview (Bar Chart)</CardTitle>
+                <CardDescription>Total revenue over time.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                    <BarChart accessibilityLayer data={salesData}>
+                        <CartesianGrid vertical={false} />
+                        <XAxis
+                            dataKey="date"
+                            tickLine={false}
+                            tickMargin={10}
+                            axisLine={false}
+                        />
+                        <YAxis 
+                            tickFormatter={(value) => `₦${value / 1000}k`}
+                        />
+                        <ChartTooltip content={<ChartTooltipContent 
+                                formatter={(value) => `₦${Number(value).toLocaleString()}`}
+                        />} />
+                        <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
+                    </BarChart>
+                </ChartContainer>
+            </CardContent>
+        </Card>
+    </>
+  );
 
   return (
     <div className="space-y-6">
@@ -130,7 +239,36 @@ export function AdminDashboardClient({ data }: { data: DashboardData }) {
                 </CardContent>
             </Card>
         </div>
-
+        
+        <Tabs defaultValue="monthly" onValueChange={(value) => setTimeRange(value as TimeRange)}>
+            <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="daily">Daily</TabsTrigger>
+                <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                <TabsTrigger value="yearly">Yearly</TabsTrigger>
+            </TabsList>
+            <TabsContent value="daily">
+                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                    <SalesCharts />
+                 </div>
+            </TabsContent>
+            <TabsContent value="weekly">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                    <SalesCharts />
+                 </div>
+            </TabsContent>
+            <TabsContent value="monthly">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                    <SalesCharts />
+                 </div>
+            </TabsContent>
+            <TabsContent value="yearly">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                    <SalesCharts />
+                 </div>
+            </TabsContent>
+        </Tabs>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-1">
                  <CardHeader>
@@ -147,117 +285,45 @@ export function AdminDashboardClient({ data }: { data: DashboardData }) {
                     </ChartContainer>
                 </CardContent>
             </Card>
-             <Card className="lg:col-span-2">
+            <Card className="lg:col-span-2">
                 <CardHeader>
-                    <CardTitle>Sales Overview (Line Chart)</CardTitle>
-                    <CardDescription>A line chart showing total revenue per month.</CardDescription>
+                    <CardTitle>Recent Orders</CardTitle>
+                    <CardDescription>A quick look at the most recent orders.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                        <LineChart
-                          accessibilityLayer
-                          data={monthlyRevenue}
-                          margin={{
-                            left: 12,
-                            right: 12,
-                          }}
-                        >
-                          <CartesianGrid vertical={false} />
-                          <XAxis
-                            dataKey="month"
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={8}
-                          />
-                           <YAxis
-                            tickFormatter={(value) => `₦${value / 1000}k`}
-                           />
-                          <ChartTooltip
-                            cursor={false}
-                            content={<ChartTooltipContent 
-                                formatter={(value) => `₦${Number(value).toLocaleString()}`}
-                            />}
-                          />
-                          <Line
-                            dataKey="revenue"
-                            type="monotone"
-                            stroke="var(--color-revenue)"
-                            strokeWidth={2}
-                            dot={false}
-                          />
-                        </LineChart>
-                    </ChartContainer>
-                </CardContent>
-            </Card>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Sales Overview (Bar Chart)</CardTitle>
-                    <CardDescription>A bar chart showing total revenue per month.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                        <BarChart accessibilityLayer data={monthlyRevenue}>
-                            <CartesianGrid vertical={false} />
-                            <XAxis
-                                dataKey="month"
-                                tickLine={false}
-                                tickMargin={10}
-                                axisLine={false}
-                            />
-                            <YAxis 
-                                tickFormatter={(value) => `₦${value / 1000}k`}
-                            />
-                            <ChartTooltip content={<ChartTooltipContent 
-                                 formatter={(value) => `₦${Number(value).toLocaleString()}`}
-                            />} />
-                            <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
-                        </BarChart>
-                    </ChartContainer>
-                </CardContent>
-            </Card>
-        </div>
-
-        <Card>
-            <CardHeader>
-                <CardTitle>Recent Orders</CardTitle>
-                <CardDescription>A quick look at the most recent orders.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Invoice ID</TableHead>
-                            <TableHead>Customer</TableHead>
-                            <TableHead>Amount</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Date</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {recentOrders.map(order => (
-                            <TableRow key={order.id}>
-                                <TableCell className="font-medium">{order.id}</TableCell>
-                                <TableCell>{order.customer.name}</TableCell>
-                                <TableCell>₦{order.amount.toFixed(2)}</TableCell>
-                                <TableCell>
-                                    <Badge variant={
-                                        order.status === 'Fulfilled' ? 'default' :
-                                        order.status === 'Processing' ? 'secondary' :
-                                        'destructive'
-                                    } className={order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : order.status === 'Cancelled' ? 'bg-gray-500/20 text-gray-700 border-gray-500/20' : ''}>
-                                        {order.status}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Invoice ID</TableHead>
+                                <TableHead>Customer</TableHead>
+                                <TableHead>Amount</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Date</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+                        </TableHeader>
+                        <TableBody>
+                            {recentOrders.map(order => (
+                                <TableRow key={order.id}>
+                                    <TableCell className="font-medium">{order.id}</TableCell>
+                                    <TableCell>{order.customer.name}</TableCell>
+                                    <TableCell>₦{order.amount.toFixed(2)}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={
+                                            order.status === 'Fulfilled' ? 'default' :
+                                            order.status === 'Processing' ? 'secondary' :
+                                            'destructive'
+                                        } className={order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : order.status === 'Cancelled' ? 'bg-gray-500/20 text-gray-700 border-gray-500/20' : ''}>
+                                            {order.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </div>
     </div>
   );
 }
