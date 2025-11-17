@@ -26,7 +26,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 const navItems = [
-    { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'sales', 'accountant', 'supplier'] },
+    { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'sales', 'accountant', 'supplier', 'customer'] },
     { href: '/admin/general', label: 'General Admin', icon: LayoutGrid, roles: ['admin'] },
     { href: '/admin/orders', label: 'Orders', icon: ShoppingBag, roles: ['admin', 'sales'] },
     { href: '/admin/products', label: 'Products', icon: Package, roles: ['admin', 'supplier'] },
@@ -48,12 +48,12 @@ export default function AdminLayout({
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && (!user || user.role === 'customer')) {
-      router.push('/');
+    if (!isLoading && !user) {
+      router.push('/login');
     }
   }, [isLoading, user, router]);
 
-  if (isLoading || !user || user.role === 'customer') {
+  if (isLoading || !user) {
     return (
         <div className="flex h-screen items-center justify-center">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -61,7 +61,7 @@ export default function AdminLayout({
     );
   }
 
-  const userRole = user?.role || 'admin'; 
+  const userRole = user?.role || 'customer'; 
   const userName = user?.name || 'Admin';
   const userAvatar = (user as any)?.avatar;
 
