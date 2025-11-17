@@ -9,14 +9,22 @@ import { IAdminLog } from '@/models/AdminLog';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import axios from 'axios';
+import { toast } from '@/hooks/use-toast';
 
 async function fetchAdminLogs(): Promise<IAdminLog[]> {
     try {
-        const response = await axios.get('/api/admin/activities');
-        return response.data;
+        const response = await fetch('/api/admin/activities');
+        if (!response.ok) {
+            throw new Error('Failed to fetch admin logs.');
+        }
+        return response.json();
     } catch (error) {
         console.error("Failed to fetch admin logs:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Could not load admin activity logs.'
+        });
         return [];
     }
 }
@@ -90,5 +98,3 @@ export default function AdminActivitiesPage() {
         </Card>
     );
 }
-
-    
