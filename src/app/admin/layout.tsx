@@ -15,7 +15,7 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
-import { Home, ShoppingBag, Package, Users, BarChart2, Settings, UserCircle, LifeBuoy, LayoutDashboard, PackageSearch, Truck, Briefcase, LayoutGrid, Wallet, Loader2 } from 'lucide-react';
+import { Home, ShoppingBag, Package, Users, BarChart2, Settings, UserCircle, LifeBuoy, LayoutDashboard, PackageSearch, Truck, Briefcase, LayoutGrid, Wallet, Loader2, Activity } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -34,6 +34,7 @@ const navItems = [
     { href: '/admin/supply-department', label: 'Supply Department', icon: Truck, roles: ['admin', 'supplier'] },
     { href: '/admin/users', label: 'All Users', icon: Users, roles: ['admin'] },
     { href: '/admin/employees', label: 'Employees', icon: Briefcase, roles: ['admin'] },
+    { href: '/admin/activities', label: 'Admin Activities', icon: Activity, roles: ['admin'] },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart2, roles: ['admin', 'sales'] },
     { href: '/admin/settings', label: 'Settings', icon: Settings, roles: ['admin'] },
 ];
@@ -52,9 +53,8 @@ export default function AdminLayout({
   const userAvatar = (user as any)?.avatar;
 
   const userCanAccess = (itemRoles: string[]) => {
-      // If no user, default to admin to show all links for public access
-      if (!user) return itemRoles.includes('admin');
-      return itemRoles.includes(userRole);
+      if (user) return itemRoles.includes(userRole);
+      return true; // Allow access for non-logged in for now
   };
   
   return (
@@ -134,3 +134,5 @@ export default function AdminLayout({
       </SidebarProvider>
   );
 }
+
+    
