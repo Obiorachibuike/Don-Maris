@@ -132,7 +132,7 @@ const emailTemplate = (name: string, title: string, content: string, ctaLink: st
 `;
 
 
-export const sendEmail = async ({ request, email, emailType, userId, password }: { request: NextRequest, email: string, emailType: 'VERIFY' | 'RESET' | 'ADMIN_CREATED' | 'WELCOME', userId: string, password?: string }) => {
+export const sendEmail = async ({ request, email, emailType, userId, password, orderId }: { request: NextRequest, email: string, emailType: 'VERIFY' | 'RESET' | 'ADMIN_CREATED' | 'WELCOME' | 'ORDER_CONFIRMATION', userId: string, password?: string, orderId?: string }) => {
     try {
         const hashedToken = await bcrypt.hash(userId.toString(), 10);
         let subject = '';
@@ -145,9 +145,13 @@ export const sendEmail = async ({ request, email, emailType, userId, password }:
 
         const user = await User.findById(userId);
         if (!user) {
-            throw new Error("User not found to send email.");
+            // For order confirmations, the user might be a guest.
+            // We can proceed if we have an email.
+            if (emailType !== 'ORDER_CONFIRMATION') {
+                throw new Error("User not found to send email.");
+            }
         }
-        const userName = user.name;
+        const userName = user ? user.name : 'Valued Customer';
         
         if (emailType === "VERIFY") {
             await User.findByIdAndUpdate(userId, { verifyToken: hashedToken, verifyTokenExpiry: Date.now() + 3600000 });
@@ -178,6 +182,15 @@ export const sendEmail = async ({ request, email, emailType, userId, password }:
             content = 'Your account is now verified! You can now explore our full range of products, manage your orders, and enjoy a seamless shopping experience. Thanks for joining us!';
             ctaLink = `${baseUrl}/products`;
             ctaText = 'Start Shopping';
+        } else if (emailType === 'ORDER_CONFIRMATION') {
+            if (!orderId) {
+                throw new Error("Order ID is required for ORDER_CONFIRMATION email type.");
+            }
+            subject = `Your Don Maris Order is Confirmed! (ID: ${orderId})`;
+            title = 'Order Confirmed!';
+            content = `Thank you for your purchase! We've received your order and are getting it ready for you. We appreciate your business and hope you enjoy your new accessories. You can view your order details by clicking the button below.`;
+            ctaLink = `${baseUrl}/orders/${orderId}`;
+            ctaText = 'View Your Order';
         }
 
         const transport = nodemailer.createTransport({

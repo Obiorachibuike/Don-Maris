@@ -1,8 +1,10 @@
 
+
 import { connectDB } from "@/lib/mongodb";
 import Order from '@/models/Order';
 import User from '@/models/User';
 import { NextRequest, NextResponse } from 'next/server';
+import { sendEmail } from "@/lib/mailer";
 
 // GET all orders
 export async function GET(request: NextRequest) {
@@ -30,7 +32,7 @@ export async function GET(request: NextRequest) {
 
 
 // POST a new order
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
     try {
         await connectDB();
         const orderData = await request.json();
@@ -50,6 +52,19 @@ export async function POST(request: Request) {
                     lifetimeValue: savedOrder.amount,
                 }
             });
+        }
+        
+        try {
+             await sendEmail({
+                request,
+                email: savedOrder.customer.email,
+                emailType: 'ORDER_CONFIRMATION',
+                userId: savedOrder.customer.id,
+                orderId: savedOrder.id,
+            });
+        } catch (emailError: any) {
+            // Log the error but don't fail the order process
+            console.error(`Failed to send order confirmation email for order ${savedOrder.id}:`, emailError.message);
         }
 
         return NextResponse.json({ 
