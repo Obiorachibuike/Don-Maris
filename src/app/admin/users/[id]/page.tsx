@@ -5,30 +5,49 @@ import { useParams, notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Calendar, User, ShoppingBag, Loader2 } from 'lucide-react';
+import { Mail, Calendar, User, ShoppingBag, Loader2, DollarSign } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Link from 'next/link';
 import { useUserStore } from '@/store/user-store';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { Order } from '@/lib/types';
 
 export default function UserDetailsPage() {
     const params = useParams();
     const userId = params.id as string;
     const { users, fetchUsers, isLoading: areUsersLoading } = useUserStore();
+    const [userOrders, setUserOrders] = useState<Order[]>([]);
+    const [areOrdersLoading, setAreOrdersLoading] = useState(true);
+
     const user = users.find(u => u._id === userId);
     
-    // In a real app, orders would be fetched from an API based on user ID
-    // For this example, we'll just filter dummy data if the user is a customer
-    const userOrders = user && user.role === 'customer' 
-        ? [] // Placeholder for fetching real orders
-        : [];
-
     useEffect(() => {
         if (users.length === 0) {
             fetchUsers();
         }
     }, [users, fetchUsers]);
+
+     useEffect(() => {
+        if (user && user.role === 'customer') {
+            const fetchOrders = async () => {
+                setAreOrdersLoading(true);
+                try {
+                    const response = await fetch(`/api/orders?customerId=${user.id}`);
+                    if (response.ok) {
+                        setUserOrders(await response.json());
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch user orders", error);
+                } finally {
+                    setAreOrdersLoading(false);
+                }
+            };
+            fetchOrders();
+        } else {
+            setAreOrdersLoading(false);
+        }
+    }, [user]);
 
     if (areUsersLoading) {
         return (
@@ -104,7 +123,7 @@ export default function UserDetailsPage() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-                            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                            <DollarSign className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">₦{totalSpent.toFixed(2)}</div>
@@ -113,7 +132,7 @@ export default function UserDetailsPage() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-                            <User className="h-4 w-4 text-muted-foreground" />
+                            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{userOrders.length}</div>
@@ -131,7 +150,13 @@ export default function UserDetailsPage() {
                             }
                         </CardDescription>
                     </CardHeader>
-                    {userOrders.length > 0 && (
+                    {areOrdersLoading ? (
+                        <CardContent>
+                            <div className="flex items-center justify-center h-24">
+                                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                            </div>
+                        </CardContent>
+                    ) : userOrders.length > 0 ? (
                         <CardContent>
                             <Table>
                                 <TableHeader>
@@ -165,6 +190,10 @@ export default function UserDetailsPage() {
                                     ))}
                                 </TableBody>
                             </Table>
+                        </CardContent>
+                    ) : (
+                         <CardContent>
+                            <p className="text-muted-foreground text-center py-8">This user has not placed any orders yet.</p>
                         </CardContent>
                     )}
                 </Card>
