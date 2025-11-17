@@ -27,8 +27,10 @@ import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AddUserForm } from "@/components/add-user-form";
 import { cn } from "@/lib/utils";
+import { useSession } from "@/contexts/SessionProvider";
 
 export default function EmployeesPage() {
+    const { user: currentUser } = useSession();
     const { users, isLoading, fetchUsers, updateUser, deleteUser } = useUserStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -43,6 +45,8 @@ export default function EmployeesPage() {
     }, [fetchUsers]);
     
     const employees = users.filter(user => user.role !== 'customer' && user.status !== 'inactive');
+    
+    const canEdit = currentUser?.role === 'admin' || currentUser?.role === 'accountant';
 
     const handleEdit = (user: User) => {
         setSelectedUser(user);
@@ -139,7 +143,7 @@ export default function EmployeesPage() {
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
-                                <AddUserForm />
+                                {canEdit && <AddUserForm />}
                             </div>
                         </div>
                     </CardHeader>
@@ -150,7 +154,7 @@ export default function EmployeesPage() {
                                     <TableHead>Employee</TableHead>
                                     <TableHead>Role</TableHead>
                                     <TableHead>Date Joined</TableHead>
-                                    <TableHead><span className="sr-only">Actions</span></TableHead>
+                                    {canEdit && <TableHead><span className="sr-only">Actions</span></TableHead>}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -172,33 +176,35 @@ export default function EmployeesPage() {
                                             <Badge variant="secondary" className="capitalize">{user.role}</Badge>
                                         </TableCell>
                                         <TableCell>{new Date(user.dateJoined).toLocaleDateString()}</TableCell>
-                                        <TableCell>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                                        <span className="sr-only">Open menu</span>
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem asChild>
-                                                        <Link href={`/admin/users/${user._id}`}>View Details</Link>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onSelect={() => handleEdit(user)}>Edit Employee</DropdownMenuItem>
-                                                    <DropdownMenuItem onSelect={() => handleChangeRole(user)}>Change Role</DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    {user.role !== 'admin' && (
-                                                        <DropdownMenuItem onSelect={() => handleLogoutUser(user)}>
-                                                            <LogOut className="mr-2 h-4 w-4" />
-                                                            Force Logout
+                                        {canEdit && (
+                                            <TableCell>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                        <DropdownMenuItem asChild>
+                                                            <Link href={`/admin/users/${user._id}`}>View Details</Link>
                                                         </DropdownMenuItem>
-                                                    )}
-                                                    <DropdownMenuItem onSelect={() => handleDeactivate(user)}>Deactivate Employee</DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-red-500" onSelect={() => handleDelete(user)}>Permanently Delete</DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
+                                                        <DropdownMenuItem onSelect={() => handleEdit(user)}>Edit Employee</DropdownMenuItem>
+                                                        <DropdownMenuItem onSelect={() => handleChangeRole(user)}>Change Role</DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        {user.role !== 'admin' && (
+                                                            <DropdownMenuItem onSelect={() => handleLogoutUser(user)}>
+                                                                <LogOut className="mr-2 h-4 w-4" />
+                                                                Force Logout
+                                                            </DropdownMenuItem>
+                                                        )}
+                                                        <DropdownMenuItem onSelect={() => handleDeactivate(user)}>Deactivate Employee</DropdownMenuItem>
+                                                        <DropdownMenuItem className="text-red-500" onSelect={() => handleDelete(user)}>Permanently Delete</DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        )}
                                     </TableRow>
                                 ))}
                             </TableBody>

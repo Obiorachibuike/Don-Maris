@@ -5,20 +5,25 @@ import { useParams, notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Calendar, User, ShoppingBag, Loader2, DollarSign } from 'lucide-react';
+import { Mail, Calendar, ShoppingBag, Loader2, DollarSign, Pencil } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Link from 'next/link';
 import { useUserStore } from '@/store/user-store';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Order } from '@/lib/types';
+import { useSession } from '@/contexts/SessionProvider';
+import { Button } from '@/components/ui/button';
+import { EditUserForm } from '@/components/edit-user-form';
 
 export default function UserDetailsPage() {
     const params = useParams();
     const userId = params.id as string;
+    const { user: currentUser } = useSession();
     const { users, fetchUsers, isLoading: areUsersLoading } = useUserStore();
     const [userOrders, setUserOrders] = useState<Order[]>([]);
     const [areOrdersLoading, setAreOrdersLoading] = useState(true);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     const user = users.find(u => u._id === userId);
     
@@ -48,6 +53,8 @@ export default function UserDetailsPage() {
             setAreOrdersLoading(false);
         }
     }, [user]);
+    
+    const canEdit = currentUser && (currentUser.role === 'admin' || currentUser.role === 'accountant' || currentUser._id === userId);
 
     if (areUsersLoading) {
         return (
@@ -85,6 +92,7 @@ export default function UserDetailsPage() {
     const isCustomer = user.role === 'customer';
 
     return (
+        <>
         <div className="space-y-6">
             <Card>
                 <CardHeader>
@@ -93,7 +101,7 @@ export default function UserDetailsPage() {
                             <AvatarImage src={(user as any).avatar} alt={user.name} />
                             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                         </Avatar>
-                        <div>
+                        <div className="flex-grow">
                             <CardTitle className="text-3xl">{user.name}</CardTitle>
                             <CardDescription className="flex items-center gap-2">
                                 <Badge variant="secondary" className="capitalize">{user.role}</Badge>
@@ -101,6 +109,11 @@ export default function UserDetailsPage() {
                                 <span className="text-sm">ID: {user._id}</span>
                             </CardDescription>
                         </div>
+                         {canEdit && (
+                            <Button variant="outline" onClick={() => setIsEditModalOpen(true)}>
+                                <Pencil className="mr-2 h-4 w-4" /> Edit User
+                            </Button>
+                        )}
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -200,5 +213,13 @@ export default function UserDetailsPage() {
               </>
             )}
         </div>
+        {user && isEditModalOpen && (
+            <EditUserForm 
+                isOpen={isEditModalOpen}
+                setIsOpen={setIsEditModalOpen}
+                user={user}
+            />
+        )}
+        </>
     );
 }
