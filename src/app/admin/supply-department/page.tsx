@@ -7,10 +7,13 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import type { Order, OrderPaymentStatus } from '@/lib/types';
+import type { Order, CartItem, OrderPaymentStatus } from '@/lib/types';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, ArrowUpDown, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUpDown, Loader2, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useProductStore } from '@/store/product-store';
+import { useRouter } from 'next/navigation';
+import { useSession } from '@/contexts/SessionProvider';
 
 type SortKey = keyof Order | 'balance';
 
@@ -22,6 +25,14 @@ export default function SupplyDepartmentPage() {
     const [sortConfig, setSortConfig] = useState<{ key: SortKey | null; direction: 'ascending' | 'descending' | null }>({ key: 'date', direction: 'descending' });
     const ordersPerPage = 10;
     const { toast } = useToast();
+    const router = useRouter();
+    const { user } = useSession();
+
+    const { products, fetchProducts, isLoading: areProductsLoading } = useProductStore();
+
+    useEffect(() => {
+      fetchProducts();
+    }, [fetchProducts]);
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -113,6 +124,48 @@ export default function SupplyDepartmentPage() {
         setCurrentPage(prev => Math.min(prev + 1, totalPages));
     };
 
+    const handlePrintInvoice = (order: Order) => {
+        if (areProductsLoading) {
+            toast({
+                variant: 'destructive',
+                title: 'Please wait',
+                description: 'Product data is still loading. Try again in a moment.'
+            });
+            return;
+        }
+
+        const cartItems: CartItem[] = order.items.map(item => {
+            const product = products.find(p => p.id === item.productId);
+            return {
+                id: item.productId,
+                product: product!,
+                quantity: item.quantity
+            }
+        }).filter(item => item.product);
+
+         const [address, city, stateZip] = order.shippingAddress.split(', ');
+         const [state, zip] = (stateZip || ' ').split(' ');
+
+         const invoiceData = {
+            items: cartItems,
+            total: order.amount,
+            invoiceId: order.id,
+            date: new Date(order.date).toLocaleDateString(),
+            customer: {
+                name: order.customer.name,
+                email: order.customer.email,
+                address: address || '',
+                city: city || '',
+                state: state || '',
+                zip: zip || '',
+            },
+            paymentStatus: order.paymentStatus === 'Paid' ? 'paid' : 'unpaid',
+        };
+
+        sessionStorage.setItem('don_maris_supply_invoice', JSON.stringify(invoiceData));
+        router.push(`/admin/supply-department/invoice`);
+    };
+
     const SortableHeader = ({ sortKey, label, className }: { sortKey: SortKey, label: string, className?: string }) => (
         <TableHead className={className}>
             <Button variant="ghost" onClick={() => requestSort(sortKey)} className="px-0">
@@ -154,12 +207,13 @@ export default function SupplyDepartmentPage() {
                                     <SortableHeader sortKey="amount" label="Total Amount" className="text-right" />
                                     <SortableHeader sortKey="amountPaid" label="Amount Paid" className="text-right" />
                                     <SortableHeader sortKey="balance" label="Balance" className="text-right" />
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="h-24 text-center">
+                                        <TableCell colSpan={9} className="h-24 text-center">
                                             <Loader2 className="mx-auto h-6 w-6 animate-spin" />
                                         </TableCell>
                                     </TableRow>
@@ -190,12 +244,18 @@ export default function SupplyDepartmentPage() {
                                             <TableCell className="text-right">₦{order.amount.toLocaleString()}</TableCell>
                                             <TableCell className="text-right">₦{order.amountPaid.toLocaleString()}</TableCell>
                                             <TableCell className="text-right font-medium text-destructive">₦{balance.toLocaleString()}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="outline" size="sm" onClick={() => handlePrintInvoice(order)}>
+                                                    <Printer className="mr-2 h-4 w-4" />
+                                                    Print
+                                                </Button>
+                                            </TableCell>
                                         </TableRow>
                                         )
                                     })
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                                        <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
                                             No pending or processing orders found.
                                         </TableCell>
                                     </TableRow>
