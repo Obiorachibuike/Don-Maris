@@ -34,11 +34,33 @@ export default function AdminProductDetailsPage() {
     const productId = params.id as string;
     const [product, setProduct] = useState<Product | null | undefined>(null);
     const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistoryEntry[]>([]);
+    const [allOrders, setAllOrders] = useState<Order[]>([]);
 
     useEffect(() => {
         async function loadProductData() {
             const fetchedProduct = await getProductById(productId);
             setProduct(fetchedProduct);
+            
+            const ordersRes = await fetch('/api/orders');
+            if (ordersRes.ok) {
+                const orders: Order[] = await ordersRes.json();
+                setAllOrders(orders);
+
+                const history: PurchaseHistoryEntry[] = [];
+                orders.forEach(order => {
+                    const item = order.items.find(i => i.productId === productId);
+                    if (item) {
+                        history.push({
+                            orderId: order.id,
+                            customer: order.customer,
+                            date: order.date,
+                            quantity: item.quantity,
+                            pricePerUnit: fetchedProduct?.price || 0,
+                        });
+                    }
+                });
+                setPurchaseHistory(history.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+            }
         }
         
         if(productId) {
