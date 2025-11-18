@@ -14,12 +14,14 @@ import type { Order, Customer, Product, StockHistoryEntry } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { getProductById } from '@/lib/client-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart";
 
 interface PurchaseHistoryEntry {
     orderId: string;
@@ -29,12 +31,49 @@ interface PurchaseHistoryEntry {
     pricePerUnit: number;
 }
 
+type SalesTimeRange = 'daily' | 'weekly' | 'monthly';
+
+const chartConfig = {
+  unitsSold: {
+    label: "Units Sold",
+    color: "hsl(var(--primary))",
+  },
+} satisfies ChartConfig;
+
+const aggregateSalesData = (history: PurchaseHistoryEntry[], range: SalesTimeRange) => {
+    const dataMap: { [key: string]: { date: string; unitsSold: number } } = {};
+
+    history.forEach(item => {
+        const itemDate = new Date(item.date);
+        let key = '';
+
+        switch (range) {
+            case 'daily':
+                key = format(startOfDay(itemDate), 'MMM d');
+                break;
+            case 'weekly':
+                key = format(startOfWeek(itemDate), 'MMM d');
+                break;
+            case 'monthly':
+                key = format(startOfMonth(itemDate), 'MMM yyyy');
+                break;
+        }
+
+        if (!dataMap[key]) {
+            dataMap[key] = { date: key, unitsSold: 0 };
+        }
+        dataMap[key].unitsSold += item.quantity;
+    });
+
+    return Object.values(dataMap).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+};
+
 export default function AdminProductDetailsPage() {
     const params = useParams();
     const productId = params.id as string;
     const [product, setProduct] = useState<Product | null | undefined>(null);
     const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistoryEntry[]>([]);
-    const [allOrders, setAllOrders] = useState<Order[]>([]);
+    const [salesTimeRange, setSalesTimeRange] = useState<SalesTimeRange>('monthly');
 
     useEffect(() => {
         async function loadProductData() {
@@ -44,7 +83,6 @@ export default function AdminProductDetailsPage() {
             const ordersRes = await fetch('/api/orders');
             if (ordersRes.ok) {
                 const orders: Order[] = await ordersRes.json();
-                setAllOrders(orders);
 
                 const history: PurchaseHistoryEntry[] = [];
                 orders.forEach(order => {
@@ -95,6 +133,8 @@ export default function AdminProductDetailsPage() {
     const totalUnitsSold = purchaseHistory.reduce((sum, item) => sum + item.quantity, 0);
     const totalRevenue = purchaseHistory.reduce((sum, item) => sum + (item.quantity * item.pricePerUnit), 0);
     const sortedStockHistory = product.stockHistory?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) || [];
+
+    const salesChartData = useMemo(() => aggregateSalesData(purchaseHistory, salesTimeRange), [purchaseHistory, salesTimeRange]);
 
     return (
         <div className="space-y-6">
@@ -231,6 +271,43 @@ export default function AdminProductDetailsPage() {
                             </CardContent>
                         </Card>
                     </div>
+
+                    <Card>
+                        <CardHeader>
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <CardTitle>Sales Performance</CardTitle>
+                                    <CardDescription>
+                                        Units sold over time.
+                                    </CardDescription>
+                                </div>
+                                <Tabs defaultValue="monthly" onValueChange={(value) => setSalesTimeRange(value as SalesTimeRange)} className="w-auto">
+                                    <TabsList>
+                                        <TabsTrigger value="daily">Daily</TabsTrigger>
+                                        <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                                        <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                                    </TabsList>
+                                </Tabs>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <ChartContainer config={chartConfig} className="h-64 w-full">
+                                <BarChart accessibilityLayer data={salesChartData}>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis
+                                        dataKey="date"
+                                        tickLine={false}
+                                        tickMargin={10}
+                                        axisLine={false}
+                                        tickFormatter={(value) => value.slice(0, 3)}
+                                    />
+                                    <YAxis />
+                                    <ChartTooltip content={<ChartTooltipContent />} />
+                                    <Bar dataKey="unitsSold" fill="var(--color-unitsSold)" radius={4} />
+                                </BarChart>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
 
                     <Card>
                         <CardHeader>
