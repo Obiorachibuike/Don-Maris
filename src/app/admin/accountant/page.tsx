@@ -27,6 +27,7 @@ export default function AccountantPage() {
     const { toast } = useToast();
     const { user } = useSession();
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
     const fetchOrders = async () => {
         setIsLoading(true);
@@ -53,6 +54,10 @@ export default function AccountantPage() {
         fetchOrders();
     }, [toast]);
 
+    const handleOpenUpdateModal = (order: Order) => {
+        setSelectedOrder(order);
+        setIsUpdateModalOpen(true);
+    };
 
     const filteredOrders = useMemo(() => allOrders.filter(order => 
         order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -198,7 +203,7 @@ export default function AccountantPage() {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <Button variant="outline" size="sm" onClick={() => setSelectedOrder(order)}>
+                                                <Button variant="outline" size="sm" onClick={() => handleOpenUpdateModal(order)}>
                                                     Update Payment
                                                 </Button>
                                             </TableCell>
@@ -250,8 +255,8 @@ export default function AccountantPage() {
         </div>
         {selectedOrder && user && (
             <UpdatePaymentDialog 
-                isOpen={!!selectedOrder}
-                setIsOpen={() => setSelectedOrder(null)}
+                isOpen={isUpdateModalOpen}
+                setIsOpen={setIsUpdateModalOpen}
                 order={selectedOrder}
                 onOrderUpdate={handleUpdateOrder}
                 currentUser={user}
