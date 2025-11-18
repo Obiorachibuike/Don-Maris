@@ -75,6 +75,8 @@ export default function AdminProductDetailsPage() {
     const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistoryEntry[]>([]);
     const [salesTimeRange, setSalesTimeRange] = useState<SalesTimeRange>('monthly');
 
+    const salesChartData = useMemo(() => aggregateSalesData(purchaseHistory, salesTimeRange), [purchaseHistory, salesTimeRange]);
+
     useEffect(() => {
         async function loadProductData() {
             const fetchedProduct = await getProductById(productId);
@@ -133,8 +135,6 @@ export default function AdminProductDetailsPage() {
     const totalUnitsSold = purchaseHistory.reduce((sum, item) => sum + item.quantity, 0);
     const totalRevenue = purchaseHistory.reduce((sum, item) => sum + (item.quantity * item.pricePerUnit), 0);
     const sortedStockHistory = product.stockHistory?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) || [];
-
-    const salesChartData = useMemo(() => aggregateSalesData(purchaseHistory, salesTimeRange), [purchaseHistory, salesTimeRange]);
 
     return (
         <div className="space-y-6">
