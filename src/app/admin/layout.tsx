@@ -15,7 +15,7 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
-import { Home, ShoppingBag, Package, Users, BarChart2, Settings, UserCircle, LifeBuoy, LayoutDashboard, PackageSearch, Truck, Briefcase, LayoutGrid, Wallet, Loader2, Activity } from 'lucide-react';
+import { Home, ShoppingBag, Package, Users, BarChart2, Settings, UserCircle, LifeBuoy, LayoutDashboard, PackageSearch, Truck, Briefcase, LayoutGrid, Wallet, Loader2, Activity, Banknote } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -32,6 +32,7 @@ const navItems = [
     { href: '/admin/products', label: 'Products', icon: Package, roles: ['admin', 'supplier'] },
     { href: '/admin/sourcing', label: 'Posting Department', icon: PackageSearch, roles: ['admin', 'supplier'] },
     { href: '/admin/supply-department', label: 'Supply Department', icon: Truck, roles: ['admin', 'supplier'] },
+    { href: '/admin/accountant', label: 'Accountant', icon: Banknote, roles: ['admin', 'accountant'] },
     { href: '/admin/users', label: 'All Users', icon: Users, roles: ['admin'] },
     { href: '/admin/employees', label: 'Employees', icon: Briefcase, roles: ['admin'] },
     { href: '/admin/activities', label: 'Admin Activities', icon: Activity, roles: ['admin'] },
@@ -134,5 +135,3 @@ export default function AdminLayout({
       </SidebarProvider>
   );
 }
-
-    
