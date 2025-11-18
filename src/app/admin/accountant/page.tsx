@@ -9,11 +9,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import type { Order, OrderPaymentStatus } from '@/lib/types';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Loader2, ArrowUpDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, ArrowUpDown, Calendar as CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSession } from '@/contexts/SessionProvider';
-import axios from 'axios';
 import { UpdatePaymentDialog } from '@/components/update-payment-dialog';
+import { DateRange } from 'react-day-picker';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 type SortKey = keyof Order | 'balance';
 
@@ -23,6 +27,7 @@ export default function AccountantPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [sortConfig, setSortConfig] = useState<{ key: SortKey | null; direction: 'ascending' | 'descending' | null }>({ key: 'date', direction: 'descending' });
+    const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const ordersPerPage = 10;
     const { toast } = useToast();
     const { user } = useSession();
@@ -59,11 +64,28 @@ export default function AccountantPage() {
         setIsUpdateModalOpen(true);
     };
 
-    const filteredOrders = useMemo(() => allOrders.filter(order => 
-        order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.paymentStatus.toLowerCase().includes(searchTerm.toLowerCase())
-    ), [allOrders, searchTerm]);
+    const filteredOrders = useMemo(() => {
+        let filtered = allOrders;
+        
+        if(searchTerm) {
+            filtered = filtered.filter(order => 
+                order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                order.paymentStatus.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+
+        if (dateRange?.from) {
+            filtered = filtered.filter(order => new Date(order.date) >= dateRange.from!);
+        }
+        if (dateRange?.to) {
+            const toDate = new Date(dateRange.to);
+            toDate.setHours(23, 59, 59, 999);
+            filtered = filtered.filter(order => new Date(order.date) <= toDate);
+        }
+
+        return filtered;
+    }, [allOrders, searchTerm, dateRange]);
 
     const requestSort = (key: SortKey) => {
         let direction: 'ascending' | 'descending' | null = 'ascending';
@@ -148,12 +170,50 @@ export default function AccountantPage() {
                                 Manage and update order payment statuses.
                             </CardDescription>
                         </div>
-                        <Input 
-                            placeholder="Search orders..." 
-                            className="w-full md:max-w-sm"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                        <div className="flex items-center gap-2">
+                             <Input 
+                                placeholder="Search orders..." 
+                                className="w-full md:max-w-sm"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                <Button
+                                    id="date"
+                                    variant={"outline"}
+                                    className={cn(
+                                    "w-[300px] justify-start text-left font-normal",
+                                    !dateRange && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {dateRange?.from ? (
+                                    dateRange.to ? (
+                                        <>
+                                        {format(dateRange.from, "LLL dd, y")} -{" "}
+                                        {format(dateRange.to, "LLL dd, y")}
+                                        </>
+                                    ) : (
+                                        format(dateRange.from, "LLL dd, y")
+                                    )
+                                    ) : (
+                                    <span>Pick a date range</span>
+                                    )}
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="end">
+                                    <Calendar
+                                        initialFocus
+                                        mode="range"
+                                        defaultMonth={dateRange?.from}
+                                        selected={dateRange}
+                                        onSelect={setDateRange}
+                                        numberOfMonths={2}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -213,7 +273,7 @@ export default function AccountantPage() {
                                 ) : (
                                     <TableRow>
                                         <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
-                                            No orders found.
+                                            No orders found for the selected criteria.
                                         </TableCell>
                                     </TableRow>
                                 )}
