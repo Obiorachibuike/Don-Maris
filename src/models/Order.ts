@@ -48,7 +48,7 @@ const OrderSchema = new mongoose.Schema<OrderType>({
       required: true,
       default: 0
   },
-  printHistory: [PrintHistoryEntrySchema],
+  printHistory: { type: [PrintHistoryEntrySchema], default: [] },
   createdBy: { type: String },
   paymentDetails: {
       opayReference: String,
