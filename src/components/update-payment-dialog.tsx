@@ -20,9 +20,9 @@ import {
 } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import axios from 'axios';
+import { Checkbox } from './ui/checkbox';
 
 interface UpdatePaymentDialogProps {
   isOpen: boolean;
@@ -32,11 +32,9 @@ interface UpdatePaymentDialogProps {
   onOrderUpdate: () => void;
 }
 
-const paymentStatuses: OrderPaymentStatus[] = ['Not Paid', 'Incomplete', 'Paid'];
-
 const formSchema = z.object({
   amountPaid: z.coerce.number().min(0, "Amount paid cannot be negative."),
-  paymentStatus: z.enum(paymentStatuses as [string, ...string[]], { required_error: 'Please select a status.' }),
+  paymentCompleted: z.boolean().default(false),
 });
 
 type PaymentFormValues = z.infer<typeof formSchema>;
@@ -49,32 +47,52 @@ export function UpdatePaymentDialog({ isOpen, setIsOpen, order, currentUser, onO
     resolver: zodResolver(formSchema),
     defaultValues: {
       amountPaid: order.amountPaid,
-      paymentStatus: order.paymentStatus,
+      paymentCompleted: order.paymentStatus === 'Paid',
     },
   });
+
+  const paymentCompleted = form.watch('paymentCompleted');
+  const amountPaidValue = form.watch('amountPaid');
   
   useEffect(() => {
     form.reset({
         amountPaid: order.amountPaid,
-        paymentStatus: order.paymentStatus,
-    })
-  }, [order, form]);
+        paymentCompleted: order.paymentStatus === 'Paid',
+    });
+  }, [order, form, isOpen]);
+
+  useEffect(() => {
+    if (paymentCompleted) {
+        form.setValue('amountPaid', order.amount);
+    }
+  }, [paymentCompleted, form, order.amount]);
+
 
   const onSubmit = async (data: PaymentFormValues) => {
     const originalAmountPaid = order.amountPaid;
     const paymentDifference = data.amountPaid - originalAmountPaid;
     
-    const originalLedgerBalance = (await axios.get(`/api/users/${order.customer.id}`)).data.ledgerBalance || 0;
-    
-    // If the new payment is more, the ledger balance should decrease by the difference.
-    // If the new payment is less (e.g. a correction), the ledger balance should increase.
-    const newLedgerBalance = originalLedgerBalance - paymentDifference;
+    let newPaymentStatus: OrderPaymentStatus;
+    if (data.paymentCompleted) {
+        newPaymentStatus = 'Paid';
+    } else if (data.amountPaid <= 0) {
+        newPaymentStatus = 'Not Paid';
+    } else if (data.amountPaid < order.amount) {
+        newPaymentStatus = 'Incomplete';
+    } else {
+        newPaymentStatus = 'Paid';
+    }
     
     try {
+        const customerResponse = await axios.get(`/api/users/${order.customer.id}`);
+        const originalLedgerBalance = customerResponse.data.ledgerBalance || 0;
+        
+        const newLedgerBalance = originalLedgerBalance - paymentDifference;
+        
         // 1. Update the order
         const orderUpdatePromise = axios.put(`/api/orders/${order.id}`, {
             amountPaid: data.amountPaid,
-            paymentStatus: data.paymentStatus,
+            paymentStatus: newPaymentStatus,
         });
 
         // 2. Update the customer's ledger balance
@@ -105,7 +123,7 @@ export function UpdatePaymentDialog({ isOpen, setIsOpen, order, currentUser, onO
         <DialogHeader>
           <DialogTitle>Update Payment for Order #{order.id}</DialogTitle>
           <DialogDescription>
-            Adjust the amount paid and the payment status for this order. This will affect the customer's ledger balance.
+            Adjust the amount paid for this order. This will affect the customer's ledger balance.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -117,7 +135,7 @@ export function UpdatePaymentDialog({ isOpen, setIsOpen, order, currentUser, onO
                 </div>
                  <div>
                     <label className="text-sm font-medium">Current Balance Due</label>
-                    <Input value={`₦${(order.amount - order.amountPaid).toLocaleString()}`} disabled className="text-destructive font-bold" />
+                    <Input value={`₦${(order.amount - amountPaidValue).toLocaleString()}`} disabled className="text-destructive font-bold" />
                 </div>
              </div>
             <FormField
@@ -125,37 +143,35 @@ export function UpdatePaymentDialog({ isOpen, setIsOpen, order, currentUser, onO
               name="amountPaid"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>New Total Amount Paid</FormLabel>
+                  <FormLabel>Amount Paid</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} />
+                    <Input type="number" step="0.01" {...field} disabled={paymentCompleted} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="paymentStatus"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Payment Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+             <FormField
+                control={form.control}
+                name="paymentCompleted"
+                render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a status" />
-                      </SelectTrigger>
+                        <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        />
                     </FormControl>
-                    <SelectContent>
-                      {paymentStatuses.map(status => (
-                        <SelectItem key={status} value={status}>
-                          {status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+                    <div className="space-y-1 leading-none">
+                        <FormLabel>
+                            Payment Completed
+                        </FormLabel>
+                        <DialogDescription>
+                           Check this if the full order amount has been paid.
+                        </DialogDescription>
+                    </div>
+                    </FormItem>
+                )}
             />
              <DialogFooter className="pt-4">
                 <DialogClose asChild>
@@ -163,7 +179,7 @@ export function UpdatePaymentDialog({ isOpen, setIsOpen, order, currentUser, onO
                 </DialogClose>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
                     {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Changes
+                    Update Payment
                 </Button>
             </DialogFooter>
           </form>
