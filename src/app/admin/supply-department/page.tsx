@@ -1,31 +1,58 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { dummyOrders } from '@/lib/dummy-orders';
 import type { Order, OrderPaymentStatus } from '@/lib/types';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUpDown, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 type SortKey = keyof Order | 'balance';
 
 export default function SupplyDepartmentPage() {
+    const [allOrders, setAllOrders] = useState<Order[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [sortConfig, setSortConfig] = useState<{ key: SortKey | null; direction: 'ascending' | 'descending' | null }>({ key: 'date', direction: 'descending' });
     const ordersPerPage = 10;
+    const { toast } = useToast();
 
-    const supplyOrders = dummyOrders.filter(order => order.status === 'Processing' || order.status === 'Pending');
+    useEffect(() => {
+        const fetchOrders = async () => {
+            setIsLoading(true);
+            try {
+                const response = await fetch('/api/orders');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch orders');
+                }
+                const data = await response.json();
+                setAllOrders(data);
+            } catch (error) {
+                console.error("Could not fetch orders:", error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: 'Could not load orders. Please try again later.'
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchOrders();
+    }, [toast]);
+
+    const supplyOrders = useMemo(() => allOrders.filter(order => order.status === 'Processing' || order.status === 'Pending'), [allOrders]);
 
     const filteredOrders = useMemo(() => supplyOrders.filter(order => 
         order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.deliveryMethod.toLowerCase().includes(searchTerm.toLowerCase())
+        (order.deliveryMethod && order.deliveryMethod.toLowerCase().includes(searchTerm.toLowerCase()))
     ), [supplyOrders, searchTerm]);
 
     const requestSort = (key: SortKey) => {
@@ -44,7 +71,7 @@ export default function SupplyDepartmentPage() {
         let sortableItems = [...filteredOrders];
         if (sortConfig.key && sortConfig.direction) {
             sortableItems.sort((a, b) => {
-                let aValue, bValue;
+                let aValue: any, bValue: any;
 
                 if (sortConfig.key === 'balance') {
                     aValue = a.amount - a.amountPaid;
@@ -96,7 +123,7 @@ export default function SupplyDepartmentPage() {
     );
 
     return (
-        <div className="w-[95%] mx-auto">
+        <div className="w-full">
             <Card>
                 <CardHeader>
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -130,35 +157,49 @@ export default function SupplyDepartmentPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {currentOrders.map((order) => {
-                                    const balance = order.amount - order.amountPaid;
-                                    return (
-                                    <TableRow key={order.id}>
-                                        <TableCell className="font-medium">
-                                            <Link href={`/admin/orders/${order.id}`} className="text-primary hover:underline">
-                                                {order.id}
-                                            </Link>
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={8} className="h-24 text-center">
+                                            <Loader2 className="mx-auto h-6 w-6 animate-spin" />
                                         </TableCell>
-                                        <TableCell>{order.customer.name}</TableCell>
-                                        <TableCell>{order.deliveryMethod}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={order.status === 'Processing' ? 'secondary' : 'destructive'} className={order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : ''}>{order.status}</Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={
-                                                order.paymentStatus === 'Paid' ? 'default' :
-                                                order.paymentStatus === 'Not Paid' ? 'destructive' :
-                                                'secondary'
-                                            } className={order.paymentStatus === 'Incomplete' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : ''}>
-                                                {order.paymentStatus}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">₦{order.amount.toLocaleString()}</TableCell>
-                                        <TableCell className="text-right">₦{order.amountPaid.toLocaleString()}</TableCell>
-                                        <TableCell className="text-right font-medium text-destructive">₦{balance.toLocaleString()}</TableCell>
                                     </TableRow>
-                                    )
-                                })}
+                                ) : currentOrders.length > 0 ? (
+                                    currentOrders.map((order) => {
+                                        const balance = order.amount - order.amountPaid;
+                                        return (
+                                        <TableRow key={order.id}>
+                                            <TableCell className="font-medium">
+                                                <Link href={`/admin/orders/${order.id}`} className="text-primary hover:underline">
+                                                    {order.id}
+                                                </Link>
+                                            </TableCell>
+                                            <TableCell>{order.customer.name}</TableCell>
+                                            <TableCell>{order.deliveryMethod}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={order.status === 'Processing' ? 'secondary' : 'destructive'} className={order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : ''}>{order.status}</Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={
+                                                    order.paymentStatus === 'Paid' ? 'default' :
+                                                    order.paymentStatus === 'Not Paid' ? 'destructive' :
+                                                    'secondary'
+                                                } className={order.paymentStatus === 'Incomplete' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : ''}>
+                                                    {order.paymentStatus}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">₦{order.amount.toLocaleString()}</TableCell>
+                                            <TableCell className="text-right">₦{order.amountPaid.toLocaleString()}</TableCell>
+                                            <TableCell className="text-right font-medium text-destructive">₦{balance.toLocaleString()}</TableCell>
+                                        </TableRow>
+                                        )
+                                    })
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                                            No pending or processing orders found.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </div>
