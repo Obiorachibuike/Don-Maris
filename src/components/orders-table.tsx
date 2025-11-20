@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import axios from 'axios';
+import DeletedOrder from '@/models/DeletedOrder';
 
 type SortKey = keyof Order | 'balance';
 
@@ -73,10 +74,12 @@ export function OrdersTable() {
     };
 
     const confirmDeleteOrder = async () => {
-        if (!orderToDelete) return;
+        if (!orderToDelete || !user) return;
         try {
-            await axios.delete(`/api/orders/${orderToDelete.id}`);
-            toast({ title: 'Order Deleted', description: `Order #${orderToDelete.id} has been deleted.` });
+            await axios.delete(`/api/orders/${orderToDelete.id}`, {
+                data: { deletedBy: user.name } // Pass user name in the body
+            });
+            toast({ title: 'Order Deleted', description: `Order #${orderToDelete.id} has been moved to the archive.` });
             setAllOrders(prev => prev.filter(o => o.id !== orderToDelete.id));
             setOrderToDelete(null);
         } catch (error) {
@@ -362,7 +365,7 @@ export function OrdersTable() {
                 <AlertDialogHeader>
                     <AlertDialogTitle>Delete Order #{orderToDelete?.id}?</AlertDialogTitle>
                     <AlertDialogDescription>
-                       This action is irreversible. It will permanently delete the order and may affect customer ledger balances.
+                       This action is irreversible. The order will be moved to the deleted orders archive.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -376,3 +379,5 @@ export function OrdersTable() {
         </>
     );
 }
+
+    

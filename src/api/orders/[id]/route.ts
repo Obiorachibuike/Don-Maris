@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import AdminLog from '@/models/AdminLog';
 import OrderModel from '@/models/Order';
 import User from '@/models/User';
+import DeletedOrder from '@/models/DeletedOrder';
 import { dummyOrders } from '@/lib/dummy-orders';
 import type { Order } from '@/lib/types';
 import { getDataFromToken } from '@/lib/get-data-from-token';
@@ -52,8 +53,8 @@ export async function PUT(
         const loggedInUserId = await getDataFromToken(request);
         const adminUser = loggedInUserId ? await User.findById(loggedInUserId) : null;
 
-        if (!adminUser) {
-             return NextResponse.json({ error: "Not authenticated or user not found." }, { status: 401 });
+        if (!adminUser || !['admin', 'accountant'].includes(adminUser.role)) {
+             return NextResponse.json({ error: "Not authorized to perform this action." }, { status: 403 });
         }
         
         const originalOrder = await OrderModel.findOne({ id: id }).lean();
@@ -119,3 +120,57 @@ export async function PUT(
         return NextResponse.json({ error: `Failed to update order: ${error.message}` }, { status: 500 });
     }
 }
+
+
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    const { id } = params;
+    try {
+        await connectDB();
+
+        const loggedInUserId = await getDataFromToken(request);
+        const adminUser = loggedInUserId ? await User.findById(loggedInUserId) : null;
+
+        if (!adminUser || !['admin', 'accountant'].includes(adminUser.role)) {
+            return NextResponse.json({ error: "Not authorized to perform this action." }, { status: 403 });
+        }
+
+        const orderToDelete = await OrderModel.findOne({ id: id }).lean();
+        if (!orderToDelete) {
+            return new NextResponse('Order not found', { status: 404 });
+        }
+
+        // Create an archived copy
+        const archivedOrder = new DeletedOrder({
+            ...orderToDelete,
+            _id: new mongoose.Types.ObjectId(), // Generate a new ID for the archived document
+            deletedBy: adminUser.name,
+            deletedAt: new Date(),
+        });
+        await archivedOrder.save();
+
+        // Delete the original order
+        await OrderModel.deleteOne({ id: id });
+
+        // Log the action
+        await AdminLog.create({
+            adminId: loggedInUserId,
+            adminName: adminUser.name,
+            action: 'DELETE_ORDER',
+            targetType: 'Order',
+            targetId: id,
+            targetName: `Order for ${orderToDelete.customer.name}`,
+            details: `Order #${id} was deleted and archived.`,
+        });
+
+        return new NextResponse(null, { status: 204 });
+
+    } catch (error: any) {
+        console.error(`Failed to delete order ${id}:`, error);
+        return NextResponse.json({ error: `Failed to delete order: ${error.message}` }, { status: 500 });
+    }
+}
+
+    
