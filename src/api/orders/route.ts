@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
         // --- New Sequential ID Logic ---
         const lastOrder = await Order.findOne().sort({ date: -1 });
-        let nextIdNumber = 14500;
+        let nextIdNumber = 145000;
         if (lastOrder && lastOrder.id && lastOrder.id.startsWith('DM-')) {
             const lastIdNumber = parseInt(lastOrder.id.split('-')[1], 10);
             if (!isNaN(lastIdNumber)) {
