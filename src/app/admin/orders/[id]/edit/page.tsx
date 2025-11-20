@@ -9,15 +9,17 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, PlusCircle, Loader2, Save, ArrowLeft } from 'lucide-react';
+import { X, PlusCircle, Loader2, Save, ArrowLeft, Check, ChevronsUpDown } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import axios from 'axios';
 import Link from 'next/link';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandInput, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
+
 
 type EditableOrderItem = OrderItem & { product: Product };
 
@@ -32,6 +34,7 @@ export default function EditOrderPage() {
     const [productToAdd, setProductToAdd] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isLoadingOrder, setIsLoadingOrder] = useState(true);
+    const [isProductPopoverOpen, setIsProductPopoverOpen] = useState(false);
     const { toast } = useToast();
     
     useEffect(() => {
@@ -243,16 +246,49 @@ export default function EditOrderPage() {
                                 </Table>
                             </ScrollArea>
                             <div className="flex items-center gap-2 pt-4 border-t">
-                                <Select onValueChange={setProductToAdd} value={productToAdd || ''}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a product to add" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {availableProducts.map(p => (
-                                            <SelectItem key={p.id} value={p.id}>{p.name} (Stock: {p.stock})</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Popover open={isProductPopoverOpen} onOpenChange={setIsProductPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={isProductPopoverOpen}
+                                            className="w-[300px] justify-between"
+                                        >
+                                            {productToAdd
+                                                ? availableProducts.find((p) => p.id === productToAdd)?.name
+                                                : "Select product to add..."}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[300px] p-0">
+                                        <Command>
+                                            <CommandInput placeholder="Search product..." />
+                                            <CommandList>
+                                                <CommandEmpty>No product found.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {availableProducts.map((p) => (
+                                                    <CommandItem
+                                                        key={p.id}
+                                                        value={p.name}
+                                                        onSelect={() => {
+                                                            setProductToAdd(p.id)
+                                                            setIsProductPopoverOpen(false)
+                                                        }}
+                                                    >
+                                                        <Check
+                                                        className={cn(
+                                                            "mr-2 h-4 w-4",
+                                                            productToAdd === p.id ? "opacity-100" : "opacity-0"
+                                                        )}
+                                                        />
+                                                        {p.name} (Stock: {p.stock})
+                                                    </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
                                 <Button onClick={handleAddProduct} disabled={!productToAdd}>
                                     <PlusCircle className="mr-2 h-4 w-4" /> Add
                                 </Button>
