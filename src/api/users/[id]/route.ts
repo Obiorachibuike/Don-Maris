@@ -57,8 +57,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         let updateData: Record<string, any> = {};
         let changes: string[] = [];
 
-        // A user can always update their own name
-        if (body.name && body.name !== targetUser.name) {
+        // A user can always update their own name. An admin or accountant can update anyone's name.
+        if (body.name && body.name !== targetUser.name && (isSelfUpdate || isAdmin || isAccountant)) {
             updateData.name = body.name;
             changes.push(`Name changed from "${targetUser.name}" to "${body.name}"`);
         }
@@ -198,5 +198,3 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
-
-    
