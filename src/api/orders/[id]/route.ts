@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/mongodb';
 import { NextResponse } from 'next/server';
 import AdminLog from '@/models/AdminLog';
 import OrderModel from '@/models/Order';
+import DeletedOrderModel from '@/models/DeletedOrder';
 import User from '@/models/User';
 import type { Order } from '@/lib/types';
 import { getDataFromToken } from '@/lib/get-data-from-token';
@@ -113,21 +114,33 @@ export async function DELETE(
             return NextResponse.json({ error: "Not authorized." }, { status: 403 });
         }
 
-        const orderToDelete = await OrderModel.findOne({ id: id });
+        const orderToDelete = await OrderModel.findOne({ id: id }).lean();
         if (!orderToDelete) {
             return new NextResponse('Order not found', { status: 404 });
         }
 
-        // Revert ledger balance change
-        if (orderToDelete.paymentStatus === 'Not Paid') {
-            await User.findOneAndUpdate({ id: orderToDelete.customer.id }, {
-                $inc: {
-                    ledgerBalance: -orderToDelete.amount,
-                    lifetimeValue: -orderToDelete.amount,
-                }
-            });
+        // Create an archived copy in the DeletedOrder collection
+        await new DeletedOrderModel({
+            ...orderToDelete,
+            deletedBy: adminUser.name,
+            deletedAt: new Date(),
+        }).save();
+
+
+        // Revert ledger balance change if order was not fully paid
+        if (orderToDelete.paymentStatus !== 'Paid') {
+            const balanceToRevert = orderToDelete.amount - orderToDelete.amountPaid;
+             if (balanceToRevert > 0) {
+                await User.findOneAndUpdate({ id: orderToDelete.customer.id }, {
+                    $inc: {
+                        ledgerBalance: -balanceToRevert,
+                        lifetimeValue: -balanceToRevert, // Also adjust lifetime value
+                    }
+                });
+             }
         }
         
+        // Now, permanently delete the order from the active collection
         await OrderModel.deleteOne({ id: id });
 
         await AdminLog.create({
@@ -137,7 +150,7 @@ export async function DELETE(
             targetType: 'Order',
             targetId: orderToDelete.id,
             targetName: `Order for ${orderToDelete.customer.name}`,
-            details: `Deleted order #${id}.`,
+            details: `Deleted and archived order #${id}.`,
         });
 
         return new NextResponse(null, { status: 204 }); // No Content
