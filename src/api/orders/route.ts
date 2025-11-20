@@ -1,5 +1,4 @@
 
-
 import { connectDB } from "@/lib/mongodb";
 import Order from '@/models/Order';
 import User from '@/models/User';
@@ -37,9 +36,21 @@ export async function POST(request: NextRequest) {
         await connectDB();
         const orderData = await request.json();
 
+        // --- New Sequential ID Logic ---
+        const lastOrder = await Order.findOne().sort({ date: -1 });
+        let nextIdNumber = 14500;
+        if (lastOrder && lastOrder.id && lastOrder.id.startsWith('DM-')) {
+            const lastIdNumber = parseInt(lastOrder.id.split('-')[1], 10);
+            if (!isNaN(lastIdNumber)) {
+                nextIdNumber = lastIdNumber + 1;
+            }
+        }
+        const newOrderId = `DM-${nextIdNumber}`;
+        // --- End New Logic ---
+
         const newOrder = new Order({
             ...orderData,
-            id: `DM-${Date.now()}`, // Generate unique ID
+            id: newOrderId, // Use the new sequential ID
         });
         
         const savedOrder = await newOrder.save();
