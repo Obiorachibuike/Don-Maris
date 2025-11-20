@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -10,9 +9,7 @@ import { Button } from '@/components/ui/button';
 import type { Order, OrderPaymentStatus } from '@/lib/types';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Loader2, ArrowUpDown, Calendar as CalendarIcon, MoreHorizontal, Trash2, Pencil } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { useSession } from '@/contexts/SessionProvider';
-import { UpdatePaymentDialog } from '@/components/update-payment-dialog';
 import { DateRange } from 'react-day-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -32,12 +29,9 @@ export function OrdersTable() {
     const [sortConfig, setSortConfig] = useState<{ key: SortKey | null; direction: 'ascending' | 'descending' | null }>({ key: 'date', direction: 'descending' });
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const ordersPerPage = 10;
-    const { toast } = useToast();
     const { user } = useSession();
     const { users: allUsers, fetchUsers: fetchAllUsers } = useUserStore();
-    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
-    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
     useEffect(() => {
         fetchOrders();
@@ -45,11 +39,6 @@ export function OrdersTable() {
             fetchAllUsers();
         }
     }, [fetchOrders, fetchAllUsers, allUsers.length]);
-
-    const handleOpenUpdateModal = (order: Order) => {
-        setSelectedOrder(order);
-        setIsUpdateModalOpen(true);
-    };
 
     const handleDeleteOrder = (order: Order) => {
         setOrderToDelete(order);
@@ -143,10 +132,6 @@ export function OrdersTable() {
     const handleNextPage = () => {
         setCurrentPage(prev => Math.min(prev + 1, totalPages));
     };
-    
-    const handleUpdateOrder = async () => {
-        await fetchOrders();
-    }
 
     const SortableHeader = ({ sortKey, label, className }: { sortKey: SortKey, label: string, className?: string }) => (
         <TableHead className={className}>
@@ -276,8 +261,8 @@ export function OrdersTable() {
                                                     <DropdownMenuItem asChild>
                                                         <Link href={`/admin/orders/${order.id}`}>View Details</Link>
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onSelect={() => handleOpenUpdateModal(order)}>
-                                                        Update Payment
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href={`/admin/orders/${order.id}/payment`}>Update Payment</Link>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem asChild>
                                                         <Link href={`/admin/orders/${order.id}/edit`}><Pencil className="mr-2 h-4 w-4" /> Edit Order</Link>
@@ -334,17 +319,7 @@ export function OrdersTable() {
                 </div>
             </CardFooter>
         </Card>
-        
-        {selectedOrder && user && (
-            <UpdatePaymentDialog 
-                isOpen={isUpdateModalOpen}
-                setIsOpen={setIsUpdateModalOpen}
-                order={selectedOrder}
-                onOrderUpdate={handleUpdateOrder}
-                currentUser={user}
-            />
-        )}
-        
+
         <AlertDialog open={!!orderToDelete} onOpenChange={(isOpen) => !isOpen && setOrderToDelete(null)}>
             <AlertDialogContent>
                 <AlertDialogHeader>
