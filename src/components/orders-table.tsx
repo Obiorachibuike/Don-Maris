@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import axios from 'axios';
-import DeletedOrder from '@/models/DeletedOrder';
+import { useUserStore } from '@/store/user-store';
 
 type SortKey = keyof Order | 'balance';
 
@@ -35,6 +35,7 @@ export function OrdersTable() {
     const ordersPerPage = 10;
     const { toast } = useToast();
     const { user } = useSession();
+    const { users: allUsers, fetchUsers: fetchAllUsers } = useUserStore();
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -62,6 +63,9 @@ export function OrdersTable() {
     
     useEffect(() => {
         fetchOrders();
+        if (allUsers.length === 0) {
+            fetchAllUsers();
+        }
     }, []);
 
     const handleOpenUpdateModal = (order: Order) => {
@@ -76,9 +80,7 @@ export function OrdersTable() {
     const confirmDeleteOrder = async () => {
         if (!orderToDelete || !user) return;
         try {
-            await axios.delete(`/api/orders/${orderToDelete.id}`, {
-                data: { deletedBy: user.name } // Pass user name in the body
-            });
+            await axios.delete(`/api/orders/${orderToDelete.id}`);
             toast({ title: 'Order Deleted', description: `Order #${orderToDelete.id} has been moved to the archive.` });
             setAllOrders(prev => prev.filter(o => o.id !== orderToDelete.id));
             setOrderToDelete(null);
@@ -243,6 +245,7 @@ export function OrdersTable() {
                             <TableRow>
                                 <SortableHeader sortKey="id" label="Invoice ID" />
                                 <TableHead>Customer</TableHead>
+                                <TableHead>Placed By</TableHead>
                                 <SortableHeader sortKey="date" label="Date" />
                                 <SortableHeader sortKey="amount" label="Total" className="text-right" />
                                 <SortableHeader sortKey="amountPaid" label="Paid" className="text-right" />
@@ -254,13 +257,14 @@ export function OrdersTable() {
                         <TableBody>
                             {isLoading ? (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="h-24 text-center">
+                                    <TableCell colSpan={9} className="h-24 text-center">
                                         <Loader2 className="mx-auto h-6 w-6 animate-spin" />
                                     </TableCell>
                                 </TableRow>
                             ) : currentOrders.length > 0 ? (
                                 currentOrders.map((order) => {
                                     const balance = order.amount - order.amountPaid;
+                                    const placedBy = allUsers.find(u => u._id === order.createdBy);
                                     return (
                                     <TableRow key={order.id}>
                                         <TableCell className="font-medium">
@@ -269,6 +273,7 @@ export function OrdersTable() {
                                             </Link>
                                         </TableCell>
                                         <TableCell>{order.customer.name}</TableCell>
+                                        <TableCell className="text-muted-foreground text-xs">{placedBy?.email || 'N/A'}</TableCell>
                                         <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
                                         <TableCell className="text-right">₦{order.amount.toLocaleString()}</TableCell>
                                         <TableCell className="text-right text-green-600">₦{order.amountPaid.toLocaleString()}</TableCell>
@@ -309,7 +314,7 @@ export function OrdersTable() {
                                 })
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                                    <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
                                         No orders found for the selected criteria.
                                     </TableCell>
                                 </TableRow>
@@ -379,5 +384,3 @@ export function OrdersTable() {
         </>
     );
 }
-
-    
