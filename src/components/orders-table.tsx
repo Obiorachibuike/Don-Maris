@@ -18,16 +18,15 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from './ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import axios from 'axios';
+import { useOrderStore } from '@/store/order-store';
 import { useUserStore } from '@/store/user-store';
 
 type SortKey = keyof Order | 'balance';
 
 export function OrdersTable() {
-    const [allOrders, setAllOrders] = useState<Order[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { orders: allOrders, isLoading, fetchOrders, deleteOrder } = useOrderStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [sortConfig, setSortConfig] = useState<{ key: SortKey | null; direction: 'ascending' | 'descending' | null }>({ key: 'date', direction: 'descending' });
@@ -40,33 +39,12 @@ export function OrdersTable() {
     const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
-    const fetchOrders = async () => {
-        setIsLoading(true);
-        try {
-            const response = await fetch('/api/orders');
-            if (!response.ok) {
-                throw new Error('Failed to fetch orders');
-            }
-            const data = await response.json();
-            setAllOrders(data);
-        } catch (error) {
-            console.error("Could not fetch orders:", error);
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Could not load orders. Please try again later.'
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    
     useEffect(() => {
         fetchOrders();
         if (allUsers.length === 0) {
             fetchAllUsers();
         }
-    }, []);
+    }, [fetchOrders, fetchAllUsers, allUsers.length]);
 
     const handleOpenUpdateModal = (order: Order) => {
         setSelectedOrder(order);
@@ -78,14 +56,12 @@ export function OrdersTable() {
     };
 
     const confirmDeleteOrder = async () => {
-        if (!orderToDelete || !user) return;
+        if (!orderToDelete) return;
         try {
-            await axios.delete(`/api/orders/${orderToDelete.id}`);
-            toast({ title: 'Order Deleted', description: `Order #${orderToDelete.id} has been moved to the archive.` });
-            setAllOrders(prev => prev.filter(o => o.id !== orderToDelete.id));
+            await deleteOrder(orderToDelete.id);
             setOrderToDelete(null);
         } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not delete order.' });
+            // Error is handled in the store
         }
     }
 
@@ -296,6 +272,10 @@ export function OrdersTable() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href={`/admin/orders/${order.id}`}>View Details</Link>
+                                                    </DropdownMenuItem>
                                                     <DropdownMenuItem onSelect={() => handleOpenUpdateModal(order)}>
                                                         Update Payment
                                                     </DropdownMenuItem>
