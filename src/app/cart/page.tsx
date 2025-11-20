@@ -9,9 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Trash2, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { useMemo } from 'react';
 
 export default function CartPage() {
   const { items, removeItem, updateItemQuantity, clearCart, total } = useCart();
+  const draftInvoiceId = useMemo(() => `DRAFT-${Math.floor(1000 + Math.random() * 9000)}`, []);
 
   if (items.length === 0) {
     return (
@@ -43,7 +45,7 @@ export default function CartPage() {
                 <div className="flex justify-between items-start mb-8">
                     <div>
                         <h2 className="text-2xl font-bold font-headline text-primary">Don Maris Accessories</h2>
-                        <p className="text-muted-foreground">Invoice #{new Date().getTime()}</p>
+                        <p className="text-muted-foreground">Invoice #{draftInvoiceId}</p>
                         <p className="text-muted-foreground">Date: {new Date().toLocaleDateString()}</p>
                     </div>
                     <div className="text-right">
@@ -118,7 +120,7 @@ export default function CartPage() {
                             <span className="font-medium">Calculated at next step</span>
                         </div>
                         <Separator />
-                        <div className="flex justify-between font-bold text-lg">
+                        <div className="flex justify-between font-bold text-xl">
                             <span>Total</span>
                             <span>₦{total.toFixed(2)}</span>
                         </div>
