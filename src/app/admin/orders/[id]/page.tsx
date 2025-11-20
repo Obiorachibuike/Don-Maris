@@ -42,23 +42,24 @@ export default function OrderDetailsPage() {
       fetchProducts();
     }, [fetchProducts]);
 
-    useEffect(() => {
-        async function fetchOrder() {
-            if (orderId) {
-                try {
-                    const response = await fetch(`/api/orders/${orderId}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        setOrder(data);
-                    } else {
-                       setOrder(undefined);
-                    }
-                } catch (error) {
-                    console.error("Failed to fetch order", error);
+    const fetchOrder = async () => {
+        if (orderId) {
+            try {
+                const response = await fetch(`/api/orders/${orderId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setOrder(data);
+                } else {
                     setOrder(undefined);
                 }
+            } catch (error) {
+                console.error("Failed to fetch order", error);
+                setOrder(undefined);
             }
         }
+    };
+
+    useEffect(() => {
         fetchOrder();
     }, [orderId]);
 
@@ -172,6 +173,8 @@ export default function OrderDetailsPage() {
         navigateToInvoice();
         setIsPrintModalOpen(false);
     }
+    
+    const canEditOrder = user?.role === 'admin' || user?.role === 'accountant';
 
     return (
         <>
@@ -182,10 +185,12 @@ export default function OrderDetailsPage() {
                         <p className="text-muted-foreground">Invoice ID: {order.id}</p>
                     </div>
                     <div className='flex items-center gap-4'>
-                         <Button onClick={() => setIsEditModalOpen(true)} variant="outline">
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit Order
-                        </Button>
+                         {canEditOrder && (
+                            <Button onClick={() => setIsEditModalOpen(true)} variant="outline">
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit Order
+                            </Button>
+                         )}
                         <Button onClick={handlePreviewInvoice} variant="outline" disabled={areProductsLoading}>
                             <Printer className="mr-2 h-4 w-4" />
                             Preview Invoice

@@ -1,6 +1,6 @@
 
 import mongoose from 'mongoose';
-import type { Order as OrderType, PrintHistoryEntry } from '@/lib/types';
+import type { Order as OrderType, PrintHistoryEntry, OrderEditHistoryEntry, OrderItem } from '@/lib/types';
 
 // This interface extends the base OrderType to include deletion info
 export interface IDeletedOrder extends OrderType {
@@ -24,6 +24,16 @@ const PrintHistoryEntrySchema = new mongoose.Schema<PrintHistoryEntry>({
     printedBy: { type: String, required: true },
     printedAt: { type: String, required: true },
 }, { _id: false });
+
+const OrderEditHistorySchema = new mongoose.Schema<OrderEditHistoryEntry>({
+    editedBy: { type: String, required: true },
+    editedAt: { type: String, required: true },
+    previousState: {
+        items: [OrderItemSchema],
+        amount: Number,
+    }
+}, { _id: false });
+
 
 const DeletedOrderSchema = new mongoose.Schema<IDeletedOrder>({
   // All fields from the original Order schema
@@ -61,6 +71,7 @@ const DeletedOrderSchema = new mongoose.Schema<IDeletedOrder>({
       opayOrderNo: String,
       flutterwaveTxRef: String,
   },
+  editHistory: { type: [OrderEditHistorySchema], default: [] },
   // New fields for archival
   deletedBy: { type: String, required: true },
   deletedAt: { type: Date, default: Date.now },

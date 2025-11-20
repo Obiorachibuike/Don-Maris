@@ -1,6 +1,6 @@
 
 import mongoose from 'mongoose';
-import type { Order as OrderType, PrintHistoryEntry } from '@/lib/types';
+import type { Order as OrderType, PrintHistoryEntry, OrderEditHistoryEntry, OrderItem } from '@/lib/types';
 
 const OrderItemSchema = new mongoose.Schema({
   productId: { type: String, required: true },
@@ -17,6 +17,15 @@ const CustomerSchema = new mongoose.Schema({
 const PrintHistoryEntrySchema = new mongoose.Schema<PrintHistoryEntry>({
     printedBy: { type: String, required: true },
     printedAt: { type: String, required: true },
+}, { _id: false });
+
+const OrderEditHistorySchema = new mongoose.Schema<OrderEditHistoryEntry>({
+    editedBy: { type: String, required: true },
+    editedAt: { type: String, required: true },
+    previousState: {
+        items: [OrderItemSchema],
+        amount: Number,
+    }
 }, { _id: false });
 
 
@@ -54,7 +63,8 @@ const OrderSchema = new mongoose.Schema<OrderType>({
       opayReference: String,
       opayOrderNo: String,
       flutterwaveTxRef: String,
-  }
+  },
+  editHistory: { type: [OrderEditHistorySchema], default: [] }
 });
 
 export default mongoose.models.Order || mongoose.model<OrderType>('Order', OrderSchema);

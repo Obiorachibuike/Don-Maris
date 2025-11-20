@@ -47,30 +47,53 @@ export async function PUT(
         const loggedInUserId = await getDataFromToken(request);
         const adminUser = loggedInUserId ? await User.findById(loggedInUserId) : null;
 
-        // If payment status is being updated, log it as an admin action
-        if (adminUser && (updatedData.paymentStatus || updatedData.amountPaid !== undefined)) {
-            const originalOrder = await OrderModel.findOne({ id: id }).lean();
-            if (originalOrder) {
-                const changes = [];
-                if (updatedData.paymentStatus && updatedData.paymentStatus !== originalOrder.paymentStatus) {
-                    changes.push(`Payment status from "${originalOrder.paymentStatus}" to "${updatedData.paymentStatus}"`);
-                }
-                 if (updatedData.amountPaid !== undefined && updatedData.amountPaid !== originalOrder.amountPaid) {
-                    changes.push(`Amount paid from "₦${originalOrder.amountPaid}" to "₦${updatedData.amountPaid}"`);
-                }
+        if (!adminUser) {
+             return NextResponse.json({ error: "Not authenticated or user not found." }, { status: 401 });
+        }
+        
+        const originalOrder = await OrderModel.findOne({ id: id }).lean();
+        if (!originalOrder) {
+            return new NextResponse('Order not found', { status: 404 });
+        }
 
-                if(changes.length > 0) {
-                    await AdminLog.create({
-                        adminId: loggedInUserId,
-                        adminName: adminUser.name,
-                        action: 'UPDATE_PAYMENT',
-                        targetType: 'Order',
-                        targetId: originalOrder.id,
-                        targetName: `Order for ${originalOrder.customer.name}`,
-                        details: `Updated payment for Order #${id}: ${changes.join(', ')}.`
-                    });
-                }
-            }
+        // Logic for logging changes and creating history
+        const changes: string[] = [];
+        let logAction = 'UPDATE_PAYMENT';
+        
+        // Check if items or amount are being updated
+        if (updatedData.items || updatedData.amount) {
+            logAction = 'UPDATE_ORDER'; // A more general update action
+            const editHistoryEntry = {
+                editedBy: adminUser.name,
+                editedAt: new Date().toISOString(),
+                previousState: {
+                    items: originalOrder.items,
+                    amount: originalOrder.amount,
+                },
+            };
+            // Add the history entry to the update payload
+            updatedData.editHistory = [...(originalOrder.editHistory || []), editHistoryEntry];
+            changes.push('Order items/amount modified');
+        }
+
+        // Check for payment status changes
+        if (updatedData.paymentStatus && updatedData.paymentStatus !== originalOrder.paymentStatus) {
+            changes.push(`Payment status from "${originalOrder.paymentStatus}" to "${updatedData.paymentStatus}"`);
+        }
+        if (updatedData.amountPaid !== undefined && updatedData.amountPaid !== originalOrder.amountPaid) {
+            changes.push(`Amount paid from "₦${originalOrder.amountPaid}" to "₦${updatedData.amountPaid}"`);
+        }
+        
+        if (changes.length > 0) {
+            await AdminLog.create({
+                adminId: loggedInUserId,
+                adminName: adminUser.name,
+                action: logAction,
+                targetType: 'Order',
+                targetId: originalOrder.id,
+                targetName: `Order for ${originalOrder.customer.name}`,
+                details: `Updated order #${id}: ${changes.join(', ')}.`
+            });
         }
 
         const updatedOrder = await OrderModel.findOneAndUpdate(
@@ -80,7 +103,8 @@ export async function PUT(
         ).lean();
         
         if (!updatedOrder) {
-            return new NextResponse('Order not found', { status: 404 });
+            // This should not happen if originalOrder was found
+            return new NextResponse('Order not found during update', { status: 404 });
         }
 
         return NextResponse.json(JSON.parse(JSON.stringify(updatedOrder)));

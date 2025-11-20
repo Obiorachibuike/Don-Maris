@@ -1,5 +1,4 @@
 
-
 export type ProductType = 'Power Flex' | 'Charging Flex' | 'Screen' | 'Backglass' | 'Glass' | 'Tools' | 'Machine' | 'Touch Pad';
 
 export type Review = {
@@ -98,6 +97,15 @@ export interface PrintHistoryEntry {
   printedAt: string;
 }
 
+export interface OrderEditHistoryEntry {
+  editedBy: string;
+  editedAt: string;
+  previousState: {
+    items: OrderItem[];
+    amount: number;
+  };
+}
+
 export interface Order {
   id: string;
   customer: Customer;
@@ -117,6 +125,7 @@ export interface Order {
     opayOrderNo?: string;
     flutterwaveTxRef?: string;
   };
+  editHistory?: OrderEditHistoryEntry[];
 }
 
 export interface Brand {
