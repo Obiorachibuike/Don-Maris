@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import type { Order, OrderPaymentStatus } from '@/lib/types';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Loader2, ArrowUpDown, Calendar as CalendarIcon, MoreHorizontal, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, ArrowUpDown, Calendar as CalendarIcon, MoreHorizontal, Trash2, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSession } from '@/contexts/SessionProvider';
 import { UpdatePaymentDialog } from '@/components/update-payment-dialog';
@@ -290,6 +290,9 @@ export function OrdersTable() {
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuItem onSelect={() => handleOpenUpdateModal(order)}>
                                                         Update Payment
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href={`/admin/orders/${order.id}/edit`}><Pencil className="mr-2 h-4 w-4" /> Edit Order</Link>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem className="text-destructive" onSelect={() => handleDeleteOrder(order)}>

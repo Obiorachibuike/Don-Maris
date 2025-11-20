@@ -3,11 +3,16 @@ import { connectDB } from '@/lib/mongodb';
 import { NextResponse } from 'next/server';
 import AdminLog from '@/models/AdminLog';
 import OrderModel from '@/models/Order';
-import DeletedOrderModel from '@/models/DeletedOrder';
 import User from '@/models/User';
+import { dummyOrders } from '@/lib/dummy-orders';
 import type { Order } from '@/lib/types';
 import { getDataFromToken } from '@/lib/get-data-from-token';
 import type { NextRequest } from 'next/server';
+
+// Fallback function in case DB fails
+function getDummyOrderById(id: string): Order | undefined {
+    return dummyOrders.find(o => o.id === id);
+}
 
 export async function GET(
     request: Request,
@@ -112,74 +117,5 @@ export async function PUT(
     } catch (error: any) {
         console.error(`Failed to update order ${id}:`, error);
         return NextResponse.json({ error: `Failed to update order: ${error.message}` }, { status: 500 });
-    }
-}
-
-export async function DELETE(
-    request: NextRequest,
-    { params }: { params: { id: string } }
-) {
-    const { id } = params;
-    try {
-        await connectDB();
-    } catch (dbError: any) {
-        console.error(`Database connection failed for deleting order ${id}:`, dbError);
-        return NextResponse.json({ error: "Could not connect to the database.", details: dbError.message }, { status: 500 });
-    }
-    
-    try {
-        const loggedInUserId = await getDataFromToken(request);
-        if (!loggedInUserId) {
-            return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
-        }
-        
-        const adminUser = await User.findById(loggedInUserId);
-        if (!adminUser || !['admin', 'accountant'].includes(adminUser.role)) {
-            return NextResponse.json({ error: "Not authorized." }, { status: 403 });
-        }
-
-        const orderToDelete = await OrderModel.findOne({ id: id }).lean();
-        if (!orderToDelete) {
-            return new NextResponse('Order not found', { status: 404 });
-        }
-
-        // Create an archived copy in the DeletedOrder collection
-        await new DeletedOrderModel({
-            ...orderToDelete,
-            deletedBy: adminUser.name,
-            deletedAt: new Date(),
-        }).save();
-
-
-        // Revert ledger balance change if order was not fully paid
-        if (orderToDelete.paymentStatus !== 'Paid') {
-            const balanceToRevert = orderToDelete.amount - orderToDelete.amountPaid;
-             if (balanceToRevert > 0) {
-                await User.findOneAndUpdate({ id: orderToDelete.customer.id }, {
-                    $inc: {
-                        ledgerBalance: -balanceToRevert,
-                        lifetimeValue: -balanceToRevert, // Also adjust lifetime value
-                    }
-                });
-             }
-        }
-        
-        // Now, permanently delete the order from the active collection
-        await OrderModel.deleteOne({ id: id });
-
-        await AdminLog.create({
-            adminId: loggedInUserId,
-            adminName: adminUser.name,
-            action: 'DELETE_ORDER',
-            targetType: 'Order',
-            targetId: orderToDelete.id,
-            targetName: `Order for ${orderToDelete.customer.name}`,
-            details: `Deleted and archived order #${id}.`,
-        });
-
-        return new NextResponse(null, { status: 204 }); // No Content
-    } catch (error: any) {
-        console.error(`Failed to delete order ${id}:`, error);
-        return NextResponse.json({ error: `Failed to delete order: ${error.message}` }, { status: 500 });
     }
 }
