@@ -9,50 +9,30 @@ import { Mail, Calendar, ShoppingBag, Loader2, DollarSign, Pencil } from 'lucide
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Link from 'next/link';
 import { useUserStore } from '@/store/user-store';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Order } from '@/lib/types';
 import { useSession } from '@/contexts/SessionProvider';
 import { Button } from '@/components/ui/button';
 import { EditUserForm } from '@/components/edit-user-form';
+import { useOrderStore } from '@/store/order-store';
 
 export default function UserDetailsPage() {
     const params = useParams();
     const userId = params.id as string;
     const { user: currentUser } = useSession();
-    const { users, fetchUsers, isLoading: areUsersLoading } = useUserStore();
-    const [userOrders, setUserOrders] = useState<Order[]>([]);
-    const [areOrdersLoading, setAreOrdersLoading] = useState(true);
+    const { users, isLoading: areUsersLoading } = useUserStore();
+    const { orders: allOrders, isLoading: areOrdersLoading } = useOrderStore();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-    const user = users.find(u => u._id === userId);
+    const user = useMemo(() => users.find(u => u._id === userId), [users, userId]);
     
-    useEffect(() => {
-        if (users.length === 0) {
-            fetchUsers();
+    const userOrders = useMemo(() => {
+        if (user && user.role === 'customer' && allOrders) {
+            return allOrders.filter(order => order.customer.id === user.id);
         }
-    }, [users, fetchUsers]);
-
-     useEffect(() => {
-        if (user && user.role === 'customer') {
-            const fetchOrders = async () => {
-                setAreOrdersLoading(true);
-                try {
-                    const response = await fetch(`/api/orders?customerId=${user.id}`);
-                    if (response.ok) {
-                        setUserOrders(await response.json());
-                    }
-                } catch (error) {
-                    console.error("Failed to fetch user orders", error);
-                } finally {
-                    setAreOrdersLoading(false);
-                }
-            };
-            fetchOrders();
-        } else {
-            setAreOrdersLoading(false);
-        }
-    }, [user]);
+        return [];
+    }, [user, allOrders]);
     
     const canEdit = currentUser && (currentUser.role === 'admin' || currentUser.role === 'accountant' || currentUser._id === userId);
 

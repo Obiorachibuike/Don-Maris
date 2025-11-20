@@ -17,13 +17,13 @@ import { useRouter } from 'next/navigation';
 import { useProductStore } from '@/store/product-store';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { submitOrder } from '@/lib/client-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSession } from '@/contexts/SessionProvider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OrdersPlaced } from '@/components/orders-placed';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useUserStore } from '@/store/user-store';
+import { useOrderStore } from '@/store/order-store';
 
 
 interface SupplyItem {
@@ -56,7 +56,7 @@ function formatAddress(user: User): string {
 
 function CreateInvoiceTab() {
     const [supplyItems, setSupplyItems] = useState<SupplyItem[]>([]);
-    const { users: allUsers, fetchUsers } = useUserStore();
+    const { users: allUsers, updateUser } = useUserStore();
     const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
     const [productPopoverOpen, setProductPopoverOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
@@ -72,15 +72,11 @@ function CreateInvoiceTab() {
     const [isPurchasing, setIsPurchasing] = useState(false);
     const [isPurchaseConfirmOpen, setIsPurchaseConfirmOpen] = useState(false);
 
-    const { products, fetchProducts, updateStock } = useProductStore();
+    const { products, updateStock } = useProductStore();
+    const { addOrder } = useOrderStore();
     const { user, isLoading: isUserLoading } = useSession();
     const { toast } = useToast();
     const router = useRouter();
-
-    useEffect(() => {
-        if(allUsers.length === 0) fetchUsers();
-        if (products.length === 0) fetchProducts();
-    }, [products.length, fetchProducts, allUsers.length, fetchUsers]);
 
     useEffect(() => {
         try {
@@ -157,23 +153,10 @@ function CreateInvoiceTab() {
         const zip = stateZip[1] || '';
     
         try {
-            const response = await fetch(`/api/users/${selectedCustomer._id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ address: street, city, state, zip }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to update address');
-            }
-            
+            await updateUser(selectedCustomer._id, { address: street, city, state, zip });
             toast({ title: "Address Saved", description: "Customer's address has been updated." });
-            // Optionally refetch users to update the local store
-            fetchUsers();
-        } catch (error: any) {
-            console.error("Could not update customer address:", error);
-            toast({ variant: 'destructive', title: "Save Failed", description: error.message || "Could not save your address." });
+        } catch (error) {
+            // Error handled in store
         } finally {
             setIsSavingAddress(false);
         }
@@ -353,9 +336,9 @@ function CreateInvoiceTab() {
                 createdBy: user._id
             };
 
-            const result = await submitOrder(orderDetails);
+            const newOrder = await addOrder(orderDetails);
             
-            if (result.status === 'success' || result.id) {
+            if (newOrder) {
                 for (const item of cartItems) {
                     await updateStock(item.product.id, item.quantity, user?.name || 'Sourcing Dept.');
                 }
@@ -703,5 +686,3 @@ export default function SourcingPage() {
         </Tabs>
     )
 }
-
-    

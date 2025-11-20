@@ -20,11 +20,12 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Printer, Pencil } from 'lucide-react';
 import type { CartItem, Order } from '@/lib/types';
-import { useState, useEffect } from 'react';
-import { EditOrderForm } from '@/components/edit-order-form';
+import { useState, useEffect, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PrintConfirmationDialog } from '@/components/print-confirmation-dialog';
 import { useSession } from '@/contexts/SessionProvider';
+import { useOrderStore } from '@/store/order-store';
+import { useToast } from '@/hooks/use-toast';
 
 export default function OrderDetailsPage() {
     const params = useParams();
@@ -32,67 +33,15 @@ export default function OrderDetailsPage() {
     const { user } = useSession();
     const orderId = params.id as string;
     
-    const [order, setOrder] = useState<Order | null | undefined>(null);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const { toast } = useToast();
+    const { getOrderById, isLoading: isOrderLoading } = useOrderStore();
+    const { products, isLoading: areProductsLoading } = useProductStore();
+
     const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
-    const { products, fetchProducts, isLoading: areProductsLoading } = useProductStore();
+    const order = useMemo(() => getOrderById(orderId), [getOrderById, orderId]);
     
-    useEffect(() => {
-      fetchProducts();
-    }, [fetchProducts]);
-
-    const fetchOrder = async () => {
-        if (orderId) {
-            try {
-                const response = await fetch(`/api/orders/${orderId}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setOrder(data);
-                } else {
-                    setOrder(undefined);
-                }
-            } catch (error) {
-                console.error("Failed to fetch order", error);
-                setOrder(undefined);
-            }
-        }
-    };
-
-    useEffect(() => {
-        fetchOrder();
-    }, [orderId]);
-
-    const handleOrderUpdate = async (updatedData: Partial<Order>) => {
-        if (!order) return;
-        try {
-            const response = await fetch(`/api/orders/${order.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedData),
-            });
-            if (!response.ok) throw new Error('Failed to update order');
-            const newOrder = await response.json();
-            setOrder(newOrder);
-        } catch (error) {
-            console.error("Failed to update order", error);
-        }
-    };
-    
-    if (order === undefined) {
-        return (
-            <Card>
-                <CardHeader>
-                    <CardTitle>Order Not Found</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p>The requested order could not be found.</p>
-                </CardContent>
-            </Card>
-        )
-    }
-
-    if (!order) {
+    if (isOrderLoading) {
          return (
             <div className="space-y-6">
                 <Skeleton className="h-8 w-1/4" />
@@ -115,6 +64,19 @@ export default function OrderDetailsPage() {
                  </div>
             </div>
          )
+    }
+
+    if (!order) {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Order Not Found</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p>The requested order could not be found.</p>
+                </CardContent>
+            </Card>
+        )
     }
 
     const orderItems = order.items.map(item => {
@@ -186,9 +148,11 @@ export default function OrderDetailsPage() {
                     </div>
                     <div className='flex items-center gap-4'>
                          {canEditOrder && (
-                            <Button onClick={() => setIsEditModalOpen(true)} variant="outline">
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Edit Order
+                            <Button asChild variant="outline">
+                                <Link href={`/admin/orders/${orderId}/edit`}>
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Edit Order
+                                </Link>
                             </Button>
                          )}
                         <Button onClick={handlePreviewInvoice} variant="outline" disabled={areProductsLoading}>
@@ -299,14 +263,6 @@ export default function OrderDetailsPage() {
                     </div>
                 </div>
             </div>
-            {isEditModalOpen && (
-                <EditOrderForm
-                    isOpen={isEditModalOpen}
-                    setIsOpen={setIsEditModalOpen}
-                    order={order}
-                    onOrderUpdate={handleOrderUpdate}
-                />
-            )}
              <PrintConfirmationDialog
                 isOpen={isPrintModalOpen}
                 setIsOpen={setIsPrintModalOpen}

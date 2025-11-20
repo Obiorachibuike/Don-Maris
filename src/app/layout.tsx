@@ -12,6 +12,8 @@ import { UserStoreInitializer } from '@/store/user-store-initializer';
 import { ThemeProvider } from '@/components/theme-provider';
 import { SplashProvider, useSplash } from '@/contexts/SplashProvider';
 import { SplashScreen } from '@/components/splash-screen';
+import { OrderStoreInitializer } from '@/store/order-store-initializer';
+import { BrandStoreInitializer } from '@/store/brand-store-initializer';
 
 function AppContent({ children }: { children: React.ReactNode }) {
   const { isSplashFinished } = useSplash();
@@ -57,6 +59,8 @@ export default function RootLayout({
               <CartProvider>
                 <ProductStoreInitializer />
                 <UserStoreInitializer />
+                <OrderStoreInitializer />
+                <BrandStoreInitializer />
                 <AppContent>{children}</AppContent>
               </CartProvider>
             </SessionProvider>

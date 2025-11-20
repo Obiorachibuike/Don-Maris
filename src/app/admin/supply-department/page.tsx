@@ -14,12 +14,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useProductStore } from '@/store/product-store';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@/contexts/SessionProvider';
+import { useOrderStore } from '@/store/order-store';
 
 type SortKey = keyof Order | 'balance';
 
 export default function SupplyDepartmentPage() {
-    const [allOrders, setAllOrders] = useState<Order[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { orders: allOrders, isLoading } = useOrderStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [sortConfig, setSortConfig] = useState<{ key: SortKey | null; direction: 'ascending' | 'descending' | null }>({ key: 'date', direction: 'descending' });
@@ -28,35 +28,7 @@ export default function SupplyDepartmentPage() {
     const router = useRouter();
     const { user } = useSession();
 
-    const { products, fetchProducts, isLoading: areProductsLoading } = useProductStore();
-
-    useEffect(() => {
-      fetchProducts();
-    }, [fetchProducts]);
-
-    useEffect(() => {
-        const fetchOrders = async () => {
-            setIsLoading(true);
-            try {
-                const response = await fetch('/api/orders');
-                if (!response.ok) {
-                    throw new Error('Failed to fetch orders');
-                }
-                const data = await response.json();
-                setAllOrders(data);
-            } catch (error) {
-                console.error("Could not fetch orders:", error);
-                toast({
-                    variant: 'destructive',
-                    title: 'Error',
-                    description: 'Could not load orders. Please try again later.'
-                });
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchOrders();
-    }, [toast]);
+    const { products, isLoading: areProductsLoading } = useProductStore();
 
     const supplyOrders = useMemo(() => allOrders.filter(order => order.status === 'Processing' || order.status === 'Pending'), [allOrders]);
 

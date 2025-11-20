@@ -19,12 +19,13 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { CreditCard, Loader2 } from 'lucide-react';
 import type { Order } from '@/lib/types';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/contexts/SessionProvider';
 import { useProductStore } from '@/store/product-store';
 import { useToast } from '@/hooks/use-toast';
 import axios from 'axios';
+import { useOrderStore } from '@/store/order-store';
 
 export default function OrderDetailsPage() {
     const params = useParams();
@@ -33,48 +34,24 @@ export default function OrderDetailsPage() {
     const { toast } = useToast();
     const orderId = params.id as string;
     
-    const [order, setOrder] = useState<Order | null | undefined>(null);
     const [isPaying, setIsPaying] = useState(false);
 
-    const { products, fetchProducts, isLoading: areProductsLoading } = useProductStore();
+    const { products, isLoading: areProductsLoading } = useProductStore();
+    const { getOrderById, isLoading: isOrderLoading } = useOrderStore();
     
-    useEffect(() => {
-      if (products.length === 0) fetchProducts();
-    }, [fetchProducts, products.length]);
+    const order = useMemo(() => getOrderById(orderId), [getOrderById, orderId]);
 
     useEffect(() => {
-        async function fetchOrder() {
-            if (orderId) {
-                try {
-                    const response = await fetch(`/api/orders/${orderId}`);
-                    if (!response.ok) throw new Error("Order not found or not authorized.");
-                    
-                    const data = await response.json();
-                    
-                    // Security check: ensure the user owns this order
-                    if (user && user.role === 'customer' && data.customer.id !== user.id) {
-                         toast({ variant: 'destructive', title: 'Access Denied', description: 'You are not authorized to view this order.' });
-                         router.push('/profile');
-                         return;
-                    }
-                    setOrder(data);
-
-                } catch (error) {
-                    console.error("Failed to fetch order", error);
-                    toast({ variant: 'destructive', title: 'Error', description: 'Could not retrieve order details.' });
-                    router.push('/profile');
-                }
-            }
-        }
-
-        // Only fetch if user is loaded
-        if (!isUserLoading && user) {
-            fetchOrder();
-        } else if (!isUserLoading && !user) {
-            // If not logged in, redirect
+        if (!isUserLoading && !user) {
             router.push('/login');
         }
-    }, [orderId, isUserLoading, user, router, toast]);
+        if (!isUserLoading && user && order) {
+            if (user.role === 'customer' && order.customer.id !== user.id) {
+                 toast({ variant: 'destructive', title: 'Access Denied', description: 'You are not authorized to view this order.' });
+                 router.push('/profile');
+            }
+        }
+    }, [isUserLoading, user, order, router, toast]);
 
     const handlePayNow = async (orderToPay: Order) => {
         if (!user) return;
@@ -102,7 +79,7 @@ export default function OrderDetailsPage() {
         }
     };
 
-    if (isUserLoading || order === null) {
+    if (isUserLoading || isOrderLoading || areProductsLoading) {
          return (
             <div className="container mx-auto px-4 py-8 space-y-6">
                 <Skeleton className="h-8 w-1/4" />
@@ -126,7 +103,7 @@ export default function OrderDetailsPage() {
          )
     }
 
-    if (order === undefined) {
+    if (!order) {
         return (
              <div className="container mx-auto px-4 py-8">
                 <Card>

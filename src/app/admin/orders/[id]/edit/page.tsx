@@ -15,10 +15,10 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import axios from 'axios';
 import Link from 'next/link';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandInput, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
+import { useOrderStore } from '@/store/order-store';
 
 
 type EditableOrderItem = OrderItem & { product: Product };
@@ -28,44 +28,26 @@ export default function EditOrderPage() {
     const router = useRouter();
     const orderId = params.id as string;
 
-    const { products, fetchProducts, isLoading: areProductsLoading } = useProductStore();
-    const [originalOrder, setOriginalOrder] = useState<Order | null>(null);
+    const { products, isLoading: areProductsLoading } = useProductStore();
+    const { getOrderById, updateOrder, isLoading: isOrderLoading } = useOrderStore();
+    
+    const originalOrder = useMemo(() => getOrderById(orderId), [getOrderById, orderId]);
+
     const [editableItems, setEditableItems] = useState<EditableOrderItem[]>([]);
     const [productToAdd, setProductToAdd] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
-    const [isLoadingOrder, setIsLoadingOrder] = useState(true);
     const [isProductPopoverOpen, setIsProductPopoverOpen] = useState(false);
     const { toast } = useToast();
     
     useEffect(() => {
-        fetchProducts();
-    }, [fetchProducts]);
-
-    useEffect(() => {
-        async function loadOrder() {
-            try {
-                const response = await axios.get(`/api/orders/${orderId}`);
-                const orderData: Order = response.data;
-                setOriginalOrder(orderData);
-                
-                const itemsWithProductData = orderData.items.map(item => {
-                    const product = products.find(p => p.id === item.productId);
-                    return { ...item, product: product! };
-                }).filter(item => item.product);
-
-                setEditableItems(itemsWithProductData);
-            } catch (error) {
-                toast({ variant: 'destructive', title: 'Error', description: 'Failed to load order data.' });
-                setOriginalOrder(null);
-            } finally {
-                setIsLoadingOrder(false);
-            }
+        if (originalOrder && products.length > 0) {
+            const itemsWithProductData = originalOrder.items.map(item => {
+                const product = products.find(p => p.id === item.productId);
+                return { ...item, product: product! };
+            }).filter(item => item.product);
+            setEditableItems(itemsWithProductData);
         }
-
-        if (orderId && products.length > 0) {
-            loadOrder();
-        }
-    }, [orderId, products, toast]);
+    }, [originalOrder, products]);
 
     const handleQuantityChange = useCallback((productId: string, newQuantity: number) => {
         const quantity = isNaN(newQuantity) ? 0 : newQuantity;
@@ -129,24 +111,20 @@ export default function EditOrderPage() {
         };
         
         try {
-            await axios.put(`/api/orders/${originalOrder.id}`, updatedData);
+            await updateOrder(originalOrder.id, updatedData);
             toast({
                 title: "Order Updated",
                 description: `Order #${originalOrder.id} has been successfully updated.`,
             });
             router.push(`/admin/orders/${originalOrder.id}`);
         } catch (error) {
-            toast({
-                variant: 'destructive',
-                title: "Update Failed",
-                description: "Could not save order changes.",
-            });
+            // Toast is handled by the store
         } finally {
             setIsSaving(false);
         }
     };
 
-    if (isLoadingOrder || areProductsLoading) {
+    if (isOrderLoading || areProductsLoading) {
         return (
             <div className="container mx-auto px-4 py-8 space-y-6">
                 <Skeleton className="h-10 w-1/3" />

@@ -16,11 +16,12 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import axios from 'axios';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useOrderStore } from '@/store/order-store';
 
 
 export default function ProfilePage() {
     const { user, isLoading, refetchUser } = useSession();
-    const [userOrders, setUserOrders] = useState<Order[]>([]);
+    const { orders: allOrders, isLoading: areOrdersLoading } = useOrderStore();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isPaying, setIsPaying] = useState<string | null>(null);
     const router = useRouter();
@@ -30,20 +31,14 @@ export default function ProfilePage() {
         if (!isLoading && !user) {
             router.push('/login');
         }
-        if (user && user.role === 'customer') {
-            const fetchOrders = async () => {
-                 try {
-                    const response = await fetch(`/api/orders?customerId=${user.id}`);
-                    if (response.ok) {
-                        setUserOrders(await response.json());
-                    }
-                } catch (error) {
-                    console.error("Failed to fetch user orders", error);
-                }
-            };
-            fetchOrders();
-        }
     }, [user, isLoading, router]);
+
+    const userOrders = useMemo(() => {
+        if (user && user.role === 'customer' && allOrders) {
+            return allOrders.filter(order => order.customer.id === user.id);
+        }
+        return [];
+    }, [user, allOrders]);
     
     const handlePayNow = async (order: Order) => {
         if (!user) return;
@@ -71,7 +66,7 @@ export default function ProfilePage() {
         }
     };
 
-    if (isLoading || !user) {
+    if (isLoading || !user || areOrdersLoading) {
         return (
             <div className="container mx-auto flex min-h-[80vh] items-center justify-center">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />

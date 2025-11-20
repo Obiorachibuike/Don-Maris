@@ -15,13 +15,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { useEffect, useState, useMemo } from 'react';
-import { getProductById } from '@/lib/client-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { format, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart";
+import { useProductStore } from '@/store/product-store';
+import { useOrderStore } from '@/store/order-store';
 
 interface PurchaseHistoryEntry {
     orderId: string;
@@ -71,49 +72,37 @@ const aggregateSalesData = (history: PurchaseHistoryEntry[], range: SalesTimeRan
 export default function AdminProductDetailsPage() {
     const params = useParams();
     const productId = params.id as string;
-    const [product, setProduct] = useState<Product | null | undefined>(null);
+    
+    const { getProductById, isLoading: isProductLoading } = useProductStore();
+    const { orders, isLoading: areOrdersLoading } = useOrderStore();
+
     const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistoryEntry[]>([]);
     const [salesTimeRange, setSalesTimeRange] = useState<SalesTimeRange>('monthly');
 
+    const product = useMemo(() => getProductById(productId), [getProductById, productId]);
     const salesChartData = useMemo(() => aggregateSalesData(purchaseHistory, salesTimeRange), [purchaseHistory, salesTimeRange]);
 
     useEffect(() => {
-        async function loadProductData() {
-            const fetchedProduct = await getProductById(productId);
-            setProduct(fetchedProduct);
-            
-            const ordersRes = await fetch('/api/orders');
-            if (ordersRes.ok) {
-                const orders: Order[] = await ordersRes.json();
-
-                const history: PurchaseHistoryEntry[] = [];
-                orders.forEach(order => {
-                    const item = order.items.find(i => i.productId === productId);
-                    if (item) {
-                        history.push({
-                            orderId: order.id,
-                            customer: order.customer,
-                            date: order.date,
-                            quantity: item.quantity,
-                            pricePerUnit: fetchedProduct?.price || 0,
-                        });
-                    }
-                });
-                setPurchaseHistory(history.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-            }
+        if (product && orders.length > 0) {
+            const history: PurchaseHistoryEntry[] = [];
+            orders.forEach(order => {
+                const item = order.items.find(i => i.productId === productId);
+                if (item) {
+                    history.push({
+                        orderId: order.id,
+                        customer: order.customer,
+                        date: order.date,
+                        quantity: item.quantity,
+                        pricePerUnit: product?.price || 0,
+                    });
+                }
+            });
+            setPurchaseHistory(history.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
         }
-        
-        if(productId) {
-            loadProductData();
-        }
-    }, [productId]);
+    }, [product, orders, productId]);
 
 
-    if (product === undefined) {
-        notFound();
-    }
-
-    if (product === null) {
+    if (isProductLoading || areOrdersLoading) {
         return (
              <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -130,6 +119,10 @@ export default function AdminProductDetailsPage() {
                 </div>
             </div>
         )
+    }
+
+    if (!product) {
+        notFound();
     }
 
     const totalUnitsSold = purchaseHistory.reduce((sum, item) => sum + item.quantity, 0);
