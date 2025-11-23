@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Banknote, CreditCard, Copy, Forward } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { submitOrder } from '@/lib/client-data';
-import type { PaymentStatus, CartItem, Order } from '@/lib/types';
+import type { OrderPaymentStatus, CartItem, Order } from '@/lib/types';
 import axios, { AxiosError } from 'axios';
 import { useProductStore } from '@/store/product-store';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -68,7 +68,7 @@ export default function PaymentPage() {
         }
     }, [router]);
 
-    const handleFinalizeOrder = async (paymentMethod: 'Bank Transfer' | 'Pay on Delivery' | 'OPay' | 'PalmPay' | 'Card'): Promise<string | null> => {
+    const handleFinalizeOrder = async (paymentMethod: 'Bank Transfer' | 'Pay on Delivery' | 'OPay' | 'PalmPay' | 'Card', paymentStatus: OrderPaymentStatus): Promise<string | null> => {
         if (!shippingDetails) {
             toast({ variant: 'destructive', title: "Error", description: "Shipping details are missing. Please go back to checkout." });
             return null;
@@ -90,7 +90,7 @@ export default function PaymentPage() {
             paymentMethod,
             items: shippingDetails.items.map(item => ({ productId: item.id, quantity: item.quantity })),
             deliveryMethod: 'Waybill',
-            paymentStatus: 'Pending',
+            paymentStatus,
             amountPaid: 0,
             createdBy: user?._id
         };
@@ -123,7 +123,7 @@ export default function PaymentPage() {
             return;
         }
 
-        const orderId = await handleFinalizeOrder('Card');
+        const orderId = await handleFinalizeOrder('Card', 'Pending');
         if (!orderId) {
             setIsCardLoading(false);
             return;
@@ -210,7 +210,7 @@ export default function PaymentPage() {
         if (!shippingDetails) return;
         setIsOpayLoading(true);
 
-        const orderId = await handleFinalizeOrder('OPay');
+        const orderId = await handleFinalizeOrder('OPay', 'Pending');
         if (!orderId) {
             setIsOpayLoading(false);
             return;
@@ -245,7 +245,7 @@ export default function PaymentPage() {
     };
     
     const onConfirmBankPayment = async () => {
-        const orderId = await handleFinalizeOrder('Bank Transfer');
+        const orderId = await handleFinalizeOrder('Bank Transfer', 'Pending');
         if (orderId && shippingDetails) {
             const orderDate = new Date();
              const invoiceData = {
@@ -261,7 +261,7 @@ export default function PaymentPage() {
                     state: shippingDetails.customer.state,
                     zip: shippingDetails.customer.zip,
                 },
-                paymentStatus: 'unpaid' as PaymentStatus,
+                paymentStatus: 'unpaid' as OrderPaymentStatus,
             };
             sessionStorage.setItem('don_maris_order', JSON.stringify(invoiceData));
             toast({
@@ -284,7 +284,7 @@ export default function PaymentPage() {
         }
         setIsPayLaterLoading(true);
 
-        const orderId = await handleFinalizeOrder('Pay on Delivery');
+        const orderId = await handleFinalizeOrder('Pay on Delivery', 'Not Paid');
         
         if (orderId) {
             const orderDate = new Date();
@@ -301,7 +301,7 @@ export default function PaymentPage() {
                     state: shippingDetails.customer.state,
                     zip: shippingDetails.customer.zip,
                 },
-                paymentStatus: 'unpaid' as PaymentStatus,
+                paymentStatus: 'unpaid' as OrderPaymentStatus,
             };
 
             sessionStorage.setItem('don_maris_order', JSON.stringify(invoiceData));
