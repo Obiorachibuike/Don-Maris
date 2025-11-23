@@ -17,7 +17,6 @@ import { ProductChat } from '@/components/product-chat';
 import type { Product, Review } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatProductType } from '@/lib/display-utils';
-import { getProductById } from '@/lib/client-data';
 import { cn } from '@/lib/utils';
 import { WhatsAppInquiryModal } from '@/components/whatsapp-inquiry-modal';
 import { useSession } from '@/contexts/SessionProvider';
@@ -28,6 +27,7 @@ import { z } from 'zod';
 import axios from 'axios';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useProductStore } from '@/store/product-store';
 
 const reviewSchema = z.object({
   rating: z.number().min(1, 'Please select a rating.'),
@@ -39,13 +39,15 @@ type ReviewFormValues = z.infer<typeof reviewSchema>;
 export default function ProductPage() {
   const params = useParams();
   const productId = params.id as string;
+  const { products, isLoading: areProductsLoading } = useProductStore();
   const { addItem } = useCart();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
-  const [product, setProduct] = useState<Product | null | undefined>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user } = useSession();
+
+  const product = products.find(p => p.id === productId);
 
   const form = useForm<ReviewFormValues>({
     resolver: zodResolver(reviewSchema),
@@ -54,16 +56,6 @@ export default function ProductPage() {
         comment: '',
     },
   });
-
-  useEffect(() => {
-    async function loadProduct() {
-      const fetchedProduct = await getProductById(productId);
-      setProduct(fetchedProduct);
-    }
-    if (productId) {
-      loadProduct();
-    }
-  }, [productId]);
   
   const handleAddToCart = () => {
     if (product) {
@@ -80,7 +72,8 @@ export default function ProductPage() {
     try {
       const response = await axios.post(`/api/products/${product.id}/reviews`, data);
       const updatedProduct: Product = response.data;
-      setProduct(updatedProduct);
+      // The store should update itself, but we can trigger a refetch if needed
+      // For now, we assume the component re-renders from store update
       form.reset();
       toast({
         title: 'Review Submitted',
@@ -96,11 +89,7 @@ export default function ProductPage() {
     }
   };
 
-  if (product === undefined) {
-    notFound();
-  }
-  
-  if (!product) {
+  if (areProductsLoading) {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
@@ -123,6 +112,10 @@ export default function ProductPage() {
             </div>
         </div>
     );
+  }
+
+  if (!product) {
+    notFound();
   }
 
   const sortedReviews = product.reviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -283,6 +276,7 @@ export default function ProductPage() {
         isOpen={isModalOpen}
         setIsOpen={setIsModalOpen}
         product={product}
+        countryCode={user?.countryCode}
       />
     <ProductChat productId={product.id} productName={product.name} />
     </>

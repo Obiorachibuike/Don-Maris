@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -40,18 +40,27 @@ interface WhatsAppInquiryModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   product: Product;
+  countryCode?: string;
 }
 
-export function WhatsAppInquiryModal({ isOpen, setIsOpen, product }: WhatsAppInquiryModalProps) {
+export function WhatsAppInquiryModal({ isOpen, setIsOpen, product, countryCode }: WhatsAppInquiryModalProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<WhatsAppFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      phone: '',
+      phone: countryCode || '',
     },
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      form.reset({
+        phone: countryCode || '',
+      });
+    }
+  }, [isOpen, countryCode, form]);
 
   const onSubmit = async (data: WhatsAppFormValues) => {
     setIsLoading(true);
