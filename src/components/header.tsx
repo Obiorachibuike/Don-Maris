@@ -135,6 +135,12 @@ export function Header() {
                       <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
                            <Link href="/profile">
+                                <ShoppingCart className="mr-2 h-4 w-4" />
+                                <span>My Orders</span>
+                           </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                           <Link href="/profile">
                                 <UserIcon className="mr-2 h-4 w-4" />
                                 <span>Profile</span>
                            </Link>
