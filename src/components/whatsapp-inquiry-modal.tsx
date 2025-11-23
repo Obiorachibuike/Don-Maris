@@ -113,7 +113,7 @@ export function WhatsAppInquiryModal({ isOpen, setIsOpen, product, countryCode }
                 <FormItem>
                   <FormLabel>WhatsApp Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., 2348012345678" {...field} />
+                    <Input placeholder="e.g., 8012345678" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
