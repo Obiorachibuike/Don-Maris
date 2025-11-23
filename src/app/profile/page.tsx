@@ -213,7 +213,7 @@ export default function ProfilePage() {
                             </CardHeader>
                             <CardContent>
                                 <div className={`text-2xl font-bold ${user.ledgerBalance && user.ledgerBalance > 0 ? 'text-destructive' : ''}`}>
-                                    ₦{user.ledgerBalance?.toFixed(2) || '0.00'}
+                                    ₦{(user.ledgerBalance || 0).toFixed(2)}
                                 </div>
                                  <p className="text-xs text-muted-foreground">Total outstanding on all orders</p>
                             </CardContent>
