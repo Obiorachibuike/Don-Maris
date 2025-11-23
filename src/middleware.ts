@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
 
   // Paths that are public and accessible to everyone
   const isPublicPath = 
-    path.startsWith('/api') || // Treat all API routes as public
+    path.startsWith('/api') || 
     path === '/login' || 
     path === '/signup' || 
     path === '/verify-email' || 
@@ -27,7 +27,9 @@ export function middleware(request: NextRequest) {
     path.startsWith('/profile') ||
     path.startsWith('/checkout') ||
     path.startsWith('/payment') ||
-    path.startsWith('/invoice');
+    path.startsWith('/invoice') ||
+    path.startsWith('/orders/');
+
 
   // If trying to access a protected route without a token, redirect to login
   if (isProtectedRoute && !token) {
@@ -48,6 +50,7 @@ export const config = {
     '/',
     '/profile/:path*',
     '/products/:path*',
+    '/orders/:path*',
     '/login',
     '/signup',
     '/verify-email',
