@@ -28,7 +28,8 @@ export function middleware(request: NextRequest) {
     path.startsWith('/checkout') ||
     path.startsWith('/payment') ||
     path.startsWith('/invoice') ||
-    path.startsWith('/orders/');
+    path.startsWith('/orders/') ||
+    path.startsWith('/settings');
 
 
   // If trying to access a protected route without a token, redirect to login
@@ -64,6 +65,7 @@ export const config = {
     '/recommendations',
     '/about',
     '/contact',
+    '/settings',
     '/api/:path*', // Ensure middleware runs on API routes
   ]
 }

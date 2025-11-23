@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Smartphone, Sparkles, Home, ShoppingCart, Package, Info, Mail, Menu, LayoutDashboard, Wallet, LogIn, UserPlus, LogOut, User as UserIcon } from 'lucide-react';
+import { Smartphone, Sparkles, Home, ShoppingCart, Package, Info, Mail, Menu, LayoutDashboard, Wallet, LogIn, UserPlus, LogOut, User as UserIcon, Settings } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -137,6 +137,12 @@ export function Header() {
                            <Link href="/profile">
                                 <UserIcon className="mr-2 h-4 w-4" />
                                 <span>Profile</span>
+                           </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                           <Link href="/settings">
+                                <Settings className="mr-2 h-4 w-4" />
+                                <span>Settings</span>
                            </Link>
                         </DropdownMenuItem>
                         {user.role !== 'customer' && (
