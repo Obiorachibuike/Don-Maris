@@ -61,37 +61,55 @@ export default function Home() {
     <div className="flex flex-col">
       {/* Hero Section */}
       <AnimatedSection>
-        <section className="bg-gradient-to-br from-gray-900 via-accent to-primary py-20 md:py-32 px-4 sm:px-6 lg:px-8">
-          <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="space-y-6 text-center md:text-left">
-              <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight text-white">
-                Quality Parts, Expertly Delivered
-              </h1>
-              <p className="text-lg md:text-xl text-white/80">
-                Your one-stop shop for high-quality phone accessories and repair parts. Find exactly what you need to keep your devices running perfectly.
-              </p>
-              <div className="flex gap-4 justify-center md:justify-start flex-wrap">
-                <Button asChild size="lg" className="bg-background text-foreground hover:bg-background/90">
-                  <Link href="/products" className="flex items-center gap-2">Shop All Products <ArrowRight className="ml-2" /></Link>
-                </Button>
-                <Button asChild size="lg" variant="outline" className="text-white border-white/50 hover:bg-white/10 hover:text-white">
-                  <Link href="/recommendations">AI Recommender</Link>
-                </Button>
-              </div>
-            </div>
+  <section className="bg-gradient-to-br from-gray-900 via-accent to-primary py-16 md:py-28 px-4 sm:px-6 lg:px-8">
+    <div className="w-full max-w-[1400px] mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
 
-            <div className="relative w-full h-64 md:h-96 flex items-center justify-center">
-              <Image
-                src="https://placehold.co/700x500.png"
-                alt="Assortment of phone accessories"
-                fill
-                className="object-contain rounded-lg shadow-xl w-full h-full max-h-[400px] md:max-h-[500px]"
-                data-ai-hint="phone accessories"
-              />
-            </div>
-          </div>
-        </section>
-      </AnimatedSection>
+      {/* TEXT SECTION */}
+      <div className="w-full lg:w-1/2 text-center lg:text-left space-y-6">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold font-headline leading-tight text-white">
+          Quality Parts, Expertly Delivered
+        </h1>
+
+        <p className="text-base sm:text-lg md:text-xl text-white/80 max-w-[90%] lg:max-w-full mx-auto lg:mx-0">
+          Your one-stop shop for high-quality phone accessories and repair parts.
+          Find exactly what you need to keep your devices running perfectly.
+        </p>
+
+        {/* BUTTONS */}
+        <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+          <Button asChild size="lg" className="bg-background text-foreground hover:bg-background/90">
+            <Link href="/products" className="flex items-center gap-2">
+              Shop All Products <ArrowRight className="ml-1" />
+            </Link>
+          </Button>
+
+          <Button
+            asChild
+            size="lg"
+            variant="outline"
+            className="text-white border-white/50 hover:bg-white/10 hover:text-white"
+          >
+            <Link href="/recommendations">AI Recommender</Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* IMAGE SECTION */}
+      <div className="w-full lg:w-1/2 flex justify-center relative">
+        <div className="w-[90%] sm:w-[80%] md:w-[70%] lg:w-full h-64 sm:h-72 md:h-96 lg:h-[480px] relative">
+          <Image
+            src="https://placehold.co/700x500.png"
+            alt="Assortment of phone accessories"
+            fill
+            priority
+            className="object-contain rounded-lg shadow-xl"
+          />
+        </div>
+      </div>
+
+    </div>
+  </section>
+</AnimatedSection>
 
       {/* Featured Products Section */}
       <AnimatedSection>
