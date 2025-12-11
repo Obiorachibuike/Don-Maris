@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useSession } from '@/contexts/SessionProvider';
@@ -18,9 +17,11 @@ import axios from 'axios';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useOrderStore } from '@/store/order-store';
 
-
 export default function ProfilePage() {
-    const { user, isLoading, refetchUser } = useSession();
+    const session = useSession();
+    const user = session?.user;
+    const isLoading = session?.isLoading;
+    const refetchUser = session?.refetchUser;
     const { orders: allOrders, isLoading: areOrdersLoading } = useOrderStore();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isPaying, setIsPaying] = useState<string | null>(null);
@@ -34,12 +35,12 @@ export default function ProfilePage() {
     }, [user, isLoading, router]);
 
     const userOrders = useMemo(() => {
-        if (user && user.role === 'customer' && allOrders) {
-            return allOrders.filter(order => order.customer.id === user.id);
+        if (user?.role === 'customer' && allOrders) {
+            return allOrders.filter(order => order.customer?.id === user.id);
         }
         return [];
     }, [user, allOrders]);
-    
+
     const handlePayNow = async (order: Order) => {
         if (!user) return;
         setIsPaying(order.id);
@@ -73,9 +74,9 @@ export default function ProfilePage() {
             </div>
         );
     }
-    
+
     const totalSpent = userOrders.reduce((acc, order) => acc + order.amountPaid, 0);
-    const isCustomer = user.role === 'customer';
+    const isCustomer = user?.role === 'customer';
     const outstandingOrders = userOrders.filter(order => order.paymentStatus !== 'Paid');
 
     const renderOrderTable = (orders: Order[]) => (
@@ -146,8 +147,8 @@ export default function ProfilePage() {
                          <div className="flex flex-col sm:flex-row items-center gap-4">
                             <div className="relative group">
                                 <Avatar className="w-24 h-24 border-2 border-primary">
-                                    <AvatarImage src={user.avatar} alt={user.name} />
-                                    <AvatarFallback className="text-3xl">{user.name.charAt(0)}</AvatarFallback>
+                                    <AvatarImage src={user?.avatar || ''} alt={user?.name || 'User'} />
+                                    <AvatarFallback className="text-3xl">{user?.name ? user.name.charAt(0) : '?'}</AvatarFallback>
                                 </Avatar>
                                 <Button
                                     variant="outline"
@@ -159,9 +160,9 @@ export default function ProfilePage() {
                                 </Button>
                             </div>
                             <div>
-                                <CardTitle className="text-3xl font-headline">{user.name}</CardTitle>
+                                <CardTitle className="text-3xl font-headline">{user?.name || 'User'}</CardTitle>
                                 <CardDescription className="flex items-center gap-2 mt-1">
-                                    <Badge variant="secondary" className="capitalize text-sm">{user.role}</Badge>
+                                    <Badge variant="secondary" className="capitalize text-sm">{user?.role || 'N/A'}</Badge>
                                 </CardDescription>
                             </div>
                             <Button variant="outline" className="sm:ml-auto" onClick={() => setIsEditModalOpen(true)}>
@@ -173,9 +174,9 @@ export default function ProfilePage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-muted-foreground">
                             <div className="flex items-center gap-3">
                                 <Mail className="h-5 w-5" />
-                                <a href={`mailto:${user.email}`} className="hover:text-primary transition-colors">{user.email}</a>
+                                <a href={`mailto:${user?.email}`} className="hover:text-primary transition-colors">{user?.email || 'N/A'}</a>
                             </div>
-                            {user.dateJoined && (
+                            {user?.dateJoined && (
                                 <div className="flex items-center gap-3">
                                     <Calendar className="h-5 w-5" />
                                     <p>Joined on {new Date(user.dateJoined).toLocaleDateString()}</p>
@@ -184,7 +185,7 @@ export default function ProfilePage() {
                         </div>
                     </CardContent>
                 </Card>
-                
+
                 {isCustomer && (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -212,8 +213,8 @@ export default function ProfilePage() {
                                 <Wallet className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className={`text-2xl font-bold ${user.ledgerBalance && user.ledgerBalance > 0 ? 'text-destructive' : ''}`}>
-                                    ₦{(user.ledgerBalance || 0).toFixed(2)}
+                                <div className={`text-2xl font-bold ${user?.ledgerBalance && user.ledgerBalance > 0 ? 'text-destructive' : ''}`}>
+                                    ₦{(user?.ledgerBalance || 0).toFixed(2)}
                                 </div>
                                  <p className="text-xs text-muted-foreground">Total outstanding on all orders</p>
                             </CardContent>
