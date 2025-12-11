@@ -55,12 +55,6 @@ export function Header() {
   const baseNavLinks = [
     { href: "/", label: "Home", icon: Home, show: "always" },
     { href: "/products", label: "Products", icon: Package, show: "always" },
-    {
-      href: "/recommendations",
-      label: "AI Recommender",
-      icon: Sparkles,
-      show: "always",
-    },
     { href: "/about", label: "About", icon: Info, show: "always" },
     { href: "/contact", label: "Contact", icon: Mail, show: "always" },
     { href: "/profile", label: "Profile", icon: UserIcon, show: "loggedIn" },
