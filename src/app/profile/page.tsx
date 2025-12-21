@@ -1,73 +1,93 @@
 'use client';
 
-import { useSession } from '@/contexts/SessionProvider';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Mail, Calendar, ShoppingBag, DollarSign, Wallet, Loader2, CreditCard, Pencil } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useEffect, useState, useMemo } from 'react';
-import type { Order } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import { EditProfileForm } from '@/components/edit-profile-form';
 import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
 import axios from 'axios';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+import { useSession } from '@/contexts/SessionProvider';
 import { useOrderStore } from '@/store/order-store';
+import type { Order } from '@/lib/types';
+
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { EditProfileForm } from '@/components/edit-profile-form';
+
+import { Mail, Calendar, ShoppingBag, DollarSign, Wallet, Loader2, CreditCard, Pencil } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ProfilePage() {
-    const session = useSession();
-    const user = session?.user;
-    const isLoading = session?.isLoading;
-    const refetchUser = session?.refetchUser;
-    const { orders: allOrders, isLoading: areOrdersLoading } = useOrderStore();
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isPaying, setIsPaying] = useState<string | null>(null);
     const router = useRouter();
     const { toast } = useToast();
 
+    const session = useSession();
+    const user = session?.user ?? null;
+    const isLoading = session?.isLoading ?? true;
+    const refetchUser = session?.refetchUser;
+
+    const orderStore = useOrderStore();
+    const allOrders: Order[] = orderStore?.orders ?? [];
+    const areOrdersLoading = orderStore?.isLoading ?? true;
+
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isPaying, setIsPaying] = useState<string | null>(null);
+
+    /* -------------------- AUTH REDIRECT (SAFE) -------------------- */
     useEffect(() => {
-        if (!isLoading && !user) {
-            router.push('/login');
+        if (isLoading === false && user === null) {
+            router.replace('/login');
         }
     }, [user, isLoading, router]);
 
+    /* -------------------- FILTER USER ORDERS (SAFE) -------------------- */
     const userOrders = useMemo(() => {
-        if (user?.role === 'customer' && allOrders) {
-            return allOrders.filter(order => order.customer?.id === user.id);
+        if (user?.role === 'customer' && Array.isArray(allOrders)) {
+            return allOrders.filter(order => order.customer?._id === user._id);
         }
         return [];
     }, [user, allOrders]);
 
+    /* -------------------- PAYMENT HANDLER -------------------- */
     const handlePayNow = async (order: Order) => {
         if (!user) return;
+
         setIsPaying(order.id);
 
-        const amountToPay = order.amount - order.amountPaid;
+        const amountToPay = (order.amount ?? 0) - (order.amountPaid ?? 0);
 
         try {
-            const res = await axios.post("/api/checkout", {
+            const res = await axios.post('/api/checkout', {
                 userId: user._id,
                 amount: amountToPay,
-                orderId: order.id
+                orderId: order.id,
             });
 
-            const data = res.data;
-            if (data.checkoutUrl) {
-                window.location.href = data.checkoutUrl;
+            if (res.data?.checkoutUrl) {
+                window.location.href = res.data.checkoutUrl;
             } else {
-                toast({ variant: 'destructive', title: 'Error', description: data.error || "Error initializing payment" });
+                toast({
+                    variant: 'destructive',
+                    title: 'Payment Error',
+                    description: res.data?.error || 'Unable to initialize payment',
+                });
                 setIsPaying(null);
             }
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: "Could not initialize payment. Please try again." });
+        } catch {
+            toast({
+                variant: 'destructive',
+                title: 'Payment Error',
+                description: 'Could not initialize payment. Please try again.',
+            });
             setIsPaying(null);
         }
     };
 
-    if (isLoading || !user || areOrdersLoading) {
+    /* -------------------- LOADING STATE -------------------- */
+    if (isLoading || areOrdersLoading || !user) {
         return (
             <div className="container mx-auto flex min-h-[80vh] items-center justify-center">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -75,10 +95,12 @@ export default function ProfilePage() {
         );
     }
 
-    const totalSpent = userOrders.reduce((acc, order) => acc + order.amountPaid, 0);
-    const isCustomer = user?.role === 'customer';
+    /* -------------------- DERIVED VALUES -------------------- */
+    const totalSpent = userOrders.reduce((acc, order) => acc + (order.amountPaid ?? 0), 0);
     const outstandingOrders = userOrders.filter(order => order.paymentStatus !== 'Paid');
+    const isCustomer = user.role === 'customer';
 
+    /* -------------------- ORDER TABLE -------------------- */
     const renderOrderTable = (orders: Order[]) => (
         <Table>
             <TableHeader>
@@ -95,38 +117,30 @@ export default function ProfilePage() {
                 {orders.map(order => (
                     <TableRow key={order.id}>
                         <TableCell>
-                            <Link href={`/orders/${order.id}`} className="text-primary hover:underline font-medium">
+                            <Link href={`/orders/${order.id}`} className="font-medium text-primary hover:underline">
                                 {order.id}
                             </Link>
                         </TableCell>
                         <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
                         <TableCell>
-                            <Badge variant={
-                                order.status === 'Fulfilled' ? 'default' :
-                                order.status === 'Processing' ? 'secondary' :
-                                'destructive'
-                            } className={order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : order.status === 'Cancelled' ? 'bg-gray-500/20 text-gray-700 border-gray-500/20' : ''}>
+                            <Badge variant={order.status === 'Fulfilled' ? 'default' : order.status === 'Processing' ? 'secondary' : 'destructive'}>
                                 {order.status}
                             </Badge>
                         </TableCell>
                         <TableCell>
-                            <Badge variant={
-                                order.paymentStatus === 'Paid' ? 'default' :
-                                order.paymentStatus === 'Not Paid' ? 'destructive' :
-                                'secondary'
-                            } className={order.paymentStatus === 'Incomplete' ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/20' : ''}>
+                            <Badge variant={order.paymentStatus === 'Paid' ? 'default' : order.paymentStatus === 'Not Paid' ? 'destructive' : 'secondary'}>
                                 {order.paymentStatus}
                             </Badge>
                         </TableCell>
-                        <TableCell className="text-right">₦{order.amount.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">₦{(order.amount ?? 0).toFixed(2)}</TableCell>
                         <TableCell className="text-right">
                             {order.paymentStatus !== 'Paid' ? (
-                                <Button
-                                    size="sm"
-                                    onClick={() => handlePayNow(order)}
-                                    disabled={isPaying === order.id}
-                                >
-                                    {isPaying === order.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
+                                <Button size="sm" onClick={() => handlePayNow(order)} disabled={isPaying === order.id}>
+                                    {isPaying === order.id ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <CreditCard className="mr-2 h-4 w-4" />
+                                    )}
                                     Pay Now
                                 </Button>
                             ) : (
@@ -139,47 +153,57 @@ export default function ProfilePage() {
         </Table>
     );
 
+    /* -------------------- RENDER -------------------- */
     return (
         <>
-            <div className="container mx-auto px-4 py-12 space-y-6">
+            <div className="container mx-auto space-y-6 px-4 py-12">
                 <Card>
                     <CardHeader>
-                         <div className="flex flex-col sm:flex-row items-center gap-4">
+                        <div className="flex flex-col items-center gap-4 sm:flex-row">
                             <div className="relative group">
-                                <Avatar className="w-24 h-24 border-2 border-primary">
-                                    <AvatarImage src={user?.avatar || ''} alt={user?.name || 'User'} />
-                                    <AvatarFallback className="text-3xl">{user?.name ? user.name.charAt(0) : '?'}</AvatarFallback>
+                                <Avatar className="h-24 w-24 border-2 border-primary">
+                                    <AvatarImage src={user.avatar || ''} />
+                                    <AvatarFallback className="text-3xl">{user.name?.charAt(0) ?? '?'}</AvatarFallback>
                                 </Avatar>
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="absolute bottom-0 right-0 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="absolute bottom-0 right-0 h-8 w-8 rounded-full opacity-0 transition-opacity group-hover:opacity-100"
                                     onClick={() => setIsEditModalOpen(true)}
                                 >
                                     <Pencil className="h-4 w-4" />
                                 </Button>
                             </div>
+
                             <div>
-                                <CardTitle className="text-3xl font-headline">{user?.name || 'User'}</CardTitle>
-                                <CardDescription className="flex items-center gap-2 mt-1">
-                                    <Badge variant="secondary" className="capitalize text-sm">{user?.role || 'N/A'}</Badge>
+                                <CardTitle className="text-3xl">{user.name}</CardTitle>
+                                <CardDescription className="mt-1">
+                                    <Badge variant="secondary" className="capitalize">
+                                        {user.role}
+                                    </Badge>
                                 </CardDescription>
                             </div>
+
                             <Button variant="outline" className="sm:ml-auto" onClick={() => setIsEditModalOpen(true)}>
-                                <Pencil className="mr-2 h-4 w-4" /> Edit Profile
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit Profile
                             </Button>
                         </div>
                     </CardHeader>
+
                     <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-muted-foreground">
+                        <div className="grid gap-4 text-muted-foreground md:grid-cols-2">
                             <div className="flex items-center gap-3">
                                 <Mail className="h-5 w-5" />
-                                <a href={`mailto:${user?.email}`} className="hover:text-primary transition-colors">{user?.email || 'N/A'}</a>
+                                <a href={`mailto:${user.email}`} className="hover:text-primary">
+                                    {user.email}
+                                </a>
                             </div>
-                            {user?.dateJoined && (
+
+                            {user.dateJoined && (
                                 <div className="flex items-center gap-3">
                                     <Calendar className="h-5 w-5" />
-                                    <p>Joined on {new Date(user.dateJoined).toLocaleDateString()}</p>
+                                    Joined on {new Date(user.dateJoined).toLocaleDateString()}
                                 </div>
                             )}
                         </div>
@@ -187,84 +211,68 @@ export default function ProfilePage() {
                 </Card>
 
                 {isCustomer && (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <>
+                        <div className="grid gap-6 md:grid-cols-3">
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                    <CardTitle className="text-sm">Total Spent</CardTitle>
+                                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent className="text-2xl font-bold">₦{totalSpent.toFixed(2)}</CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                    <CardTitle className="text-sm">Total Orders</CardTitle>
+                                    <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent className="text-2xl font-bold">{userOrders.length}</CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                    <CardTitle className="text-sm">Account Balance</CardTitle>
+                                    <Wallet className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent className="text-2xl font-bold">
+                                    ₦{(user.ledgerBalance ?? 0).toFixed(2)}
+                                </CardContent>
+                            </Card>
+                        </div>
+
                         <Card>
-                            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-                                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">₦{totalSpent.toFixed(2)}</div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-                                <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{userOrders.length}</div>
-                            </CardContent>
-                        </Card>
-                         <Card>
-                            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                <CardTitle className="text-sm font-medium">Account Balance</CardTitle>
-                                <Wallet className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className={`text-2xl font-bold ${user?.ledgerBalance && user.ledgerBalance > 0 ? 'text-destructive' : ''}`}>
-                                    ₦{(user?.ledgerBalance || 0).toFixed(2)}
-                                </div>
-                                 <p className="text-xs text-muted-foreground">Total outstanding on all orders</p>
-                            </CardContent>
-                        </Card>
-                    </div>
-                    <Card>
-                        <Tabs defaultValue="all">
-                            <CardHeader>
-                                <div className="flex justify-between items-center">
+                            <Tabs defaultValue="all">
+                                <CardHeader className="flex justify-between">
                                     <div>
                                         <CardTitle>My Order History</CardTitle>
-                                        <CardDescription>
-                                            View and manage your past orders.
-                                        </CardDescription>
+                                        <CardDescription>View and manage your past orders</CardDescription>
                                     </div>
                                     <TabsList>
-                                        <TabsTrigger value="all">All Orders ({userOrders.length})</TabsTrigger>
-                                        <TabsTrigger value="outstanding">Outstanding Balances ({outstandingOrders.length})</TabsTrigger>
+                                        <TabsTrigger value="all">All ({userOrders.length})</TabsTrigger>
+                                        <TabsTrigger value="outstanding">Outstanding ({outstandingOrders.length})</TabsTrigger>
                                     </TabsList>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <TabsContent value="all">
-                                    {userOrders.length > 0 ? (
-                                        renderOrderTable(userOrders)
-                                    ) : (
-                                        <p className="text-muted-foreground text-center py-8">You haven't placed any orders yet.</p>
-                                    )}
-                                </TabsContent>
-                                <TabsContent value="outstanding">
-                                     {outstandingOrders.length > 0 ? (
-                                        renderOrderTable(outstandingOrders)
-                                    ) : (
-                                        <p className="text-muted-foreground text-center py-8">You have no orders with an outstanding balance.</p>
-                                    )}
-                                </TabsContent>
-                            </CardContent>
-                        </Tabs>
-                    </Card>
-                  </>
+                                </CardHeader>
+
+                                <CardContent>
+                                    <TabsContent value="all">
+                                        {userOrders.length ? renderOrderTable(userOrders) : <p className="py-8 text-center text-muted-foreground">No orders yet.</p>}
+                                    </TabsContent>
+                                    <TabsContent value="outstanding">
+                                        {outstandingOrders.length ? renderOrderTable(outstandingOrders) : <p className="py-8 text-center text-muted-foreground">No outstanding balances.</p>}
+                                    </TabsContent>
+                                </CardContent>
+                            </Tabs>
+                        </Card>
+                    </>
                 )}
             </div>
-            {user && (
-                <EditProfileForm
-                    isOpen={isEditModalOpen}
-                    setIsOpen={setIsEditModalOpen}
-                    user={user}
-                    onProfileUpdate={refetchUser}
-                />
-            )}
+
+            <EditProfileForm
+                isOpen={isEditModalOpen}
+                setIsOpen={setIsEditModalOpen}
+                user={user}
+                onProfileUpdate={refetchUser}
+            />
         </>
     );
 }
